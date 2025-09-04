@@ -22,7 +22,7 @@ services:
 
   api:
     build:
-      context: ./backend
+      context: ./server
     container_name: myapp-api
     environment:
       NODE_ENV: production
@@ -39,7 +39,7 @@ services:
 
   web:
     build:
-      context: ./frontend
+      context: ./client
     container_name: myapp-web
     depends_on:
       api:
