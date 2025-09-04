@@ -19,10 +19,11 @@ services:
     # Se vuoi collegarti da client esterno, sblocca questa riga:
     # ports: ["5432:5432"]
 
-  api:
+  server:
     build:
       context: ./server
-    container_name: skytravel-api
+    container_name: skytravel-server
+    restart: always
     environment:
       NODE_ENV: production
       PORT: 3000
