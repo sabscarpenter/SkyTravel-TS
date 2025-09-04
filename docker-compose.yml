@@ -1,9 +1,8 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16-alpine
-    container_name: myapp-db
+    container_name: skytravel-db
+    restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -17,30 +16,29 @@ services:
       timeout: 3s
       retries: 10
     networks: [appnet]
-    # Se vuoi collegarti da psql locale, sblocca la porta:
+    # Se vuoi collegarti da client esterno, sblocca questa riga:
     # ports: ["5432:5432"]
 
   api:
     build:
       context: ./server
-    container_name: myapp-api
+    container_name: skytravel-api
     environment:
       NODE_ENV: production
       PORT: 3000
-      # Il nome host del DB è il service name "db" (stessa rete)
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
     depends_on:
       db:
         condition: service_healthy
     networks: [appnet]
-    # Espongo per chiamare l’API anche fuori da nginx (opzionale)
+    # Espongo per test diretti (facoltativo)
     ports:
       - "${API_PORT}:3000"
 
   web:
     build:
       context: ./client
-    container_name: myapp-web
+    container_name: skytravel-web
     depends_on:
       api:
         condition: service_started
