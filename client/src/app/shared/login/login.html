@@ -1,0 +1,113 @@
+<div class="login-container">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <div class="text-4xl mb-3"></div>
+    <h2 class="text-2xl font-bold text-blue-900 mb-2">Accedi al tuo account</h2>
+    <p class="text-blue-600">Benvenuto di nuovo in SkyTravel</p>
+  </div>
+
+  <!-- Login Form -->
+  <form (ngSubmit)="onSubmit()" class="space-y-6">
+    <!-- Email Field -->
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text text-blue-800 font-semibold">Email</span>
+      </label>
+      <div class="relative">
+        <input 
+          type="email" 
+          [(ngModel)]="email"
+          name="email"
+          placeholder="esempio@email.com"
+          class="input w-full bg-white/80 backdrop-blur-sm border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl focus:outline-none text-blue-800 placeholder-blue-400"
+          required
+        />
+        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-blue-400">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Zm0 0c0 1.657 1.007 3 2.25 3S21 13.657 21 12a9 9 0 1 0-2.636 6.364M16.5 12V8.25" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Password Field -->
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text text-blue-800 font-semibold">Password</span>
+      </label>
+      <div class="relative">
+        <input 
+          [type]="showPassword ? 'text' : 'password'"
+          [(ngModel)]="password"
+          name="password"
+          placeholder="••••••••"
+          class="input w-full bg-white/80 backdrop-blur-sm border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl focus:outline-none text-blue-800 placeholder-blue-400"
+          required
+        />
+        <button
+          type="button"
+          (click)="togglePasswordVisibility()"
+          class="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-400 hover:text-blue-600"
+        >
+          @if (!showPassword) {
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+          } @else {
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+            </svg>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Error Message -->
+    @if (errorMessage) {
+      <div class="alert alert-error shadow-lg rounded-xl border-red-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>{{ errorMessage }}</span>
+      </div>
+    }
+
+    <!-- Login Button -->
+    <button 
+      type="submit"
+      [disabled]="!email || !password || isLoading"
+      class="w-full btn bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white border-none py-4 rounded-xl font-semibold text-lg shadow-lg"
+    >
+      @if (!isLoading) {
+        <span class="flex items-center justify-center">
+          Accedi
+        </span>
+      } @else {
+        <span class="flex items-center justify-center">
+          <div class="loading loading-spinner loading-sm mr-2"></div>
+          Accesso in corso...
+        </span>
+      }
+    </button>
+  </form>
+
+  <!-- Divider -->
+  <div class="relative my-8">
+    <div class="absolute inset-0 flex items-center">
+      <div class="w-full border-t border-blue-200"></div>
+    </div>
+    <div class="relative flex justify-center text-sm">
+      <span class="px-4 bg-white/95 text-blue-600 font-medium">Non hai un account?</span>
+    </div>
+  </div>
+
+  <!-- Switch to Register -->
+  <button 
+    type="button"
+    (click)="switchToRegister()"
+    class="w-full btn bg-white hover:bg-blue-50 text-blue-700 border-2 border-blue-300 hover:border-blue-400 py-4 rounded-xl font-semibold text-lg shadow-md"
+  >
+    Crea un nuovo account
+  </button>
+</div>

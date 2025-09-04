@@ -1,0 +1,122 @@
+@if (isOpen) {
+<div class="modal modal-open">
+  @if (popup.visible) {
+    <div class="fixed inset-0 z-[120] flex items-center justify-center pointer-events-none bg-black/20 backdrop-blur-sm">
+      <div class="w-full max-w-xl mx-auto px-6 pointer-events-auto">
+        <div 
+          class="rounded-2xl border shadow-2xl transition-all p-6 flex flex-col gap-3"
+          [ngClass]="{
+            'bg-blue-50 border-blue-200': popup.type === 'info',
+            'bg-yellow-50 border-yellow-200': popup.type === 'warning',
+            'bg-green-50 border-green-200': popup.type === 'success',
+            'bg-red-50 border-red-200': popup.type === 'error'
+          }"
+          role="alert"
+          aria-live="assertive">
+          <div class="flex items-center justify-between gap-4">
+            <h3 class="font-bold text-lg"
+                [ngClass]="{
+                  'text-blue-800': popup.type === 'info',
+                  'text-yellow-800': popup.type === 'warning',
+                  'text-green-800': popup.type === 'success',
+                  'text-red-800': popup.type === 'error'
+                }">{{ getPopupTitle() }}</h3>
+          </div>
+          <div class="flex justify-between items-center gap-6">
+            <div class="text-base font-medium"
+                 [ngClass]="{
+                   'text-blue-800': popup.type === 'info',
+                   'text-yellow-800': popup.type === 'warning',
+                   'text-green-800': popup.type === 'success',
+                   'text-red-800': popup.type === 'error'
+                 }">{{ popup.message }}</div>
+            <button type="button" class="btn btn-sm rounded-xl"
+                    (click)="closePopup()"
+                    [ngClass]="{
+                      'bg-blue-600 text-white hover:bg-blue-700 border-blue-600': popup.type === 'info',
+                      'bg-yellow-600 text-white hover:bg-yellow-700 border-yellow-600': popup.type === 'warning',
+                      'bg-green-600 text-white hover:bg-green-700 border-green-600': popup.type === 'success',
+                      'bg-red-600 text-white hover:bg-red-700 border-red-600': popup.type === 'error'
+                    }" aria-label="Chiudi avviso">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+  <div class="modal-box w-11/12 max-w-3xl modal-form-container bg-white border-2 border-blue-200 rounded-2xl shadow-2xl relative">
+    <button type="button" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" (click)="close()">✕</button>
+    <h3 class="text-2xl font-bold text-blue-900 mb-2">Crea Nuovi Voli</h3>
+    <p class="text-blue-600 mb-6">Inserisci le informazioni per creare un nuovo volo</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="form-control">
+        <label class="label"><span class="label-text text-blue-800 font-semibold">Tratta *</span></label>
+        <select class="select w-full bg-white border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl focus:outline-none text-blue-800" required (change)="selectedRoute = $any($event.target).value">
+          <option disabled selected>Seleziona tratta</option>
+          @if (routes && routes.length > 0) {
+            @for (route of routes; track route.numero) {
+              <option [value]="route.numero">{{ route.partenza }} → {{ route.arrivo }}</option>
+            }
+          }
+        </select>
+      </div>
+      <div class="form-control">
+        <label class="label"><span class="label-text text-blue-800 font-semibold">Aeromobile *</span></label>
+        <select class="select w-full bg-white border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl focus:outline-none text-blue-800" required (change)="selectedAircraft = $any($event.target).value">
+          <option disabled selected>Seleziona aeromobile</option>
+          @if (aircrafts && aircrafts.length > 0) {
+            @for (a of aircrafts; track a.numero) {
+              <option [value]="a.numero">{{ a.numero }} — {{ a.modello }}</option>
+            }
+          }
+        </select>
+      </div>
+      <div class="form-control">
+        <label class="label"><span class="label-text text-blue-800 font-semibold">Data Inizio *</span></label>
+        <input type="date" class="input w-full bg-white border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl focus:outline-none text-blue-800" required (change)="startDate = $any($event.target).value" />
+      </div>
+      <div class="form-control">
+        <label class="label"><span class="label-text text-blue-800 font-semibold">Orario Partenza *</span></label>
+        <div>
+          <input type="time" class="input w-full bg-white border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl focus:outline-none text-blue-800" required (change)="departureTime = $any($event.target).value" />
+        </div>
+      </div>
+      <div class="form-control">
+        <label class="label"><span class="label-text text-blue-800 font-semibold">Settimane</span></label>
+        <input type="number" min="1" step="1" [value]="weeksCount" class="input w-full bg-white border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl focus:outline-none text-blue-800" (change)="onWeeksChange($any($event.target).value)" />
+  <label class="label"><span class="label-text-alt text-blue-600 text-sm">Numero di settimane per cui generare i voli (default: 1)</span></label>
+      </div>
+      <div class="form-control">
+        <label class="label"><span class="label-text text-blue-800 font-semibold">Frequenza *</span></label>
+        <select class="select w-full bg-white border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl focus:outline-none text-blue-800" required (change)="selectedFrequency = $any($event.target).value">
+          <option disabled selected>Seleziona frequenza</option>
+          <option value="giornaliero">Giornaliero</option>
+          <option value="settimanale">Settimanale</option>
+        </select>
+      </div>
+
+      @if (selectedFrequency === 'settimanale') {
+        <div class="form-control md:col-span-2 mt-2">
+          <label class="label"><span class="label-text text-blue-800 font-semibold">Giorni della Settimana</span></label>
+          <div class="flex flex-wrap gap-2">
+            <label class="label cursor-pointer"><input type="checkbox" class="checkbox checkbox-sm checkbox-azzurro" (change)="onToggleDay('Lun', $any($event.target).checked)" /><span class="label-text ml-2 text-blue-800">Lun</span></label>
+            <label class="label cursor-pointer"><input type="checkbox" class="checkbox checkbox-sm checkbox-azzurro" (change)="onToggleDay('Mar', $any($event.target).checked)" /><span class="label-text ml-2 text-blue-800">Mar</span></label>
+            <label class="label cursor-pointer"><input type="checkbox" class="checkbox checkbox-sm checkbox-azzurro" (change)="onToggleDay('Mer', $any($event.target).checked)" /><span class="label-text ml-2 text-blue-800">Mer</span></label>
+            <label class="label cursor-pointer"><input type="checkbox" class="checkbox checkbox-sm checkbox-azzurro" (change)="onToggleDay('Gio', $any($event.target).checked)" /><span class="label-text ml-2 text-blue-800">Gio</span></label>
+            <label class="label cursor-pointer"><input type="checkbox" class="checkbox checkbox-sm checkbox-azzurro" (change)="onToggleDay('Ven', $any($event.target).checked)" /><span class="label-text ml-2 text-blue-800">Ven</span></label>
+            <label class="label cursor-pointer"><input type="checkbox" class="checkbox checkbox-sm checkbox-azzurro" (change)="onToggleDay('Sab', $any($event.target).checked)" /><span class="label-text ml-2 text-blue-800">Sab</span></label>
+            <label class="label cursor-pointer"><input type="checkbox" class="checkbox checkbox-sm checkbox-azzurro" (change)="onToggleDay('Dom', $any($event.target).checked)" /><span class="label-text ml-2 text-blue-800">Dom</span></label>
+          </div>
+          <label class="label"><span class="label-text-alt text-blue-600">Seleziona i giorni in cui il volo opera</span></label>
+        </div>
+      }
+    </div>
+    <div class="modal-action mt-6">
+      <form method="dialog" class="w-full flex gap-2 justify-end">
+        <button type="button" class="btn btn-ghost" (click)="close()">Annulla</button>
+        <button type="button" class="btn bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-none rounded-xl font-semibold shadow-lg" (click)="onCreateClick()">Aggiungi</button>
+      </form>
+    </div>
+  </div>
+  <div class="modal-backdrop bg-black/40" (click)="close()"></div>
+</div>
+}

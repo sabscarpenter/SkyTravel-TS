@@ -1,0 +1,34 @@
+/* Layout principale con navbar fissa */
+main {
+  min-height: 100vh;
+  padding-top: 4rem; /* Aumentato per assicurare che non ci sia sovrapposizione */
+}
+
+/* Assicura che la navbar sia sempre sopra tutti gli altri elementi */
+.navbar {
+  z-index: 9999;
+  width: 100%;
+}
+
+/* Smooth scrolling per migliorare l'esperienza utente */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Assicura che il contenuto principale abbia il padding corretto anche su schermi piccoli */
+@media (max-width: 768px) {
+  main {
+    padding-top: 4.5rem; /* Navbar più piccola su mobile ma ancora con margine sicuro */
+  }
+}
+
+/* Gestisce il caso in cui ci siano elementi con position fixed che potrebbero sovrapporsi */
+.fixed-top-content {
+  top: 5rem !important;
+}
+
+@media (max-width: 768px) {
+  .fixed-top-content {
+    top: 3.5rem !important;
+  }
+}

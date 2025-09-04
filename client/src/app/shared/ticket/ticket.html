@@ -1,0 +1,175 @@
+<div class="relative max-w-4xl w-full select-none">
+  <div
+    class="ticket-content relative overflow-hidden bg-gradient-to-r border-2 shadow-lg"
+    [ngClass]="cardGradientClasses"
+    style="border-radius: 20px"
+  >
+    <div class="absolute left-0 top-0 bottom-0 w-6 flex flex-col justify-center items-center" [ngClass]="sideBarClass">
+      @if (hasMultiple) {
+        <div class="flex flex-col items-center gap-1.5">
+          @for (t of items; track i; let i = $index) {
+            <button
+              class="w-2.5 h-2.5 rounded-full transition-all"
+              [ngClass]="i === current ? 'bg-white scale-110' : 'bg-white/60 hover:bg-white/80'"
+              (click)="goTo(i)"
+              [attr.aria-label]="'Vai al biglietto ' + (i + 1)">
+            </button>
+          }
+        </div>
+      }
+    </div>
+    <div class="pl-10 pr-6 py-6" (touchstart)="onTouchStart($event)" (touchend)="onTouchEnd($event)">
+      <div class="flex justify-between items-start mb-4">
+        <div class="flex items-center gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <div class="text-lg font-bold text-gray-800">BOARDING PASS</div>
+              @if (item?.direction) {
+                <span
+                  class="inline-block px-2 py-0.5 rounded-full text-white text-[10px] font-bold uppercase tracking-wide"
+                  [ngClass]="seatClassBadgeClass">
+                  {{ (item?.direction === 'andata' || item?.direction === 'solo') ? 'Andata' : 'Ritorno' }}
+                </span>
+              }
+            </div>
+            <div class="text-sm text-gray-600">
+              Volo {{ item?.flightNumber }} • {{ item?.from }} → {{ item?.to }}
+            </div>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="inline-block px-3 py-1 rounded-full text-white text-xs font-bold mb-2" [ngClass]="seatClassBadgeClass">
+            {{ (item?.seatClass || '').toUpperCase() }}
+          </div>
+          @if (item?.seatPrice != null) {
+            <div class="text-2xl font-bold" [ngClass]="priceTextClass">
+              {{ formatCurrency(item?.seatPrice) }}
+            </div>
+          }
+        </div>
+      </div>
+      <div class="border-t-2 border-dashed border-gray-300 my-4"></div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="md:col-span-2">
+          <div class="mb-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Passenger Name</label>
+            <p class="text-xl font-bold text-gray-800 uppercase">{{ fullName() }}</p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            @if (item?.departureDate) {
+              <div>
+                @if (item?.departureDate) {
+                  <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Date</label>
+                }
+                <p class="text-base text-gray-800 font-bold">{{ item?.departureDate }}</p>
+              </div>
+            }
+            @if (item?.departureTime) {
+              <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Departure</label>
+                <p class="text-base text-gray-800 font-bold">{{ item?.departureTime }}</p>
+              </div>
+            }
+          </div>
+        </div>
+        <div class="text-center md:text-right">
+          <div class="mb-3 inline-block text-center">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Seat</label>
+            <div class="inline-block bg-gray-800 text-white px-4 py-2 rounded-lg text-2xl font-mono font-bold">
+              {{ item?.seatNumber }}
+            </div>
+            
+          </div>
+          @if (item?.extraBags) {
+            <div class="text-right">
+              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Extra Bags</label>
+              <div class="inline-block bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-bold">
+                {{ item?.extraBags }} Bag(s)
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="mt-6 pt-4 border-t border-dashed border-gray-300">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">From</label>
+            <p class="font-bold text-gray-800"> {{ item?.cityFrom }} ({{ item?.from }})</p>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">To</label>
+            <p class="font-bold text-gray-800">{{ item?.cityTo }} ({{ item?.to }})</p>
+          </div>
+          @if (item?.departureTime) {
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Boarding</label>
+              <p class="font-bold text-gray-800">{{ boardingTime(item) }}</p>
+            </div>
+          }
+        </div>
+      </div>
+      <div class="mt-6 pt-4 border-t border-dashed border-gray-300">
+        <div class="flex justify-center mb-2">
+          <div class="flex space-x-px">
+            <div class="w-1 h-8 bg-gray-800"></div>
+            <div class="w-px h-8 bg-gray-800"></div>
+            <div class="w-1 h-8 bg-gray-800"></div>
+            <div class="w-px h-8 bg-gray-800"></div>
+            <div class="w-2 h-8 bg-gray-800"></div>
+            <div class="w-px h-8 bg-gray-800"></div>
+            <div class="w-1 h-8 bg-gray-800"></div>
+            <div class="w-px h-8 bg-gray-800"></div>
+            <div class="w-1 h-8 bg-gray-800"></div>
+            <div class="w-2 h-8 bg-gray-800"></div>
+            <div class="w-px h-8 bg-gray-800"></div>
+            <div class="w-1 h-8 bg-gray-800"></div>
+            <div class="w-px h-8 bg-gray-800"></div>
+            <div class="w-2 h-8 bg-gray-800"></div>
+            <div class="w-1 h-8 bg-gray-800"></div>
+            <div class="w-px h-8 bg-gray-800"></div>
+            <div class="w-1 h-8 bg-gray-800"></div>
+            <div class="w-px h-8 bg-gray-800"></div>
+            <div class="w-2 h-8 bg-gray-800"></div>
+            <div class="w-px h-8 bg-gray-800"></div>
+            <div class="w-1 h-8 bg-gray-800"></div>
+            <div class="w-px h-8 bg-gray-800"></div>
+            <div class="w-2 h-8 bg-gray-800"></div>
+            <div class="w-1 h-8 bg-gray-800"></div>
+          </div>
+        </div>
+        <div class="text-center text-xs text-gray-500 font-mono">
+          {{ (item?.flightNumber || '') + '-' + (item?.seatNumber || '') }}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+</div>
+@if (hasMultiple) {
+  @if (hasPrev) {
+    <div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-full pr-2 z-20">
+      <button
+        class="btn btn-ghost rounded-md h-12 w-10 md:h-14 md:w-12 nav-arrow"
+        [ngClass]="closeButtonHoverClass"
+        (click)="prev()"
+        aria-label="Precedente">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7 md:size-8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+        </svg>
+      </button>
+    </div>
+  }
+  @if (hasNext) {
+    <div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-full pl-2 z-20">
+      <button
+        class="btn btn-ghost rounded-md h-12 w-10 md:h-14 md:w-12 nav-arrow"
+        [ngClass]="closeButtonHoverClass"
+        (click)="next()"
+        aria-label="Successivo">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7 md:size-8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+        </svg>
+      </button>
+    </div>
+  }
+}

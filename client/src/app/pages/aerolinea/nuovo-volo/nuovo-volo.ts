@@ -1,0 +1,151 @@
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Aircraft, Route, AerolineaService } from '../../../services/aerolinea';
+
+export interface NewFlightFormData {
+  routeNumber: string;
+  aircraftNumber: string;
+  frequency: 'giornaliero' | 'settimanale';
+  departureTime: string; // HH:MM
+  days: string[] | null;       // required if settimanale
+  startDate: string;
+  weeksCount: number;
+}
+
+@Component({
+  selector: 'app-nuovo-volo',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './nuovo-volo.html',
+  styleUrl: './nuovo-volo.css'
+})
+export class NuovoVolo {
+  @Output() created = new EventEmitter<NewFlightFormData>();
+  @Input() routes: Route[] = [];
+  @Input() aircrafts: Aircraft[] = [];
+
+  selectedFrequency: string = '';
+  selectedAircraft: string = '';
+  selectedRoute: string = '';
+  departureTime: string = '';
+  startDate: string = '';
+  weeksCount: number = 1;
+  selectedDays: Set<string> = new Set();
+  isOpen = false;
+  submitting = false;
+  private lastCreatedPayload: NewFlightFormData | null = null;
+
+  // Popup (toast) state for errors/info
+  popup = {
+    visible: false,
+    message: '',
+    type: 'info' as 'info' | 'warning' | 'error' | 'success'
+  };
+  
+  constructor(private airlineService: AerolineaService) {}
+
+  open(): void {
+    this.isOpen = true;
+    this.popup.visible = false;
+    this.popup.message = '';
+    this.selectedFrequency = '';
+    this.selectedAircraft = '';
+    this.selectedRoute = '';
+    this.departureTime = '';
+    this.startDate = '';
+    this.weeksCount = 1;
+  }
+
+  close(): void {
+    this.isOpen = false;
+  }
+
+  onCreateClick(): void {
+    // Basic validation of required fields
+    if (!this.selectedRoute || !this.selectedAircraft || !this.selectedFrequency || !this.departureTime || !this.startDate) {
+      this.showPopup('error', 'Compila tutti i campi obbligatori.');
+      return;
+    }
+    if (this.selectedFrequency === 'settimanale' && this.selectedDays.size === 0) {
+      this.showPopup('error', 'Seleziona almeno un giorno della settimana.');
+      return;
+    }
+
+    // Crea il payload per la richiesta
+    const payload: NewFlightFormData = {
+      routeNumber: this.selectedRoute,
+      aircraftNumber: this.selectedAircraft,
+      frequency: this.selectedFrequency as 'giornaliero' | 'settimanale',
+      departureTime: this.departureTime,
+      days: this.selectedFrequency === 'settimanale' ? Array.from(this.selectedDays) : null,
+      startDate: this.startDate,
+      weeksCount: this.weeksCount
+    };
+
+    console.log('Payload per la creazione del volo:', payload);
+
+    // Invia la richiesta per creare il volo
+    this.submitting = true;
+    this.airlineService.addAirlineFlights(payload).subscribe({
+      next: () => {
+        this.submitting = false;
+        this.lastCreatedPayload = payload;
+        this.showPopup('success', 'Creazione completata: volo aggiunto.');
+      },
+      error: (err) => {
+        this.submitting = false;
+        const raw = err?.error?.error || err?.message || 'Errore durante la creazione dei voli.';
+        const m = String(raw).toLowerCase();
+        const isDuplicate = m.includes('violates unique constraint') || m.includes('duplicate key');
+        const msg = isDuplicate ? 'Alcuni voli esistono già per questi parametri.' : raw;
+        this.showPopup('error', msg);
+        console.error('Errore creazione volo:', err);
+      }
+    });
+  }
+
+  // Gestisce il cambiamento dello stato dei giorni selezionati
+  onToggleDay(dayCode: string, checked: boolean): void {
+    if (checked) {
+      this.selectedDays.add(dayCode);
+    } else {
+      this.selectedDays.delete(dayCode);
+    }
+  }
+
+  // Gestisce il cambiamento del numero di settimane
+  onWeeksChange(value: string): void {
+    const n = Number.parseInt(value || '1', 10);
+    this.weeksCount = Number.isFinite(n) && n > 0 ? n : 1;
+  }
+
+  // Popup helpers
+  showPopup(type: 'info' | 'warning' | 'error' | 'success', message: string): void {
+    this.popup.type = type;
+    this.popup.message = message;
+    this.popup.visible = true;
+  }
+
+  closePopup(): void {
+    const wasSuccess = this.popup.type === 'success';
+    this.popup.visible = false;
+    if (wasSuccess) {
+      if (this.lastCreatedPayload) {
+        this.created.emit(this.lastCreatedPayload);
+      }
+      this.lastCreatedPayload = null;
+      this.close();
+    }
+  }
+
+  getPopupTitle(): string {
+    switch (this.popup.type) {
+      case 'info': return 'Informazione';
+      case 'warning': return 'Attenzione';
+      case 'success': return 'Operazione riuscita';
+      case 'error':
+      default: return 'Errore';
+    }
+  }
+
+}

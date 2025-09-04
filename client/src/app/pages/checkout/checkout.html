@@ -1,0 +1,374 @@
+<div class="container mx-auto p-4 md:p-6 mt-4">
+  <!-- Global popup/toast -->
+  @if (popup.visible) {
+    <div class="fixed inset-0 z-40 flex items-center justify-center pointer-events-none bg-black/20 backdrop-blur-sm">
+      <div class="w-full max-w-2xl mx-auto px-6 pointer-events-auto">
+        <div 
+          class="rounded-2xl border shadow-2xl transition-all p-6 md:p-7 flex flex-col gap-3"
+          [ngClass]="{
+            'bg-blue-50 border-blue-200': popup.type === 'info',
+            'bg-yellow-50 border-yellow-200': popup.type === 'warning',
+            'bg-green-50 border-green-200': popup.type === 'success',
+            'bg-red-50 border-red-200': popup.type === 'error'
+          }"
+          role="alert"
+          aria-live="assertive">
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              @if (popup.type === 'info') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 text-blue-700">
+                  <path d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625Z" />
+                  <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+                </svg>
+              }
+              @if (popup.type === 'warning') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 text-yellow-700">
+                  <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
+                </svg>
+              }
+              @if (popup.type === 'success') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 text-green-700">
+                  <path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
+                </svg>
+              }
+              @if (popup.type === 'error') {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 text-red-700">
+                  <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
+                </svg>
+              }
+              <h3 class="font-bold text-lg md:text-xl"
+                  [ngClass]="{
+                    'text-blue-800': popup.type === 'info',
+                    'text-yellow-800': popup.type === 'warning',
+                    'text-green-800': popup.type === 'success',
+                    'text-red-800': popup.type === 'error'
+                  }">{{ getPopupTitle() }}</h3>
+            </div>
+          </div>
+          <div class="flex justify-between">
+              <div class="text-base md:text-lg font-medium"
+               [ngClass]="{
+                 'text-blue-800': popup.type === 'info',
+                 'text-yellow-800': popup.type === 'warning',
+                 'text-green-800': popup.type === 'success',
+                 'text-red-800': popup.type === 'error'
+               }">{{ popup.message }}</div>
+               <button type="button" class="btn btn-sm rounded-xl"
+                    (click)="closePopup(fatalError)"
+                    [ngClass]="{
+                      'bg-blue-600 text-white hover:bg-blue-700 border-blue-600': popup.type === 'info',
+                      'bg-yellow-600 text-white hover:bg-yellow-700 border-yellow-600': popup.type === 'warning',
+                      'bg-green-600 text-white hover:bg-green-700 border-green-600': popup.type === 'success',
+                      'bg-red-600 text-white hover:bg-red-700 border-red-600': popup.type === 'error'
+                    }" aria-label="Chiudi avviso">OK</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+  <!-- Header -->
+  <div class="bg-white shadow-2xl border border-blue-100 rounded-2xl mb-8">
+    <div class="card-body p-8">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 class="text-4xl font-bold mb-3 text-blue-900">Check-out</h1>
+          <!-- Timer -->
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-sm font-semibold"
+               [ngClass]="{
+                 'bg-green-50 text-green-700 border border-green-200': remainingSeconds > 5*60,
+                 'bg-yellow-50 text-yellow-800 border border-yellow-200': remainingSeconds <= 5*60 && remainingSeconds > 60,
+                 'bg-red-50 text-red-700 border border-red-200 animate-pulse': remainingSeconds <= 60
+               }">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+              <path fill-rule="evenodd" d="M12 2.25a9.75 9.75 0 1 0 9.75 9.75A9.762 9.762 0 0 0 12 2.25Zm.75 4.5a.75.75 0 0 0-1.5 0v6a.75.75 0 0 0 .44.68l4.5 2a.75.75 0 1 0 .62-1.36l-4.06-1.8V6.75Z" clip-rule="evenodd" />
+            </svg>
+            <span>Tempo residuo: {{ remainingMinutesText }}</span>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-3xl font-black text-blue-600">€{{ totalAmount }}</div>
+          <div class="text-base text-blue-500 font-semibold">{{ selectedSeatsCount }} posto/i selezionato/i</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra di progressione processo acquisto -->
+  <div class="mb-8">
+    <div class="bg-white shadow-lg border border-blue-200 rounded-xl">
+      <div class="card-body p-6">
+        <h3 class="text-xl font-semibold mb-6 text-center text-blue-800">Processo di Prenotazione</h3>
+        
+        <!-- Versione Desktop -->
+        <div class="hidden md:block">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center">
+              <div class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center text-sm font-semibold">1</div>
+              <span class="ml-3 text-base font-medium text-blue-700">Ricerca Voli</span>
+            </div>
+            <div class="flex-1 mx-6">
+              <div class="w-full bg-blue-100 rounded-full h-2">
+                <div class="bg-blue-700 h-2 rounded-full w-full transition-all duration-500"></div>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <div class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center text-sm font-semibold">2</div>
+              <span class="ml-3 text-base font-medium text-blue-700">Selezione Posti</span>
+            </div>
+            <div class="flex-1 mx-6">
+              <div class="w-full bg-blue-100 rounded-full h-2">
+                <div class="bg-blue-700 h-2 rounded-full w-full transition-all duration-500"></div>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <div class="w-10 h-10 rounded-full bg-blue-200 text-blue-600 flex items-center justify-center text-sm font-semibold">3</div>
+              <span class="ml-3 text-base text-blue-600">Check-out</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Versione Mobile -->
+        <div class="block md:hidden">
+          <div class="flex justify-center space-x-8">
+            <div class="flex flex-col items-center">
+              <div class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center text-sm font-semibold">1</div>
+              <span class="text-sm text-blue-700 mt-2 font-medium">Ricerca</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="w-10 h-10 rounded-full bg-blue-700 text-white flex items-center justify-center text-sm font-semibold">2</div>
+              <span class="text-sm text-blue-700 mt-2 font-medium">Posti</span>
+            </div>
+            <div class="flex flex-col items-center">
+              <div class="w-10 h-10 rounded-full bg-blue-200 text-blue-600 flex items-center justify-center text-sm font-semibold">3</div>
+              <span class="text-sm text-blue-600 mt-2">Check-out</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Indicatori di stato -->
+        <div class="mt-6 text-center">
+          <div class="flex justify-center space-x-6 text-sm">
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 rounded-full bg-blue-700"></div>
+              <span class="text-blue-700 font-medium">In corso</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 rounded-full bg-blue-200"></div>
+              <span class="text-blue-600">Da completare</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+    <!-- Riepilogo prenotazione -->
+    <div class="xl:col-span-2 space-y-8">
+      <!-- Dati passeggeri -->
+      <div class="bg-white shadow-2xl border border-blue-100 rounded-2xl">
+        <div class="card-body p-4 sm:p-6 md:p-8">
+          <div class="flex items-center justify-between gap-3 mb-4 sm:mb-6 md:mb-8">
+            <h2 class="card-title text-lg sm:text-xl md:text-2xl text-blue-900">
+              Biglietti Passeggeri
+            </h2>
+            <button type="button"
+                    class="btn btn-ghost btn-sm rounded-xl text-blue-900 hover:bg-blue-50 hover:border-blue-900"
+                    (click)="togglePassengerTickets()"
+                    [attr.aria-expanded]="showPassengerTickets ? 'true' : 'false'"
+                    aria-controls="passenger-tickets-section"
+                    title="Mostra/Nascondi">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                   class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+          </div>
+          <div id="passenger-tickets-section" [hidden]="!showPassengerTickets">
+            <div class="space-y-6 md:space-y-10 xl:space-y-12">
+              @for (ticket of tickets; track $index) {
+                <app-ticket class="block"
+                [item]="{
+                  firstName: ticket.firstName,
+                  lastName: ticket.lastName,
+                  dateOfBirth: ticket.dateOfBirth,
+                  flightNumber: ticket.flightNumber,
+                  from: ticket.from,
+                  to: ticket.to,
+                  cityFrom: ticket.cityFrom,
+                  cityTo: ticket.cityTo,
+                  direction: ticket.direction,
+                  seatNumber: ticket.seatNumber,
+                  seatClass: ticket.seatClass,
+                  seatPrice: ticket.seatPrice,
+                  extraBags: ticket.extraBags,
+                }"
+              ></app-ticket>
+            }
+          </div>
+          </div>
+        </div>
+      </div>
+      <!-- Pagamento con Stripe -->
+      <div class="bg-white shadow-2xl border border-blue-100 rounded-2xl">
+        <div class="card-body p-8">
+          <h2 class="card-title text-2xl mb-6 flex items-center text-blue-900">
+            Pagamento
+          </h2>
+
+          <!-- Stripe Payment Element -->
+          <div id="payment-element"
+              class="border-2 border-blue-200 rounded-xl p-4 md:p-6 bg-blue-50/30 shadow-inner">
+            <!-- Stripe monta qui il form di pagamento -->
+          </div>
+
+          <!-- Info / test cards -->
+          <div class="mt-4 text-sm text-blue-700">
+            In modalità test puoi usare <span class="font-semibold">4242 4242 4242 4242</span>, qualsiasi CVC e scadenza futura.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Riepilogo ordine -->
+    <div class="space-y-8">
+      <!-- Riepilogo prezzi -->
+      <div class="bg-white shadow-2xl border border-blue-100 rounded-2xl">
+        <div class="card-body p-8">
+          <h3 class="card-title text-xl font-bold text-blue-900 mb-6">Riepilogo Ordine</h3>
+          
+          <div class="space-y-4">
+            <!-- Voli selezionati -->
+            @if (segments.length > 0) {
+              <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 shadow-sm">
+                <div class="font-bold text-blue-900 text-lg mb-2">Voli selezionati</div>
+                <ul class="space-y-1">
+                  @for (seg of segments; track $index) {
+                    <li class="flex items-center justify-between">
+                      <span class="text-blue-800 font-semibold">{{ getSegmentLabel(seg) }}</span>
+                      @if (seg.direction !== 'solo') {
+                        <span class="badge badge-outline">{{ seg.direction }}</span>
+                      }
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+
+            <!-- Dettaglio posti -->
+            <div class="space-y-3">
+              @for (ticket of tickets; track $index) {
+                <div class="flex justify-between text-base">
+                  <span class="font-medium text-blue-800">Posto {{ ticket.seatNumber }}</span>
+                  <span class="font-bold text-blue-900">€{{ ticket.seatPrice - (ticket.extraBags * 25) }}</span>
+                </div>
+              }
+            </div>
+
+            <!-- Bagagli extra -->
+            @if (getTotalExtraBags() > 0) {
+              <div class="flex justify-between text-base">
+                <span class="font-medium text-blue-800">Bagagli extra ({{ getTotalExtraBags() }})</span>
+                <span class="font-bold text-blue-900">€{{ getTotalExtraBags() * 25 }}</span>
+              </div>
+            }
+
+            <div class="divider my-4"></div>
+
+            <!-- Totale -->
+            <div class="flex justify-between text-xl font-bold">
+              <span class="text-blue-900">Totale</span>
+              <span class="text-blue-600 text-2xl">€{{ totalAmount }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Termini e condizioni -->
+      <div class="bg-white shadow-2xl border border-blue-100 rounded-2xl">
+        <div class="card-body p-4 sm:p-6 md:p-8">
+          <h3 class="card-title text-lg sm:text-xl font-bold text-blue-900 mb-4 sm:mb-6">Termini e Condizioni</h3>
+          
+          <div class="space-y-3 sm:space-y-4">
+            <div class="form-control">
+              <label class="label cursor-pointer items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-0 w-full">
+                <input type="checkbox" class="checkbox bg-blue-50 border-2 border-blue-200 checked:bg-blue-600 checked:border-blue-600 w-5 h-5 sm:w-6 sm:h-6 transition-all duration-200 flex-shrink-0" [(ngModel)]="acceptTerms" />
+                <span class="label-text text-sm sm:text-base font-medium text-blue-800 leading-relaxed flex-1">
+                  Accetto i 
+                  <a class="link link-hover text-blue-600 font-semibold underline">termini e condizioni</a>
+                  di servizio *
+                </span>
+              </label>
+            </div>
+            
+            <div class="form-control">
+              <label class="label cursor-pointer items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-0 w-full">
+                <input type="checkbox" class="checkbox bg-blue-50 border-2 border-blue-200 checked:bg-blue-600 checked:border-blue-600 w-5 h-5 sm:w-6 sm:h-6 transition-all duration-200 flex-shrink-0" [(ngModel)]="acceptPrivacy" />
+                <span class="label-text text-sm sm:text-base font-medium text-blue-800 leading-relaxed flex-1">
+                  Accetto la 
+                  <a class="link link-hover text-blue-600 font-semibold underline">privacy policy</a> *
+                </span>
+              </label>
+            </div>
+
+            <div class="form-control">
+              <label class="label cursor-pointer items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-0 w-full">
+                <input type="checkbox" class="checkbox bg-blue-50 border-2 border-blue-200 checked:bg-blue-600 checked:border-blue-600 w-5 h-5 sm:w-6 sm:h-6 transition-all duration-200 flex-shrink-0" [(ngModel)]="acceptMarketing" />
+                <span class="label-text text-sm sm:text-base font-medium text-blue-800 leading-relaxed flex-1">
+                  Desidero ricevere offerte promozionali
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pulsanti azione -->
+      <div class="space-y-4">
+        <button
+          class="btn btn-primary w-full bg-blue-600 hover:bg-blue-700 border-blue-600 text-white font-bold text-lg py-4 h-auto rounded-xl shadow-xl transition-all duration-300 hover:shadow-2xl disabled:opacity-60 disabled:cursor-not-allowed"
+          [disabled]="!isPaymentReady()"
+          (click)="confirmPayment()">
+          {{ loading ? 'Elaborazione…' : ('Conferma e Paga €' + totalAmount) }}
+        </button>
+        
+        <button 
+          class="btn btn-outline w-full border-blue-400 text-blue-600 hover:bg-blue-50 hover:border-blue-500 font-semibold text-base py-3 h-auto rounded-xl transition-all duration-200"
+          (click)="goBack()">
+          Torna alla Selezione Posti
+        </button>
+      </div>
+
+      <!-- Info sicurezza -->
+      <div class="alert bg-blue-50 border-2 border-blue-200 rounded-xl">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6 text-blue-600">
+          <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 0 1 .67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 1 1-.671-1.34l.041-.022ZM12 9a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
+        </svg>
+        <div class="text-sm">
+          <div class="font-bold text-blue-800">Pagamento Sicuro</div>
+          <div class="text-blue-700">I tuoi dati sono protetti con crittografia SSL</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal di successo acquisto -->
+@if (showSuccessModal) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+    <!-- backdrop -->
+    <div class="absolute inset-0 bg-blue-900/50 backdrop-blur-sm"></div>
+    <!-- dialog -->
+    <div class="relative z-10 pointer-events-auto bg-white w-11/12 max-w-lg rounded-2xl shadow-2xl border border-blue-100 overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="success-title">
+      <div class="p-6 sm:p-8 text-center">
+        <h3 id="success-title" class="text-2xl font-bold text-blue-900 mb-2">Grazie per l'acquisto!</h3>
+        <p class="text-blue-700">{{ message || 'Buon viaggio e grazie per aver scelto noi.' }}</p>
+        <div class="mt-6">
+          <button class="btn bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl w-full" (click)="closeSuccessModal()">
+            Vai alla Home
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

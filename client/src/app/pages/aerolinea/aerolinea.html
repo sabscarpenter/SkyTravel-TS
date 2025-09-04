@@ -1,0 +1,365 @@
+@if (isOpenPopup) {
+  <app-popup [message]="popupMessage" [type]="popupType" (onClose)="closePopup()"></app-popup>
+}
+
+@if (isConfirmOpen) {
+  <div class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl border border-blue-200 p-6 w-[90%] max-w-md">
+      <h3 class="text-lg font-semibold text-blue-900 mb-3">Conferma</h3>
+      <p class="text-blue-700 mb-6">{{ confirmMessage }}</p>
+      <div class="flex justify-end gap-3">
+        <button class="btn btn-ghost" (click)="cancelConfirm()">Annulla</button>
+        <button class="btn bg-red-600 hover:bg-red-700 text-white" (click)="acceptConfirm()">Conferma</button>
+      </div>
+    </div>
+  </div>
+}
+
+<div class="container mx-auto p-4 md:p-6 mt-4 bg-gradient-to-br from-blue-50 via-white to-sky-50 rounded-2xl border border-blue-100 shadow-2xl mb-4">
+  <!-- Header Profile Section -->
+  <div class="hero bg-gradient-to-r from-blue-50 via-blue-100 to-sky-100 text-blue-900 rounded-xl mb-8 shadow-2xl border border-blue-200">
+    <div class="hero-content text-center py-12">
+      <div class="max-w-2xl">
+        <div class="avatar mb-4">
+          <div class="w-32 h-20 rounded-lg overflow-hidden border-4 border-white shadow-xl relative">
+            <!-- Placeholder SVG aereo -->
+            @if (!imageLoaded) {
+              <div class="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-12 h-12 text-blue-400">
+                  <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5L21 16z"/>
+                </svg>
+              </div>
+            }
+            <img
+              [src]="getPhotoUrl()"
+              (load)="onImageLoad()"
+              (error)="onImageError()"
+              class="w-full h-full object-cover absolute inset-0 transition-opacity duration-500"
+              [class.opacity-100]="imageLoaded"
+              [class.opacity-0]="!imageLoaded" />
+          </div>
+        </div>
+
+        <h1 class="text-4xl font-bold mb-2">{{ aerolineaInfo?.nome }}</h1>
+        <p class="text-xl opacity-80 mb-4">Compagnia situata in {{ aerolineaInfo?.nazione }}</p>
+        <div class="flex justify-center gap-4 text-sm">
+          <div class="badge bg-blue-600 text-white border-0 badge-lg shadow-lg font-bold">Verificata 
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 ml-2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
+            </svg>
+          </div>
+          <div class="badge bg-blue-500 text-white border-0 badge-lg shadow-lg font-bold">Premium Partner</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Column - Main Info -->
+    <div class="lg:col-span-2 space-y-6">
+      
+      <!-- companyProfile Information Card -->
+      <div class="card bg-white border border-blue-100 shadow-2xl">
+        <div class="card-body bg-gradient-to-br from-blue-50 via-white to-sky-50 rounded-2xl">
+          <h2 class="card-title text-2xl mb-4 text-blue-900">
+            Informazioni Aziendali
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <div class="mb-2">
+                <span class="label-text font-semibold text-blue-800">Nome Compagnia</span>
+              </div>
+              <input type="text" value="{{ aerolineaInfo?.nome }}" class="input input-bordered border-blue-200 focus:border-blue-500 bg-white" readonly />
+            </div>
+            <div class="form-control">
+              <div class="mb-2">
+                <span class="label-text font-semibold text-blue-800">Codice IATA</span>
+              </div>
+              <input type="text" value="{{ aerolineaInfo?.codice_iata }}" class="input input-bordered border-blue-200 focus:border-blue-500 bg-white" readonly />
+            </div>
+            <div class="form-control">
+              <div class="mb-2">
+                <span class="label-text font-semibold text-blue-800">Paese di provenienza</span>
+              </div>
+              <input type="text" value="{{ aerolineaInfo?.nazione }}" class="input input-bordered border-blue-200 focus:border-blue-500 bg-white" readonly />
+            </div>
+            <div class="form-control">
+              <div class="mb-2">
+                <span class="label-text font-semibold text-blue-800">Contatto</span>
+              </div>
+              <input type="text" value="{{ aerolineaInfo?.contatto }}" class="input input-bordered border-blue-200 focus:border-blue-500 bg-white" readonly />
+            </div>
+          </div>
+          <div class="card-actions justify-end mt-2"></div>
+        </div>
+      </div>
+
+      <!-- Fleet Information -->
+      <div class="card bg-white border border-blue-100 shadow-2xl">
+        <div class="card-body bg-gradient-to-br from-blue-50 via-white to-sky-50 rounded-2xl">
+          <h2 class="card-title text-2xl mb-4 text-blue-900">
+            Flotta Aerea
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="stat bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div class="stat-figure text-blue-600">
+                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
+                  <span class="text-2xl">✈️</span>
+                </div>
+              </div>
+              <div class="font-bold text-blue-800">Aeromobili Totali</div>
+              <div class="stat-value text-3xl font-black text-blue-700">{{ airlineStatistics?.numero_aerei }}</div>
+            </div>
+            <div class="stat bg-gradient-to-br from-sky-50 to-sky-100 border-2 border-sky-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <div class="stat-figure text-sky-600">
+                <div class="w-12 h-12 bg-sky-600 rounded-full flex items-center justify-center shadow-lg">
+                  <span class="text-2xl">🌍</span>
+                </div>
+              </div>
+              <div class="font-bold text-sky-800">Destinazioni</div>
+              <div class="stat-value text-3xl font-black text-sky-700">{{ airlineStatistics?.numero_destinazioni }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Route Management -->
+      <div class="card bg-white border border-blue-100 shadow-2xl">
+        <div class="card-body bg-gradient-to-br from-blue-50 via-white to-sky-50 rounded-2xl">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="card-title text-2xl text-blue-900">
+              Gestione Tratte
+            </h2>
+            <button class="btn bg-blue-600 hover:bg-blue-700 text-white border-0 shadow-lg btn-sm" (click)="openNuovaRottaModal()">
+              <span class="mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+              </span>
+              Nuova Tratta
+            </button>
+          </div>
+
+          <!-- Routes List -->
+          <div class="overflow-x-auto border border-blue-200 rounded-lg shadow-sm" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-zebra">
+              <thead class="sticky top-0 bg-blue-50 z-10">
+                <tr class="text-blue-900">
+                  <th>Codice Tratta</th>
+                  <th>Percorso</th>
+                  <th>Distanza</th>
+                  <th>Durata Media</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if(companyRoutes && companyRoutes.length > 0) {
+                  @for(route of companyRoutes; track route.numero){
+                    <tr>
+                      <td>
+                        <div class="font-bold">{{route.numero}}</div>
+                      </td>
+                      <td>
+                        <div class="font-semibold">{{route.partenza}} → {{route.arrivo}}</div>
+                        <div class="text-sm opacity-50 truncate max-w-xs" [title]="route.partenza_nome + ' → ' + route.arrivo_nome">
+                          {{route.partenza_nome}} → {{route.arrivo_nome}}
+                        </div>
+                      </td>
+                      <td>
+                        <div class="font-semibold">{{route.lunghezza_km}} km</div>
+                      </td>
+                      <td>
+                        <div class="flex items-center gap-18">
+                          <div class="font-semibold">{{route.durata_min}} min</div>
+                          <button class="btn btn-error btn-xs text-white"
+                                  (click)="deleteRoute(route)"
+                                  [disabled]="isRouteDeleting(route.numero)">
+                            @if (isRouteDeleting(route.numero)) { Eliminazione... } @else { Elimina }
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                } @else {
+                  <tr>
+                    <td colspan="4" class="text-center py-8">
+                      <div class="text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-12 mx-auto mb-3 text-gray-400">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                        <p class="font-medium">Nessuna tratta disponibile</p>
+                        <p class="text-sm">Aggiungi la prima tratta per la tua compagnia</p>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Flight Viewer by Route -->
+      <div class="card bg-white border border-blue-100 shadow-2xl mt-6">
+        <div class="card-body bg-gradient-to-br from-blue-50 via-white to-sky-50 rounded-2xl">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="card-title text-2xl text-blue-900">
+              Voli per Tratta
+              @if (selectedRouteFilter && selectedRouteFilter !== 'all') {
+                <span class="text-lg font-normal text-blue-600">
+                  - {{ getRouteDisplayByTrattaId(selectedRouteFilter) }}
+                </span>
+              }
+            </h2>
+            <div class="flex gap-2">
+              <select class="select select-bordered select-sm border-blue-200 focus:border-blue-500 bg-white" 
+                      (change)="onRouteFilterChange($event)" 
+                      [value]="selectedRouteFilter">
+                <option value="all">Tutte le tratte</option>
+                @if (companyRoutes && companyRoutes.length > 0) {
+                  @for (route of companyRoutes; track route.numero) {
+                    <option [value]="route.numero">{{ getRouteDisplayName(route) }}</option>
+                  }
+                }
+              </select>
+              <button class="btn bg-blue-600 hover:bg-blue-700 text-white border-0 shadow-lg btn-sm" (click)="openNuovoVoloModal()">
+                <span class="mr-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </span>
+                Nuovi Voli
+              </button>
+            </div>
+          </div>
+          
+          <!-- Flights List for Selected Route -->
+          <div class="overflow-x-auto border border-blue-200 rounded-lg shadow-sm" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-zebra">
+              <thead class="sticky top-0 bg-blue-50 z-10">
+                <tr class="text-blue-900">
+                  <th>Numero Volo</th>
+                  <th>Aeromobile</th>
+                  <th>Orario Partenza</th>
+                  <th>Orario Arrivo</th>
+                  <th>Posti</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if(filteredFlights && filteredFlights.length > 0) {
+                  @for(flight of filteredFlights; track flight.numero){
+                    <tr>
+                      <td>
+                        <div class="font-bold">{{ flight.numero }}</div>
+                        <div class="text-sm opacity-50">{{ getRouteDisplayByTrattaId(flight.tratta_id) }}</div>
+                      </td>
+                      <td>
+                        <div class="font-semibold">{{ flight.aereo_nome }}</div>
+                      </td>
+                      <td>
+                        <div class="font-semibold">{{ flight.partenza | date:'HH:mm' }}</div>
+                        <div class="text-xs opacity-60">{{ flight.partenza | date:'dd/MM/yyyy' }}</div>
+                      </td>
+                      <td>
+                        <div class="font-semibold">{{ flight.arrivo | date:'HH:mm' }}</div>
+                        <div class="text-xs opacity-60">{{ flight.arrivo | date:'dd/MM/yyyy' }}</div>
+                      </td>
+                      <td>
+                        <div class="font-semibold">{{ flight.posti_disponibili }}</div>
+                        <div class="text-sm opacity-50">Disponibili</div>
+                      </td>
+                    </tr>
+                  }
+                } @else {
+                  <tr>
+                    <td colspan="5" class="text-center py-8">
+                      @if (selectedRouteFilter && selectedRouteFilter !== 'all') {
+                        <div class="text-blue-700">
+                          Nessun volo trovato per la tratta selezionata.
+                        </div>
+                      } @else {
+                        <div class="text-blue-700">
+                          Nessun volo disponibile al momento.
+                        </div>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column - Quick Stats & Actions -->
+    <div class="space-y-6">
+      
+      <!-- Quick Stats -->
+      <div class="card bg-white border border-blue-100 shadow-2xl">
+        <div class="card-body bg-gradient-to-br from-blue-50 via-white to-sky-50 rounded-2xl">
+          <h3 class="card-title mb-4 text-blue-900">
+            Statistiche Rapide
+          </h3>
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-blue-800">Voli Oggi</span>
+              <div class="text-sm font-medium text-blue-800">{{ airlineStatistics?.numero_voli_oggi }}</div>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-blue-800">Passeggeri</span>
+              <div class="text-sm font-medium text-blue-800">{{ airlineStatistics?.numero_passeggeri }}</div>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-blue-800">Ricavi Mensili</span>
+              <div class="text-sm font-medium text-blue-800">€{{ airlineStatistics?.ricavi_mensili }}</div>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-sm font-medium text-blue-800">Ricavi Totali</span>
+              <div class="text-sm font-medium text-blue-800">€{{ airlineStatistics?.ricavi_totali }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Most Popular Routes -->
+      <div class="card bg-white border border-blue-100 shadow-2xl">
+        <div class="card-body bg-gradient-to-br from-blue-50 via-white to-sky-50 rounded-2xl">
+          <h3 class="card-title mb-4 text-blue-900">
+            Tratte Più Richieste
+          </h3>
+          <div class="space-y-3">
+            @if (bestRoutes?.length && bestRoutes.length > 0) {
+              @for (r of bestRoutes; track $index) {
+                <div class="p-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200 shadow-sm hover:shadow-md transition-all duration-200">
+                  <div class="flex justify-between items-center gap-3">
+                    <div>
+                      <div class="font-semibold text-sm text-blue-800">
+                        {{ r.partenza }} → {{ r.arrivo }}
+                      </div>
+                      <div class="text-xs text-blue-600 mt-1">
+                        Passeggeri: <span class="font-semibold">{{ r.passeggeri_totali }}</span>
+                        • Posti: <span class="font-semibold">{{ r.posti_totali }}</span>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 min-w-[150px]">
+                      <progress class="progress progress-info w-28" [value]="r.riempimento_percent" max="100"></progress>
+                      <span class="badge bg-blue-600 text-white">{{ r.riempimento_percent | number:'1.0-0' }}%</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            } @else {
+              <div class="p-4 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg">
+                Nessuna tratta popolare disponibile.
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals moved to standalone components -->
+<app-nuova-rotta #routeModal [airports]="airportsByCountry" [companyIata]="aerolineaInfo!.codice_iata" (created)="loadRoutes()"></app-nuova-rotta>
+<app-nuovo-volo #flightModal [routes]="companyRoutes" [aircrafts]="companyAircrafts" (created)="loadFlights()"></app-nuovo-volo>

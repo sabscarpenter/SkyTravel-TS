@@ -1,0 +1,250 @@
+<div class="relative w-screen h-screen">
+  <!-- Carousel section -->
+  <div class="carousel w-full h-full z-0">
+    <div id="slide1" class="carousel-item relative w-full">
+      <div class="absolute inset-0 bg-gradient-to-b from-blue-900/50 to-blue-800/60"></div>
+      <img
+        src="images/tanti klm.jpg"
+        class="w-full h-full object-cover"
+        alt="Bernina landscape" />
+    </div>
+  </div>
+
+  <!-- Search form section -->
+  <div class="absolute inset-0 flex justify-center items-center z-20">
+    <div class="bg-white/95 backdrop-blur-md w-[850px] shadow-2xl border border-blue-100 rounded-2xl">
+      <div class="card-body p-8">
+        <div class="text-center mb-8">
+          <h2 class="text-3xl font-bold text-blue-900 mb-2">Trova il tuo prossimo volo</h2>
+          <p class="text-blue-600 font-medium">Scopri le migliori destinazioni al mondo</p>
+        </div>
+        
+        <!-- New trip type selector -->
+        <div class="flex gap-4 mb-8">
+          <div class="grid grid-cols-2 w-full gap-3">
+            <div 
+              class="bg-blue-50 hover:bg-blue-100 cursor-pointer transition-all duration-300 h-16 group border border-blue-200 rounded-xl flex items-center justify-center"
+              [ngClass]="{'bg-blue-200 border-blue-400 shadow-md': tipoViaggio === 'andataRitorno'}"
+              (click)="onTipoViaggioChange('andataRitorno')">
+              <div class="flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                [ngClass]="tipoViaggio === 'andataRitorno' ? 'size-6 mr-2 text-blue-700' : 'size-6 mr-2 text-blue-600 group-hover:text-blue-700'"
+                viewBox="0 0 24 24" fill="currentColor">
+                  <path fill-rule="evenodd" d="M15.97 2.47a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 1 1-1.06-1.06l3.22-3.22H7.5a.75.75 0 0 1 0-1.5h11.69l-3.22-3.22a.75.75 0 0 1 0-1.06Zm-7.94 9a.75.75 0 0 1 0 1.06l-3.22 3.22H16.5a.75.75 0 0 1 0 1.5H4.81l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+                </svg>
+                <span [ngClass]="tipoViaggio === 'andataRitorno' ? 'font-semibold text-blue-800' : 'font-medium text-blue-700 group-hover:text-blue-800'">
+                  Andata e ritorno
+                </span>
+              </div>
+            </div>
+            <div 
+              class="bg-blue-50 hover:bg-blue-100 cursor-pointer transition-all duration-300 h-16 group border border-blue-200 rounded-xl flex items-center justify-center"
+              [ngClass]="{'bg-blue-200 border-blue-400 shadow-md': tipoViaggio === 'soloAndata'}"
+              (click)="onTipoViaggioChange('soloAndata')">
+              <div class="flex items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                [ngClass]="tipoViaggio === 'soloAndata' ? 'size-6 mr-2 text-blue-700' : 'size-6 mr-2 text-blue-600 group-hover:text-blue-700'" 
+                viewBox="0 0 24 24" fill="currentColor">
+                  <path fill-rule="evenodd" d="M16.72 7.72a.75.75 0 0 1 1.06 0l3.75 3.75a.75.75 0 0 1 0 1.06l-3.75 3.75a.75.75 0 1 1-1.06-1.06l2.47-2.47H3a.75.75 0 0 1 0-1.5h16.19l-2.47-2.47a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                </svg>
+                <span [ngClass]="tipoViaggio === 'soloAndata' ? 'font-semibold text-blue-800' : 'font-medium text-blue-700 group-hover:text-blue-800'">
+                  Solo andata
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6 relative">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control relative">
+              <!-- Da -->
+              <div class="form-control items-center">
+                <span class="mb-2 font-semibold text-base text-center text-blue-800">🛫 Da</span>
+                <div class="relative w-full">
+                  <input 
+                    class="input w-full cursor-pointer bg-white border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl focus:outline-none truncate"
+                    [value]="partenzaIata ? getAirportLabel(partenzaIata) : ''"
+                    [title]="partenzaIata ? getAirportLabel(partenzaIata) : ''"
+                    readonly
+                    (click)="dropdownPartenzaAperto = !dropdownPartenzaAperto; dropdownPartenzaAperto ? dropdownArrivoAperto = false : null"
+                    placeholder="Città di partenza"
+                  />
+                  @if (dropdownPartenzaAperto) {
+                  <div 
+                    class="absolute z-30 mt-2 min-w-[400px] w-[500px] bg-white border border-blue-200 rounded-xl shadow-2xl flex"
+                    (clickOutside)="dropdownPartenzaAperto = false"
+                  >
+                    <!-- Colonna nazioni -->
+                    <div class="w-1/2 border-r border-blue-100 max-h-60 overflow-y-auto">
+                      @for (n of nazioniAeroporti; track $index) {
+                      <button 
+                        class="block w-full text-left px-4 py-3 hover:bg-blue-50 text-blue-700 transition-colors"
+                        [ngClass]="{'bg-blue-100 font-bold border-l-4 border-blue-500': n.nazione === partenzaNazione}"
+                        (click)="partenzaNazione = n.nazione"
+                        type="button"
+                      >
+                        {{ n.nazione }}
+                      </button>
+                      }
+                    </div>
+                    <!-- Colonna aeroporti -->
+                    <div class="w-1/2 max-h-60 overflow-y-auto">
+                      @for (a of aeroportiPartenza; track $index) {
+                      <button 
+                        class="block w-full text-left px-4 py-3 hover:bg-blue-100 text-blue-700 transition-colors"
+                        (click)="scegliAeroportoPartenza(a)"
+                        type="button"
+                      >
+                        {{ a.city }} ({{ a.iata }})
+                      </button>
+                      }
+                    </div>
+                  </div>
+                  }
+                </div>
+              </div>
+            <!-- City swap button -->
+              <div class="flex items-center justify-center top-7 right-1 absolute">
+                <button 
+                  class="btn btn-sm bg-blue-700 hover:bg-blue-800 border-blue-700 text-white px-3 py-2 rounded-full shadow-lg transition-all duration-300 hover:scale-105"
+                  (click)="swapCities()"
+                  title="Scambia città"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <!-- A -->
+            <div class="form-control items-center">
+              <span class="mb-2 font-semibold text-base text-center text-blue-800">🛬 A</span>
+              <div class="relative w-full">
+                <input 
+                  class="input w-full cursor-pointer bg-white border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl focus:outline-none truncate"
+                  [value]="arrivoIata ? getAirportLabel(arrivoIata) : ''"
+                  [title]="arrivoIata ? getAirportLabel(arrivoIata) : ''"
+                  readonly
+                  (click)="dropdownArrivoAperto = !dropdownArrivoAperto; dropdownArrivoAperto ? dropdownPartenzaAperto = false : null"
+                  placeholder="Città di arrivo"
+                />
+                @if (dropdownArrivoAperto) {
+                <div 
+                  class="absolute z-30 mt-2 min-w-[400px] w-[500px] bg-white border border-blue-200 rounded-xl shadow-2xl flex"
+                  (clickOutside)="dropdownArrivoAperto = false"
+                >
+                  <!-- Colonna nazioni -->
+                  <div class="w-1/2 border-r border-blue-100 max-h-60 overflow-y-auto">
+                    @for (n of nazioniAeroporti; track $index) {
+                    <button 
+                      class="block w-full text-left px-4 py-3 hover:bg-blue-50 text-blue-700 transition-colors"
+                      [ngClass]="{'bg-blue-100 font-bold border-l-4 border-blue-500': n.nazione === arrivoNazione}"
+                      (click)="arrivoNazione = n.nazione"
+                      type="button"
+                    >
+                      {{ n.nazione }}
+                    </button>
+                    }
+                  </div>
+                  <!-- Colonna aeroporti -->
+                  <div class="w-1/2 max-h-60 overflow-y-auto">
+                    @for (a of aeroportiArrivo; track $index) {
+                    <button 
+                      class="block w-full text-left px-4 py-3 hover:bg-blue-100 text-blue-700 transition-colors"
+                      (click)="scegliAeroportoArrivo(a)"
+                      type="button"
+                    >
+                      {{ a.city }} ({{ a.iata }})
+                    </button>
+                    }
+                  </div>
+                </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <span class="mb-2 font-semibold text-base text-center text-blue-800">Data di partenza</span>
+              <input
+                type="date"
+                class="input w-full bg-white border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl text-black focus:outline-none"
+                [value]="dataAndataISO"
+                [min]="todayISO"
+                (change)="selezionaData($event, 'andata')"
+                (focus)="chiudiDropdownCitta()"
+                placeholder="-- / -- / ----"
+                aria-label="Data di partenza"
+              />
+            </div>
+
+            @if (tipoViaggio === 'andataRitorno') {
+            <div class="form-control">
+              <span class="mb-2 font-semibold text-base text-center text-blue-800">Data di ritorno</span>
+              <input
+                type="date"
+                class="input w-full bg-white border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl text-black focus:outline-none"
+                [value]="dataRitornoISO"
+                [min]="dataAndataISO || todayISO"
+                (change)="selezionaData($event, 'ritorno')"
+                (focus)="chiudiDropdownCitta()"
+                placeholder="-- / -- / ----"
+                aria-label="Data di ritorno"
+              />
+            </div>
+            }
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 items-end">
+            <div class="form-control md:col-span-1">
+              <span class="mb-2 font-semibold text-base text-center text-blue-800">Passeggeri</span>
+              <div class="dropdown w-full">
+                  <div tabindex="0" role="button" class="input w-full flex justify-between items-center bg-white border-2 border-blue-200 focus:border-blue-400 hover:border-blue-300 rounded-xl focus:outline-none">
+                  <div class="flex items-center gap-2">
+                    <span class="text-black">{{ numeroPasseggeri }} passegger{{ numeroPasseggeri > 1 ? 'i' : 'o' }}</span>
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                <div tabindex="0" class="dropdown-content bg-white rounded-xl z-[1] w-full px-8 py-5 shadow-2xl mt-1 border border-blue-200">
+                  <div class="space-y-4">
+                    <div class="flex items-center justify-center">
+                      <div class="flex items-center">
+                        <button 
+                          class="btn btn-circle btn-sm border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400"
+                          [disabled]="numeroPasseggeri <= 1"
+                          (click)="diminuisciPasseggeri()">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+                            <path fill-rule="evenodd" d="M4.25 12a.75.75 0 0 1 .75-.75h14a.75.75 0 0 1 0 1.5H5a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" />
+                          </svg>
+                        </button>
+                        <span class="w-12 text-center font-bold text-blue-700 text-lg">{{ numeroPasseggeri }}</span>
+                        <button 
+                          class="btn btn-circle btn-sm border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400"
+                          [disabled]="numeroPasseggeri >= 9"
+                          (click)="aumentaPasseggeri()">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-4">
+                            <path fill-rule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-control mt-6 sm:mt-8">
+              <button type="button" (click)="cerca()" class="btn bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white w-full py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]">
+                <span class="block sm:hidden">Cerca voli</span>
+                <span class="hidden sm:block">Cerca i migliori voli</span>
+              </button>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
