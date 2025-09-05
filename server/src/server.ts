@@ -1,8 +1,10 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import path from 'path';
 import dotenv from "dotenv";
+import path from 'path';
+import authRoutes from './routes/authRoutes';
+import protectedRoutes from './routes/protectedRoutes';
 import { passeggeroRouter } from './routes/passeggero';
 
 dotenv.config();
@@ -12,11 +14,12 @@ const PORT: number = 3000;
 
 app.use(express.json());
 app.use(cookieParser());
-
 app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(",") ?? ["http://localhost:4200"],
-  credentials: true
+  origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:4200'],
+  credentials: true,
 }));
+
+app.use('/auth', authRoutes);
 
 // Static for uploaded profile pictures
 app.use('/api/passeggero/uploads/profile-pictures', express.static(path.join(process.cwd(), 'uploads', 'profile-pictures')));

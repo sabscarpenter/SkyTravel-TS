@@ -28,19 +28,33 @@ const upload = multer({
 
 export const passeggeroRouter = Router();
 
-// GET /api/passeggero/profile
-passeggeroRouter.get('/profile', (_req: Request, res: Response) => {
-  // TODO: replace with DB query using authenticated user
-  const profile = {
-    nome: 'Mario',
-    cognome: 'Rossi',
-    email: 'mario.rossi@example.com',
-    codice_fiscale: 'RSSMRA80A01H501U',
-    data_nascita: '1980-01-01',
-    sesso: 'M',
-    foto: '',
-  };
-  res.json(profile);
+// GET /api/passeggero/profile?email=...
+passeggeroRouter.get('/profile', async (req: Request, res: Response) => {
+  try {
+    const { email, id } = req.query as { email?: string; id?: string };
+    if (!email && !id) return res.status(400).json({ message: 'Fornisci email o id' });
+
+    // Adatta i nomi colonne/tabelle al tuo schema reale
+    const q = email
+      ? `SELECT u.id, u.email, p.nome, p.cognome, p.codice_fiscale, p.data_nascita, p.sesso, p.foto
+           FROM public.utenti u
+           LEFT JOIN public.passeggeri p ON p.utente = u.id
+          WHERE lower(u.email) = lower($1)
+          LIMIT 1`
+      : `SELECT u.id, u.email, p.nome, p.cognome, p.codice_fiscale, p.data_nascita, p.sesso, p.foto
+           FROM public.utenti u
+           LEFT JOIN public.passeggeri p ON p.utente = u.id
+          WHERE u.id = $1
+          LIMIT 1`;
+
+    const params = [email ?? id];
+    const { rows } = await pool.query(q, params);
+
+    if (!rows.length) return res.status(404).json({ message: 'Passeggero non trovato' });
+    res.json(rows[0]);
+  } catch (err: any) {
+    res.status(500).json({ message: 'Errore recupero profilo', error: err.message });
+  }
 });
 
 // POST /api/passeggero/update-photo
