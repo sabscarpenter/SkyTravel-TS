@@ -1,4 +1,4 @@
-FROM node:20-alpine 
+FROM node:20-alpine
 
 EXPOSE 3000
 
@@ -6,8 +6,13 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install 
+# Install all dependencies (includes devDependencies) and cache layer
+RUN npm install
 
 COPY . .
 
-CMD [ "node", "src/server.ts" ]
+# Build TypeScript to JavaScript
+RUN npm run build
+
+# Run the compiled server
+CMD ["node", "dist/server.js"]

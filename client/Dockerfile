@@ -1,5 +1,5 @@
-# ---- build Angular ----
-FROM node:20-alpine 
+# Angular dev server image
+FROM node:20-alpine
 
 EXPOSE 4200
 

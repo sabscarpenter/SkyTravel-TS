@@ -23,9 +23,8 @@ services:
       DATABASE_URL: postgres://riccardo:postgres@db:5432/SkyTravelDb
     depends_on:
       - db
-    volumes:
-      - ./server:/app
-      - /app/node_modules
+    #volumes:
+    #  - ./server:/app
     # Espongo per test diretti (facoltativo)
     ports:
       - "3000:3000"

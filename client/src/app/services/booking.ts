@@ -196,8 +196,7 @@ export class BookingService {
 	}
 
 	getModelloConfigurazione(nome: string): Observable<ModelloConfigurazione> {
-		const params = new HttpParams()
-		.set('nome', nome);
+		const params = new HttpParams().set('nome', nome);
 		return this.http.get<ModelloConfigurazione>(`${this.apiUrl}/configurazione`, { params });
 	}
 
@@ -239,11 +238,11 @@ export class BookingService {
 	}
 
 	listaPostiOccupati(volo: string): Observable<{ occupied: string[] }> {
-    return this.http.get<{ occupied: string[] }>(`${this.apiUrl}/posti`, { params: { volo }, withCredentials: true });
+    	return this.http.get<{ occupied: string[] }>(`${this.apiUrl}/posti`, { params: { volo }, withCredentials: true });
   	}
 
 	trattieniPosti(ticketsData: TicketTemporaneo[]): Observable<TicketTemporaneo[]> {
-    return this.http.post<TicketTemporaneo[]>(`${this.apiUrl}/trattieni`, ticketsData, { withCredentials: true });
+    	return this.http.post<TicketTemporaneo[]>(`${this.apiUrl}/trattieni`, ticketsData, { withCredentials: true });
   	}
 }
 
