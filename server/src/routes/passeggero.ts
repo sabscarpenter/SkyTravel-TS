@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
+import { pool } from '../db';
 
 // Ensure upload directory exists
 const uploadsDir = path.join(process.cwd(), 'uploads', 'profile-pictures');
@@ -35,17 +36,11 @@ passeggeroRouter.get('/profile', async (req: Request, res: Response) => {
     if (!email && !id) return res.status(400).json({ message: 'Fornisci email o id' });
 
     // Adatta i nomi colonne/tabelle al tuo schema reale
-    const q = email
-      ? `SELECT u.id, u.email, p.nome, p.cognome, p.codice_fiscale, p.data_nascita, p.sesso, p.foto
-           FROM public.utenti u
-           LEFT JOIN public.passeggeri p ON p.utente = u.id
-          WHERE lower(u.email) = lower($1)
-          LIMIT 1`
-      : `SELECT u.id, u.email, p.nome, p.cognome, p.codice_fiscale, p.data_nascita, p.sesso, p.foto
-           FROM public.utenti u
-           LEFT JOIN public.passeggeri p ON p.utente = u.id
-          WHERE u.id = $1
-          LIMIT 1`;
+    const q = `SELECT u.id, u.email, p.nome, p.cognome, p.codice_fiscale, p.data_nascita, p.sesso, p.foto
+                FROM public.utenti u
+                LEFT JOIN public.passeggeri p ON p.utente = u.id
+                WHERE lower(u.email) = lower($1)
+                LIMIT 1`;
 
     const params = [email ?? id];
     const { rows } = await pool.query(q, params);
