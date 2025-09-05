@@ -41,7 +41,7 @@ export interface StripeSavedMethod {
 })
 export class PasseggeroService {
 
-  private apiUrl = 'http://localhost:5000/api/passeggero';
+  private apiUrl = 'http://localhost:3000/api/passeggero';
 
   constructor(private http: HttpClient) { }
 
