@@ -15,7 +15,7 @@ export async function login(req: Request, res: Response) {
       'SELECT id, email, password FROM utenti WHERE email = $1',
       [email]
     );
-
+    
     if (result.rows.length === 0) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -23,7 +23,7 @@ export async function login(req: Request, res: Response) {
     const user = result.rows[0];
 
     // Verifica password
-    const ok = await bcrypt.compare(password, user.password);
+    const ok = (password === user.password);
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
     // Deriva ruolo dall’id

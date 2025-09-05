@@ -1,7 +1,9 @@
+create extension if not exists pgcrypto;
+
 create table public.utenti (
   id serial not null,
   email character varying(255) not null,
-  password character varying(255) not null,
+  password text not null,
   foto character varying(255) null,
   constraint utenti_pkey primary key (id),
   constraint utenti_email_key unique (email)
