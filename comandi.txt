@@ -1,0 +1,12 @@
+docker-compose up
+docker-compose ps
+docker-compose restart
+docker-compose down
+docker-compose down -v
+docker compose up -d db
+docker compose logs -f db
+docker compose up -d server
+docker compose logs -f server
+docker compose up -d client
+docker compose logs -f client
+psql -U admin -d SkyTravelDb

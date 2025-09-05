@@ -53,7 +53,6 @@ SkyTravel TS/
 --.postcssrc.json
 --.angular.json
 --Dockerfile
---nginx.conf
 --package.json
 --package-lock.json
 --README.md
@@ -66,7 +65,6 @@ SkyTravel TS/
 --src/
 ---controllers/
 ---routes/
----app.ts
 ---server.ts
 --.dockerignore
 --.gitignore
