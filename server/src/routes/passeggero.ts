@@ -5,6 +5,7 @@ import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { pool } from '../db';
 
+
 // Ensure upload directory exists
 const uploadsDir = path.join(process.cwd(), 'uploads', 'profile-pictures');
 fs.mkdirSync(uploadsDir, { recursive: true });
