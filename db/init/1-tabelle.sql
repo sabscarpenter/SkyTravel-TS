@@ -9,8 +9,8 @@ create table public.utenti (
 
 create unique INDEX IF not exists uq_email_ci on public.utenti using btree (lower((email)::text)) TABLESPACE pg_default;
 
-create trigger trg_set_id_passeggero BEFORE INSERT on utenti for EACH row
-execute FUNCTION set_id_passeggero ();
+--create trigger trg_set_id_passeggero BEFORE INSERT on utenti for EACH row
+--execute FUNCTION set_id_passeggero ();
 
 
 create table public.compagnie (
@@ -174,5 +174,5 @@ create table public.biglietti (
 
 create index IF not exists ix_bigs_volo on public.biglietti using btree (volo) TABLESPACE pg_default;
 
-create trigger trigger_ticket_cleanup BEFORE INSERT on biglietti for EACH row
-execute FUNCTION ticket_cleanup ();
+--create trigger trigger_ticket_cleanup BEFORE INSERT on biglietti for EACH row
+--execute FUNCTION ticket_cleanup ();

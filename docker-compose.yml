@@ -5,7 +5,7 @@ services:
     restart: always
     environment:
       POSTGRES_DB: SkyTravelDb
-      POSTGRES_USER: riccardo
+      POSTGRES_USER: admin
       POSTGRES_PASSWORD: postgres
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -20,7 +20,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: postgres://riccardo:postgres@db:5432/SkyTravelDb
+      DATABASE_URL: postgres://admin:postgres@db:5432/SkyTravelDb
     depends_on:
       - db
     #volumes:
