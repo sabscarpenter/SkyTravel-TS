@@ -1,14 +1,18 @@
+// src/app/services/auth.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable, shareReplay } from 'rxjs';
 import { BehaviorSubject, map, of, switchMap, throwError, timer } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
+import { environment } from '../../environments/environment';
 
-export type Role = 'ADMIN' | 'COMPAGNIA' | 'PASSEGGERO';
+export type Role = 'ADMIN' | 'AEROLINEA' | 'PASSEGGERO';
 
 export interface User {
   id: number;
   email: string;
-  role: Role;
+  foto?: string;
+  role?: 'PASSEGGERO' | 'AEROLINEA' | 'ADMIN';
 }
 
 interface DecodedToken {
@@ -18,12 +22,21 @@ interface DecodedToken {
   iat: number;
 }
 
+export interface DatiUtente {
+  nome: string;
+  cognome: string;
+  codiceFiscale: string;
+  dataNascita: string;
+  sesso: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000/auth';
+  private apiUrl = `${environment.apiBase}/auth`;
   private accessToken$ = new BehaviorSubject<string | null>(localStorage.getItem('accessToken'));
   private user$ = new BehaviorSubject<User | null>(null);
   private refreshTimer: any;
+  private _me$?: Observable<User | null>;
 
   constructor(private http: HttpClient) {
     const token = this.accessToken$.value;
@@ -32,6 +45,14 @@ export class AuthService {
 
   get token() { return this.accessToken$.value; }
   get user() { return this.user$.value; }
+
+  register(email: string, password: string) {
+    return this.http.post(`${this.apiUrl}/register`, { email, password }, { withCredentials: true });
+  }
+
+  datiUtente(dati: DatiUtente) {
+    return this.http.post(`${this.apiUrl}/dati`, dati, { withCredentials: true });
+  }
 
   /** Login: salva access token e user */
   login(email: string, password: string) {
@@ -57,6 +78,15 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true });
   }
 
+  /** Idempotente, cached. Ritorna null se non autenticato. */
+  me$(): Observable<User | null> {
+    if (!this._me$) {
+      this._me$ = this.http.get<User>(`${this.apiUrl}/me`, { withCredentials: true })
+        .pipe(shareReplay(1));
+    }
+    return this._me$;
+  }
+
   /** Chiede un nuovo access token usando il refresh token nel cookie */
   refresh() {
     return this.http.post<{ accessToken: string; user: User }>(
@@ -70,11 +100,6 @@ export class AuthService {
         return true;
       })
     );
-  }
-
-  /** Ritorna info utente correntemente autenticato (se già salvato) */
-  me() {
-    return of(this.user$.value);
   }
 
   // --- Helpers ---
