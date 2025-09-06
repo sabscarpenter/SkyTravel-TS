@@ -19,12 +19,11 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use('/auth', authRoutes);
-
 // Static for uploaded profile pictures
 app.use('/api/passeggero/uploads/profile-pictures', express.static(path.join(process.cwd(), 'uploads', 'profile-pictures')));
 
 // API routes
+app.use('/auth', authRoutes);
 app.use('/api/passeggero', passeggeroRouter);
 
 // Rotta di prova
