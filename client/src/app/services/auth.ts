@@ -6,13 +6,13 @@ import { BehaviorSubject, map, of, switchMap, throwError, timer } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../environments/environment';
 
-export type Role = 'ADMIN' | 'AEROLINEA' | 'PASSEGGERO';
+export type Role = 'ADMIN' | 'COMPAGNIA' | 'PASSEGGERO';
 
 export interface User {
   id: number;
   email: string;
   foto?: string;
-  role?: 'PASSEGGERO' | 'AEROLINEA' | 'ADMIN';
+  role?: 'PASSEGGERO' | 'COMPAGNIA' | 'ADMIN';
 }
 
 interface DecodedToken {
@@ -89,14 +89,12 @@ export class AuthService {
 
   /** Chiede un nuovo access token usando il refresh token nel cookie */
   refresh() {
-    return this.http.post<{ accessToken: string; user: User }>(
-      `${this.apiUrl}/refresh`,
-      {},
-      { withCredentials: true }
+    return this.http.post<{ accessToken: string; user?: User }>(
+      `${this.apiUrl}/refresh`, {}, { withCredentials: true }
     ).pipe(
       map(res => {
         this.setAccessToken(res.accessToken);
-        this.user$.next(res.user);
+        if (res.user) this.user$.next(res.user);
         return true;
       })
     );
