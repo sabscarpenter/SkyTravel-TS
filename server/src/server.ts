@@ -4,7 +4,6 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from 'path';
 import authRoutes from './routes/authRoutes';
-import protectedRoutes from './routes/protectedRoutes';
 import { passeggeroRouter } from './routes/passeggero';
 
 dotenv.config();
@@ -23,12 +22,12 @@ app.use(cors({
 app.use('/api/passeggero/uploads/profile-pictures', express.static(path.join(process.cwd(), 'uploads', 'profile-pictures')));
 
 // API routes
-app.use('/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 app.use('/api/passeggero', passeggeroRouter);
 
 // Rotta di prova
 app.get("/", (req: Request, res: Response) => {
-  res.send("Backend funzionante 🚀");
+  res.send("Backend funzionante!");
 });
 
 // Avvio server

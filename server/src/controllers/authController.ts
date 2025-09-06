@@ -6,6 +6,32 @@ import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/
 
 const REFRESH_COOKIE = 'rt';
 
+export async function register(req: Request, res: Response) {
+  const { email, password } = req.body as { email: string; password: string };
+  if (!email || !password) return res.status(400).json({ message: 'Email e password richieste' });
+
+  try {
+    // email unique (case-insensitive)
+    const exists = await pool.query(
+      'SELECT 1 FROM utenti WHERE LOWER(email) = LOWER($1)',
+      [email]
+    );
+    if (exists.rowCount) return res.status(409).json({ message: 'Email già registrata' });
+
+    const hash = await bcrypt.hash(password, 12); // cost 10–12 in dev, 12–14 in prod
+    const ins = await pool.query(
+      'INSERT INTO utenti (email, password) VALUES ($1, $2) RETURNING id, email',
+      [email, hash]
+    );
+
+    const user = ins.rows[0] as { id: number; email: string };
+    return res.status(201).json({ user });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: 'Errore server' });
+  }
+}
+
 export async function login(req: Request, res: Response) {
   const { email, password } = req.body as { email: string; password: string };
 
@@ -23,7 +49,7 @@ export async function login(req: Request, res: Response) {
     const user = result.rows[0];
 
     // Verifica password
-    const ok = (password === user.password);
+    const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
     // Deriva ruolo dall’id
@@ -39,7 +65,7 @@ export async function login(req: Request, res: Response) {
       httpOnly: true,
       sameSite: 'lax',
       secure: false, // true in produzione con https
-      path: '/auth/refresh',
+      path: '/api/auth/refresh',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -67,7 +93,7 @@ export async function refresh(req: Request, res: Response) {
 }
 
 export async function logout(_req: Request, res: Response) {
-  res.clearCookie(REFRESH_COOKIE, { path: '/auth/refresh' });
+  res.clearCookie(REFRESH_COOKIE, { path: '/api/auth/refresh' });
   return res.json({ ok: true });
 }
 
