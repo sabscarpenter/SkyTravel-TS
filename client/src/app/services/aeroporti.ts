@@ -21,13 +21,13 @@ export interface NazioniAeroporti {
 })
 export class AeroportiService {
 
-  private apiUrl = 'http://localhost:5000/api/aeroporti';
+  private apiUrl = 'http://localhost:3000/api/aeroporti';
 
   constructor(private http: HttpClient) { }
 
   getAeroporti(): Observable<NazioniAeroporti[]> {
     return this.http
-      .get<NazioniAeroporti[]>(`${this.apiUrl}/lista`)
+      .get<NazioniAeroporti[]>(`${this.apiUrl}/list`)
       .pipe(
         map((res) =>
           res.map((item) => ({

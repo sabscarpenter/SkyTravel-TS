@@ -4,6 +4,8 @@ import path from 'path';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { pool } from '../db';
+import { requireAuth } from '../middleware/auth';
+import { requireRole } from '../middleware/role';
 
 // Ensure upload directory exists
 const uploadsDir = path.join(process.cwd(), 'uploads', 'profile-pictures');
@@ -30,10 +32,10 @@ const upload = multer({
 export const passeggeroRouter = Router();
 
 // GET /api/passeggero/profile?email=...
-passeggeroRouter.get('/profile', async (req: Request, res: Response) => {
+passeggeroRouter.get('/profile', requireAuth, requireRole('PASSEGGERO'), async (req: Request, res: Response) => {
   try {
-    const { id } = req.query as { email?: string; id?: string };
-    if (!id) return res.status(400).json({ message: 'Fornisci id' });
+    const sub  = req.user!.sub;
+    if (!sub) return res.status(400).json({ message: 'id Mancante' });
 
     // Adatta i nomi colonne/tabelle al tuo schema reale
     const q = `SELECT u.id, u.email, p.nome, p.cognome, p.codice_fiscale, p.data_nascita, p.sesso, u.foto
@@ -41,7 +43,7 @@ passeggeroRouter.get('/profile', async (req: Request, res: Response) => {
                 JOIN passeggeri p ON p.utente = u.id
                 WHERE u.id = $1`;
 
-    const params = [id];
+    const params = [sub];
     const { rows } = await pool.query(q, params);
 
     if (!rows.length) return res.status(404).json({ message: 'Passeggero non trovato' });
@@ -58,9 +60,10 @@ passeggeroRouter.post('/update-photo', upload.single('profile_picture'), (req: R
 });
 
 // GET /api/passeggero/reservations
-passeggeroRouter.get('/reservations', async (_req: Request, res: Response) => {
+passeggeroRouter.get('/reservations', async (req: Request, res: Response) => {
   try {
-    const params = [100]; // Replace with actual passenger ID
+    const sub  = req.user!.sub;
+    if (!sub) return res.status(400).json({ message: 'id Mancante' });
     const query = `SELECT b.*, v.*, t.*, ap.citta AS citta_partenza, aa.citta AS citta_arrivo
                   FROM biglietti b
                   JOIN voli v ON b.volo = v.numero
@@ -68,7 +71,7 @@ passeggeroRouter.get('/reservations', async (_req: Request, res: Response) => {
                   JOIN aeroporti ap ON t.partenza = ap."codice_IATA"
                   JOIN aeroporti aa ON t.arrivo = aa."codice_IATA"
                   WHERE b.utente = $1`;
-    const { rows } = await pool.query(query, params);
+    const { rows } = await pool.query(query, [sub]);
 
     const reservations = [];
     for (const row of rows) {
@@ -96,21 +99,21 @@ passeggeroRouter.get('/reservations', async (_req: Request, res: Response) => {
 });
 
 // GET /api/passeggero/statistics
-passeggeroRouter.get('/statistics', async (_req: Request, res: Response) => {
+passeggeroRouter.get('/statistics', async (req: Request, res: Response) => {
   try {
-    const params = [100]; // Replace with actual passenger ID
-
+    const sub  = req.user!.sub;
+    if (!sub) return res.status(400).json({ message: 'id Mancante' });
     let query = `SELECT COUNT(DISTINCT t.arrivo) AS visited_countries, COALESCE(SUM(t.distanza), 0) AS total_km, COUNT(v.numero) AS total_flights
                  FROM biglietti b
                  JOIN voli v ON b.volo = v.numero
                  JOIN tratte t ON v.tratta = t.numero
                  WHERE b.utente = $1`;
-    let result = await pool.query(query, params);
+    let result = await pool.query(query, [sub]);
 
     query = `SELECT COUNT(*) AS flights_this_year FROM biglietti b
              JOIN voli v ON b.volo = v.numero
              WHERE b.utente = $1 AND EXTRACT(YEAR FROM v.data_ora_partenza) = EXTRACT(YEAR FROM CURRENT_DATE)`;
-    let flights_this_year = await pool.query(query, params);
+    let flights_this_year = await pool.query(query, [sub]);
 
     const stats = {
       totalFlights: result.rows[0].total_flights,
@@ -128,14 +131,17 @@ passeggeroRouter.get('/statistics', async (_req: Request, res: Response) => {
 passeggeroRouter.put('/aggiorna-email', async (req: Request, res: Response) => {
   const { email } = req.body || {};
   if (!email) return res.status(400).json({ message: 'Email mancante' });
+  const sub  = req.user!.sub;
+  if (!sub) return res.status(400).json({ message: 'id Mancante' });
   if (!/\S+@\S+\.\S+/.test(email)) return res.status(404).json({ message: 'Email non valida' });
+
   try {
     const query = 'SELECT * FROM utenti WHERE email = $1';
     const { rows } = await pool.query(query, [email]);
     if (rows.length) return res.status(405).json({ message: 'Email già in uso' });
     
     const q = 'UPDATE utenti SET email = $1 WHERE id = $2';
-    const params = [email, 100]; // Sostituisci 100 con l'ID reale dell'utente
+    const params = [email, sub]; // Sostituisci 100 con l'ID reale dell'utente
     await pool.query(q, params);
     res.json({ message: 'Email aggiornata con successo' });
   } catch (err) {

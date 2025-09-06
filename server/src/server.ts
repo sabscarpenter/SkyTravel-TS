@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import path from 'path';
 import authRoutes from './routes/authRoutes';
 import { passeggeroRouter } from './routes/passeggero';
+import { aeroportiRouter } from './routes/aeroporti';
+import soluzioniRouter from './routes/soluzioni';
 
 dotenv.config();
 
@@ -24,6 +26,8 @@ app.use('/api/passeggero/uploads/profile-pictures', express.static(path.join(pro
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/passeggero', passeggeroRouter);
+app.use('/api/aeroporti', aeroportiRouter);
+app.use('/api/soluzioni', soluzioniRouter);
 
 // Rotta di prova
 app.get("/", (req: Request, res: Response) => {

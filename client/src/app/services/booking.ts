@@ -78,7 +78,7 @@ export interface ModelloConfigurazione {
 @Injectable({ providedIn: 'root' })
 export class BookingService {
 	private state: BookingState | null = null;
-	private apiUrl = 'http://localhost:5000/api/booking';
+	private apiUrl = 'http://localhost:3000/api/booking';
 
 	constructor(private http: HttpClient) {}
 
@@ -238,11 +238,11 @@ export class BookingService {
 	}
 
 	listaPostiOccupati(volo: string): Observable<{ occupied: string[] }> {
-    	return this.http.get<{ occupied: string[] }>(`${this.apiUrl}/posti`, { params: { volo }, withCredentials: true });
+    	return this.http.get<{ occupied: string[] }>(`${this.apiUrl}/posti`, { params: { volo } });
   	}
 
 	trattieniPosti(ticketsData: TicketTemporaneo[]): Observable<TicketTemporaneo[]> {
-    	return this.http.post<TicketTemporaneo[]>(`${this.apiUrl}/trattieni`, ticketsData, { withCredentials: true });
+    	return this.http.post<TicketTemporaneo[]>(`${this.apiUrl}/trattieni`, ticketsData);
   	}
 }
 

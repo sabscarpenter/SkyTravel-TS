@@ -27,12 +27,12 @@ export interface RoundTripResult {
 
 @Injectable({ providedIn: 'root' })
 export class SoluzioniService {
-  private apiUrl = 'http://localhost:5000/api/soluzioni';
+  private apiUrl = 'http://localhost:3000/api/soluzioni';
 
   constructor(private http: HttpClient) {}
 
   private normalizeDate(date: string): string {
-  return date + "T00:00:00";
+    return date + "T00:00:00";
   }
 
   cercaSoloAndata(partenza: string, arrivo: string, data: string): Observable<Itinerario[]> {
