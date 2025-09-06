@@ -1,8 +1,6 @@
-// src/app/services/auth.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, shareReplay } from 'rxjs';
-import { BehaviorSubject, map, of, switchMap, throwError, timer } from 'rxjs';
+import { BehaviorSubject, Observable, map, shareReplay, switchMap, timer } from 'rxjs';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../environments/environment';
 
@@ -12,7 +10,7 @@ export interface User {
   id: number;
   email: string;
   foto?: string;
-  role?: 'PASSEGGERO' | 'COMPAGNIA' | 'ADMIN';
+  role?: Role;
 }
 
 interface DecodedToken {
@@ -38,13 +36,45 @@ export class AuthService {
   private refreshTimer: any;
   private _me$?: Observable<User | null>;
 
+  // margini anti-storm (ms)
+  private static readonly SKEW_MS   = 5_000;   // tolleranza orologio
+  private static readonly BUFFER_MS = 60_000;  // refresh 60s prima
+  private static readonly MIN_MS    = 5_000;   // mai < 5s
+
   constructor(private http: HttpClient) {
-    const token = this.accessToken$.value;
-    if (token) this.setAccessToken(token);
+    // Ricostruzione veloce al boot
+    const saved = this.accessToken$.value;
+    if (saved) this.setAccessToken(saved);
   }
 
+  bootstrap(): Promise<void> {
+    const saved = localStorage.getItem('accessToken');
+    if (!saved) return Promise.resolve();
+    try {
+      const d = jwtDecode<DecodedToken>(saved);
+      const expMs = d.exp * 1000;
+      const almostExpired = expMs - Date.now() < AuthService.BUFFER_MS;
+      if (almostExpired) {
+        return new Promise(resolve => {
+          this.refresh().subscribe({ next: () => resolve(), error: () => resolve() });
+        });
+      } else {
+        // già fatto nel ctor, ma riproponiamo per sicurezza
+        this.setAccessToken(saved);
+        return Promise.resolve();
+      }
+    } catch {
+      this.logout().subscribe();
+      return Promise.resolve();
+    }
+  }
+
+  // --- getters ---
   get token() { return this.accessToken$.value; }
-  get user() { return this.user$.value; }
+  get user()  { return this.user$.value; }
+  get userChanges$() { return this.user$.asObservable(); }
+
+  // --- API ---
 
   register(email: string, password: string) {
     return this.http.post(`${this.apiUrl}/register`, { email, password }, { withCredentials: true });
@@ -59,10 +89,11 @@ export class AuthService {
     return this.http.post<{ accessToken: string; user: User }>(
       `${this.apiUrl}/login`,
       { email, password },
-      { withCredentials: true } // invia/riceve cookie refresh
+      { withCredentials: true }
     ).pipe(
       map(res => {
         this.setAccessToken(res.accessToken);
+        // preferisci i dati utente del server (email/foto/role coerente)
         this.user$.next(res.user);
         return res.user;
       })
@@ -108,25 +139,34 @@ export class AuthService {
 
     try {
       const decoded = jwtDecode<DecodedToken>(token);
-      const user: User = { id: decoded.sub, email: '', role: decoded.role };
+
+      // se l'email non è nel token, mantieni quella nota (o vuota)
+      const currentEmail = this.user?.email ?? '';
+      const user: User = { id: decoded.sub, email: currentEmail, role: decoded.role };
       this.user$.next(user);
 
-      // programma un refresh automatico 1 minuto prima della scadenza
-      const expiresAt = decoded.exp * 1000;
-      const delay = Math.max(0, expiresAt - Date.now() - 60_000);
+      const now = Date.now();
+      const expMs = decoded.exp * 1000;
+      let delay = expMs - now - AuthService.BUFFER_MS;
+      if (delay <= AuthService.SKEW_MS) delay = AuthService.MIN_MS;
+
       this.scheduleRefresh(delay);
     } catch (err) {
       console.error('Token malformato', err);
+      this.logout().subscribe();
     }
   }
 
   private scheduleRefresh(delayMs: number) {
     this.clearRefreshTimer();
-    this.refreshTimer = timer(delayMs).pipe(
-      switchMap(() => this.refresh())
-    ).subscribe({
-      error: () => this.logout().subscribe()
-    });
+    const safeDelay = Math.max(AuthService.MIN_MS, delayMs);
+
+    this.refreshTimer = timer(safeDelay)
+      .pipe(switchMap(() => this.refresh()))
+      .subscribe({
+        next: () => { /* ok: setAccessToken() ha già rischedulato */ },
+        error: () => { this.logout().subscribe(); }
+      });
   }
 
   private clearRefreshTimer() {

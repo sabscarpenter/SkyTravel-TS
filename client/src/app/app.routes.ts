@@ -23,7 +23,7 @@ export const routes: Routes = [
   { path: 'aerolinea',
     component: Aerolinea,
     canActivate: [authRoleGuard],
-    data: { role: 'AEROLINEA' }
+    data: { role: 'COMPAGNIA' }
   },
 
   { path: 'dettagli',
