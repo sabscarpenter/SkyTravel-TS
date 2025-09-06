@@ -1,17 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyAccessToken } from '../utils/jwt';
+import { verifyAccessToken, TokenExpiredError } from '../utils/jwt';
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   const auth = req.headers.authorization;
   if (!auth?.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Missing/invalid Authorization header' });
+    return res.status(401).json({ message: 'Missing or invalid Authorization header' });
   }
-  const token = auth.substring('Bearer '.length);
+
+  const token = auth.slice(7); // dopo "Bearer "
   try {
-    const payload = verifyAccessToken(token);
-    (req as any).user = payload; // attach payload
-    next();
-  } catch {
-    return res.status(401).json({ message: 'Invalid or expired token' });
+    const payload = verifyAccessToken(token); // { sub, role }
+    req.user = payload;
+    return next();
+  } catch (err) {
+    if (err instanceof TokenExpiredError) {
+      // il client dovrà chiamare /auth/refresh e poi ritentare
+      return res.status(401).json({ message: 'Access token expired', code: 'ACCESS_TOKEN_EXPIRED' });
+    }
+    return res.status(401).json({ message: 'Invalid access token' });
   }
 }
