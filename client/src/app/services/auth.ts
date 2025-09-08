@@ -86,6 +86,7 @@ export class AuthService {
 
   /** Login: salva access token e user */
   login(email: string, password: string) {
+    this._me$ = undefined;
     return this.http.post<{ accessToken: string; user: User }>(
       `${this.apiUrl}/login`,
       { email, password },
@@ -93,7 +94,6 @@ export class AuthService {
     ).pipe(
       map(res => {
         this.setAccessToken(res.accessToken);
-        // preferisci i dati utente del server (email/foto/role coerente)
         this.user$.next(res.user);
         return res.user;
       })
@@ -105,6 +105,7 @@ export class AuthService {
     this.clearRefreshTimer();
     this.accessToken$.next(null);
     this.user$.next(null);
+    this._me$ = undefined;
     localStorage.removeItem('accessToken');
     return this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true });
   }
@@ -112,7 +113,7 @@ export class AuthService {
   /** Idempotente, cached. Ritorna null se non autenticato. */
   me$(): Observable<User | null> {
     if (!this._me$) {
-      this._me$ = this.http.get<User>(`${this.apiUrl}/me`, { withCredentials: true })
+      this._me$ = this.http.get<User>(`${this.apiUrl}/me`, { withCredentials: false })
         .pipe(shareReplay(1));
     }
     return this._me$;
