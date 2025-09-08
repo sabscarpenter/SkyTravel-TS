@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { NewFlightFormData } from '../pages/aerolinea/nuovo-volo/nuovo-volo';
+import { environment } from '../../environments/environment';
 
 export interface AerolineaInfo {
   nome: string;
@@ -52,7 +53,7 @@ export interface Aircraft {
 })
 export class AerolineaService {
 
-  private apiUrl = 'http://localhost:5000/api/compagnia';
+  private apiUrl = `${environment.apiBase}/compagnia`;
 
   constructor(private http: HttpClient) { }
 

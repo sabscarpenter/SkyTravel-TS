@@ -6,9 +6,10 @@ import path from 'path';
 import { pool } from './db';
 import { setJwtSecrets, generateRandomSecret } from './utils/jwt';
 import authRoutes from './routes/authRoutes';
-import { passeggeroRouter } from './routes/passeggeroRouter';
-import { aeroportiRouter } from './routes/aeroportiRoutes';
-import soluzioniRouter from './routes/soluzioniRouter';
+import passeggeroRouter from './routes/passeggeroRoutes';
+import aeroportiRouter from './routes/aeroportiRoutes';
+import soluzioniRouter from './routes/soluzioniRoutes';
+import compagniaRouter from "./routes/compagniaRoutes";
 
 dotenv.config();
 
@@ -65,6 +66,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/passeggero', passeggeroRouter);
 app.use('/api/aeroporti', aeroportiRouter);
 app.use('/api/soluzioni', soluzioniRouter);
+app.use('/api/compagnia', compagniaRouter);
 
 // Rotta di prova
 app.get("/", (req: Request, res: Response) => {
