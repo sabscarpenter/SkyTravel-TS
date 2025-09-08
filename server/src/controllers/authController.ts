@@ -151,6 +151,25 @@ export async function logout(req: Request, res: Response) {
   return res.json({ ok: true });
 }
 
+// ------------------ LOGOUT ALL ------------------
+export async function logoutAll(req: Request, res: Response) {
+  const userId = (req as any).user?.sub as number | undefined;
+  if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+  try {
+    await pool.query(
+      'UPDATE sessioni SET revocato = TRUE WHERE utente = $1 AND revocato = FALSE',
+      [userId]
+    );
+    // cancella anche il cookie su questo device
+    res.clearCookie('rt', { path: '/api/auth' });
+    return res.json({ ok: true });
+  } catch (e) {
+    console.error('[logoutAll] error:', e);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
 // ------------------ ME (protetta) ------------------
 export async function me(req: Request, res: Response) {
   const { sub, role } = (req as any).user as { sub: number; role: string };

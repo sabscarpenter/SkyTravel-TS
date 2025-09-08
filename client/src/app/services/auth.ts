@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, map, shareReplay, switchMap, timer } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../environments/environment';
 
@@ -108,6 +109,18 @@ export class AuthService {
     this._me$ = undefined;
     localStorage.removeItem('accessToken');
     return this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true });
+  }
+
+  logoutAll() {
+    return this.http.post(`${this.apiUrl}/logout-all`, {}, { withCredentials: true }).pipe(
+      finalize(() => {
+        this.clearRefreshTimer();
+        this.accessToken$.next(null);
+        this.user$.next(null);
+        this._me$ = undefined;
+        localStorage.removeItem('accessToken');
+      })
+    );
   }
 
   /** Idempotente, cached. Ritorna null se non autenticato. */

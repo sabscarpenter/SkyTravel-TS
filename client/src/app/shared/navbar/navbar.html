@@ -22,6 +22,7 @@
       <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow-xl bg-white rounded-xl w-52 border border-blue-100">
         <li><a class="text-blue-600 hover:bg-blue-50 rounded-lg">Profile</a></li>
         <li><a class="text-blue-600 hover:bg-blue-50 rounded-lg">Logout</a></li>
+        <li><a class="text-blue-600 hover:bg-blue-50 rounded-lg">Logout Tutti</a></li>
       </ul>
     </div>
   </div>
@@ -66,6 +67,11 @@
             <li>
               <a (click)="logout()" class="text-red-500 hover:bg-red-50 rounded-lg font-medium cursor-pointer">
                 Logout
+              </a>
+            </li>
+            <li>
+              <a (click)="logoutAll()" class="text-red-500 hover:bg-red-50 rounded-lg font-medium cursor-pointer">
+                Logout Tutti
               </a>
             </li>
           </ul>

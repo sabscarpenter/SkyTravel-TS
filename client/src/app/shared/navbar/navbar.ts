@@ -88,6 +88,18 @@ export class Navbar implements OnInit {
     });
   }
 
+  logoutAll() {
+    this.authService.logoutAll().subscribe({
+      next: () => {
+        this.isAuthenticated = false;
+        this.user = null;
+        // niente reload: lo stato si aggiorna
+        this.router.navigate(['/']);
+      },
+      error: (error) => console.error('Errore durante il logout da tutti i dispositivi:', error)
+    });
+  }
+
   goToProfile() {
     this.user && this.user.id >= 100
       ? this.router.navigate(['/passeggero'])

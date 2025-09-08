@@ -2,19 +2,48 @@
 import { inject } from '@angular/core';
 import { HttpInterceptorFn, HttpErrorResponse, HttpRequest, HttpHandlerFn } from '@angular/common/http';
 import { AuthService } from '../services/auth';
-import { Observable, Subject, throwError } from 'rxjs';
+import { Subject, throwError } from 'rxjs';
 import { catchError, filter, switchMap, take } from 'rxjs/operators';
 
 let isRefreshing = false;
 const refreshDone$ = new Subject<boolean>();
-const EXCLUDED = ['/auth/login', '/auth/refresh', '/auth/logout'];
 
-function isExcluded(url: string) {
-  return EXCLUDED.some(p => url.includes(p));
+// Endpoint che NON devono avere Authorization
+const NO_AUTH_HEADER_PATHS = [
+  '/auth/register',
+  '/auth/login',
+  '/auth/refresh',
+  '/auth/logout',      // logout usa solo il cookie HttpOnly
+];
+
+// Endpoint su cui NON tentare il refresh se arriva 401
+const NO_REFRESH_PATHS = [
+  '/auth/register',
+  '/auth/login',
+  '/auth/refresh',
+  '/auth/logout',
+];
+
+function pathIn(url: string, list: string[]): boolean {
+  try {
+    const u = new URL(url, window.location.origin);
+    const p = u.pathname;
+    return list.some(item => p === item);
+  } catch {
+    return list.some(item => url === item || url.endsWith(item));
+  }
+}
+
+function needsAuthHeader(url: string) {
+  return !pathIn(url, NO_AUTH_HEADER_PATHS);
+}
+
+function shouldSkipRefresh(url: string) {
+  return pathIn(url, NO_REFRESH_PATHS);
 }
 
 function attachToken(req: HttpRequest<any>, token: string | null) {
-  return token && !isExcluded(req.url)
+  return token && needsAuthHeader(req.url)
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
     : req;
 }
@@ -23,17 +52,16 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
   const auth = inject(AuthService);
   const token = auth.token;
 
-  // non allegare Authorization a /auth/*
   const initial = attachToken(req, token);
 
   return next(initial).pipe(
     catchError((err: HttpErrorResponse) => {
-      // niente refresh per errori diversi da 401 o su /auth/*
-      if (err.status !== 401 || isExcluded(req.url)) {
+      // Se non è 401 o se l'endpoint è nella lista NO_REFRESH → non provare il refresh
+      if (err.status !== 401 || shouldSkipRefresh(req.url)) {
         return throwError(() => err);
       }
 
-      // evita retry infinito: segna la request come già ritentata
+      // evita retry infinito
       const alreadyRetried = req.headers.get('x-retried') === '1';
 
       if (!isRefreshing && !alreadyRetried) {
@@ -44,7 +72,6 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
             isRefreshing = false;
             refreshDone$.next(true);
             const newToken = auth.token;
-            // ripeti la richiesta UNA sola volta
             const retry = attachToken(
               req.clone({ setHeaders: { 'x-retried': '1' } }),
               newToken
@@ -54,12 +81,12 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
           catchError((refreshErr) => {
             isRefreshing = false;
             refreshDone$.next(false);
-            auth.logout().subscribe(); // svuota token, cookie server-side
+            auth.logout().subscribe(); // svuota stato locale e cookie lato server
             return throwError(() => refreshErr);
           })
         );
       } else {
-        // coda: aspetta che il refresh finisca
+        // coda: aspetta l’esito del refresh in corso
         return refreshDone$.pipe(
           filter(ok => ok !== undefined),
           take(1),
