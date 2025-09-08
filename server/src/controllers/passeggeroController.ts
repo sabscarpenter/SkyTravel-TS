@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { pool } from '../db';
-
+import bcrypt from 'bcrypt';
 
 export async function getProfile(req: Request, res: Response) {
   try {
@@ -137,10 +137,15 @@ export async function updatePassword(req: Request, res: Response) {
   if (!sub) return res.status(400).json({ message: 'id Mancante' });
 
   try {
-    // TODO: verify current password
-    // TODO: hash new password
+    const user = await pool.query('SELECT * FROM utenti WHERE id = $1', [sub]);
+    if (!user.rows.length) return res.status(404).json({ message: 'Utente non trovato' });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.rows[0].password);
+    if (!isMatch) return res.status(401).json({ message: 'Password attuale non valida' });
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     const query = 'UPDATE utenti SET password = $1 WHERE id = $2';
-    await pool.query(query, [newPassword, sub]);
+    await pool.query(query, [hashedNewPassword, sub]);
     res.json({ message: 'Password aggiornata con successo' });
   } catch (err) {
     return res.status(500).json({ message: 'Errore aggiornamento password', error: (err as Error).message });

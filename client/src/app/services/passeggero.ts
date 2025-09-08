@@ -47,7 +47,7 @@ export class PasseggeroService {
   constructor(private http: HttpClient) { }
 
   getPassengerProfile(): Observable<PassengerInfo> {
-    return this.http.get<PassengerInfo>(`${this.apiUrl}/profile`, { withCredentials: true });
+    return this.http.get<PassengerInfo>(`${this.apiUrl}/profile`);
   }
 
   getPhotoUrl(filename: string): string {
@@ -58,45 +58,41 @@ export class PasseggeroService {
   updateProfilePhoto(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('profile_picture', file);
-    return this.http.post<any>(`${this.apiUrl}/update-photo`, formData, { withCredentials: true });
+    return this.http.post<any>(`${this.apiUrl}/update-photo`, formData);
   }
 
   getPassengerReservations(): Observable<TicketData[]> {
-    return this.http.get<TicketData[]>(`${this.apiUrl}/reservations`, { withCredentials: true });
+    return this.http.get<TicketData[]>(`${this.apiUrl}/reservations`);
   }
 
   getPassengerStatistics(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/statistics`, { withCredentials: true });
+    return this.http.get<any>(`${this.apiUrl}/statistics`);
   }
 
   aggiornaEmail(email: string): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/aggiorna-email`, { email }, { withCredentials: true });
+    return this.http.put<any>(`${this.apiUrl}/aggiorna-email`, { email });
   }
 
   aggiornaPassword(passwordAttuale: string, nuovaPassword: string): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/aggiorna-password`, { passwordAttuale, nuovaPassword }, { withCredentials: true });
+    return this.http.put<any>(`${this.apiUrl}/aggiorna-password`, { passwordAttuale, nuovaPassword });
   }
 
    // --- Stripe saved methods ---
   createStripeSetupIntent(): Observable<{ clientSecret: string }> {
     return this.http.post<{ clientSecret: string }>(
-      `${this.apiUrl}/stripe/setup-intent`,
-      {},
-      { withCredentials: true }
+      `${this.apiUrl}/stripe/setup-intent`, {}
     );
   }
 
   listStripePaymentMethods(): Observable<StripeSavedMethod[]> {
     return this.http.get<StripeSavedMethod[]>(
-      `${this.apiUrl}/stripe/payment-methods`,
-      { withCredentials: true }
+      `${this.apiUrl}/stripe/payment-methods`
     );
   }
 
   deleteStripePaymentMethod(pmId: string): Observable<any> {
     return this.http.delete<any>(
-      `${this.apiUrl}/stripe/payment-methods/${pmId}`,
-      { withCredentials: true }
+      `${this.apiUrl}/stripe/payment-methods/${pmId}`
     );
   }
 }
