@@ -14,39 +14,90 @@ const REFRESH_COOKIE = 'rt';
 
 // ------------------ REGISTER ------------------
 export async function register(req: Request, res: Response) {
-  const { email, password } = req.body as { email: string; password: string };
-  if (!email || !password) return res.status(400).json({ message: 'Email e password richieste' });
+  const { email, password, dati } = req.body as {
+    email: string;
+    password: string;
+    dati: {
+      nome: string;
+      cognome: string;
+      codiceFiscale: string;
+      dataNascita: string; // "YYYY-MM-DD"
+      sesso: 'M' | 'F';
+    };
+  };
 
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email e password richieste' });
+  }
+  if (!dati?.nome || !dati?.cognome || !dati?.codiceFiscale || !dati?.dataNascita || !dati?.sesso) {
+    return res.status(400).json({ message: 'Dati passeggero incompleti' });
+  }
+
+  const client = await pool.connect();
   try {
-    const exists = await pool.query('SELECT 1 FROM utenti WHERE LOWER(email)=LOWER($1)', [email]);
-    if (exists.rowCount) return res.status(409).json({ message: 'Email già registrata' });
+    await client.query('BEGIN');
+
+    // Email unica (case-insensitive)
+    const exists = await client.query('SELECT 1 FROM utenti WHERE LOWER(email)=LOWER($1)', [email]);
+    if (exists.rowCount) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ message: 'Email già registrata' });
+    }
+
+    // (Opzionale) validazioni extra su CF/età lato server
+    if (!/^[A-Z0-9]{16}$/i.test(dati.codiceFiscale)) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ message: 'Codice fiscale non valido' });
+    }
 
     const hash = await bcrypt.hash(password, 12);
-    const ins = await pool.query(
-      'INSERT INTO utenti (email, password, foto) VALUES ($1, $2, NULL) RETURNING id, email',
+
+    // 1) utenti
+    const insUser = await client.query(
+      'INSERT INTO utenti (email, password, foto) VALUES ($1, $2, NULL) RETURNING id, email, foto',
       [email, hash]
     );
-    const user = ins.rows[0] as { id: number; email: string };
+    const userRow = insUser.rows[0] as { id: number; email: string; foto: string | null };
 
-    const role = deriveRoleFromId(user.id);
-    const payload = { sub: user.id, role };
+    // 2) passeggeri (FK su utenti.id)
+    await client.query(
+      `INSERT INTO passeggeri (utente, nome, cognome, codice_fiscale, data_nascita, sesso)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [userRow.id, dati.nome, dati.cognome, dati.codiceFiscale.toUpperCase(), dati.dataNascita, dati.sesso]
+    );
+
+    await client.query('COMMIT');
+
+    // Costruisci user + token
+    const role = deriveRoleFromId(userRow.id);
+    const payload = { sub: userRow.id, role };
 
     const accessToken = signAccessToken(payload);
     const { token: refreshToken, jti, exp } = signRefreshToken(payload);
-    await insertSession(jti, user.id, exp);
+    await insertSession(jti, userRow.id, exp);
 
-    res.cookie(REFRESH_COOKIE, refreshToken, {
+    res.cookie('rt', refreshToken, {
       httpOnly: true,
       sameSite: 'lax',
-      secure: false,                 // true in prod + https
+      secure: false, // true in prod con https
       path: '/api/auth',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return res.status(201).json({ accessToken, user: { id: user.id, email: user.email, role } });
-  } catch (e) {
-    console.error(e);
+    return res.status(201).json({
+      accessToken,
+      user: { id: userRow.id, email: userRow.email, role, foto: userRow.foto ?? '' }
+    });
+  } catch (e: any) {
+    await client.query('ROLLBACK');
+    // Viola chk/unique? Es. codice_fiscale unique
+    if (e?.code === '23505') {
+      return res.status(409).json({ message: 'Dati già esistenti (email o codice fiscale)' });
+    }
+    console.error('[register-full] error:', e);
     return res.status(500).json({ message: 'Errore server' });
+  } finally {
+    client.release();
   }
 }
 
@@ -56,31 +107,27 @@ export async function login(req: Request, res: Response) {
 
   try {
     const result = await pool.query(
-      'SELECT id, email, password, foto FROM utenti WHERE LOWER(email)=LOWER($1)',
+      'SELECT id, email, password FROM utenti WHERE LOWER(email)=LOWER($1)',
       [email]
     );
     if (!result.rowCount) return res.status(401).json({ message: 'Invalid credentials' });
 
-    const row = result.rows[0] as { id: number; email: string; password: string; foto: string | null };
+    const row = result.rows[0] as { id: number; email: string; password: string };
     const ok = await bcrypt.compare(password, row.password);
     if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
 
-    const role = deriveRoleFromId(row.id);
-    const payload = { sub: row.id, role };
+    const u = await getUserById(row.id);
 
-    const accessToken = signAccessToken(payload);
-    const { token: refreshToken, jti, exp } = signRefreshToken(payload);
-    await insertSession(jti, row.id, exp);
+    const accessToken = signAccessToken({ sub: u.id, role: u.role as any });
+    const { token: refreshToken, jti, exp } = signRefreshToken({ sub: u.id, role: u.role as any });
+    await insertSession(jti, u.id, exp);
 
     res.cookie(REFRESH_COOKIE, refreshToken, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: false,                 // true in prod + https
-      path: '/api/auth',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true, sameSite: 'lax', secure: false,
+      path: '/api/auth', maxAge: 7*24*60*60*1000
     });
 
-    return res.json({ accessToken, user: { id: row.id, email: row.email, role, foto: row.foto ?? '' } });
+    return res.json({ accessToken, user: { id: u.id, email: u.email, role: u.role, foto: u.foto ?? '' } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Internal server error' });
@@ -93,29 +140,27 @@ export async function refresh(req: Request, res: Response) {
   if (!token) return res.status(401).json({ message: 'Missing refresh token' });
 
   try {
-    const decoded = verifyRefreshToken(token); // { sub, role, jti?, exp? }
-    const { sub, role } = decoded;
+    const decoded = verifyRefreshToken(token);
+    const { sub } = decoded;
     const oldJti = (decoded as any).jti as string | undefined;
     if (!oldJti) return res.status(401).json({ message: 'Invalid refresh token' });
 
     const valid = await isSessionValid(oldJti, sub);
     if (!valid) return res.status(401).json({ message: 'Invalid refresh token' });
 
-    // ruota
     await revokeSession(oldJti);
 
-    const accessToken = signAccessToken({ sub, role });
-    const { token: newRt, jti: newJti, exp } = signRefreshToken({ sub, role });
-    await insertSession(newJti, sub, exp);
+    const u = await getUserById(sub);
+
+    const accessToken = signAccessToken({ sub: u.id, role: u.role as any });
+    const { token: newRt, jti: newJti, exp } = signRefreshToken({ sub: u.id, role: u.role as any });
+    await insertSession(newJti, u.id, exp);
 
     res.cookie(REFRESH_COOKIE, newRt, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: false,                 // true in prod + https
-      path: '/api/auth',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true, sameSite: 'lax', secure: false,
+      path: '/api/auth', maxAge: 7*24*60*60*1000
     });
-    return res.json({ accessToken, user: { id: sub, role } });
+    return res.json({ accessToken, user: { id: u.id, email: u.email, role: u.role, foto: u.foto ?? '' } });
   } catch {
     return res.status(401).json({ message: 'Invalid refresh token' });
   }
@@ -172,11 +217,25 @@ export async function logoutAll(req: Request, res: Response) {
 
 // ------------------ ME (protetta) ------------------
 export async function me(req: Request, res: Response) {
-  const { sub, role } = (req as any).user as { sub: number; role: string };
-  return res.json({ id: sub, role });
+  const uid = (req as any).user?.sub as number | undefined;
+  if (!uid) return res.status(401).json({ message: 'Unauthorized' });
+  try {
+    const u = await getUserById(uid);
+    return res.json({ id: u.id, email: u.email, role: u.role, foto: u.foto ?? '' });
+  } catch {
+    return res.status(404).json({ message: 'User not found' });
+  }
 }
 
 // ------------------ Helpers DB ------------------
+async function getUserById(id: number): Promise<{ id:number; email:string; role:string; foto:string | null }> {
+  const r = await pool.query('SELECT id, email, foto FROM utenti WHERE id = $1', [id]);
+  if (!r.rowCount) throw new Error('User not found');
+  const row = r.rows[0] as { id:number; email:string; foto:string | null };
+  const role = deriveRoleFromId(row.id);
+  return { id: row.id, email: row.email, role, foto: row.foto };
+}
+
 async function insertSession(jti: string, userId: number, expUnix: number) {
   await pool.query(
     'INSERT INTO sessioni (jti, utente, scadenza) VALUES ($1,$2,to_timestamp($3))',

@@ -2,6 +2,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth';
+import { RegistrationBufferService } from '../../services/registrazione-buffer';
 
 @Component({
   selector: 'app-registrazione',
@@ -24,7 +25,7 @@ export class Registrazione {
   acceptTerms: boolean = false;
   errorMessage: string = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private buffer: RegistrationBufferService) {}
 
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
@@ -44,31 +45,15 @@ export class Registrazione {
   }
 
   onSubmit() {
-    if (this.isFormValid) {
-      this.isLoading = true;
-      this.errorMessage = '';
-      
-      this.authService.register(this.email, this.password).subscribe({
-        next: (response) => {
-          this.isLoading = false;
-          
-          const userData = {
-            email: this.email,
-            ...response
-          };
-          localStorage.setItem('user', JSON.stringify(userData));
+    if (!this.isFormValid) return;
+    this.isLoading = true;
+    this.errorMessage = '';
 
-          // Notifica il successo della registrazione
-          this.onRegisterSuccess.emit(response);
-          
-          this.onOpenDati.emit(userData);
-        },
-        error: (error) => {
-          this.isLoading = false;
-          this.errorMessage = error.error?.error || 'Errore durante la registrazione';
-        }
-      });
-    }
+    this.buffer.setDraft(this.email, this.password);
+    this.isLoading = false;
+
+    // Mostra step Dati
+    this.onOpenDati.emit({ email: this.email });
   }
 
   switchToLogin() {

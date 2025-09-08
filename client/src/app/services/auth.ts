@@ -77,12 +77,19 @@ export class AuthService {
 
   // --- API ---
 
-  register(email: string, password: string) {
-    return this.http.post(`${this.apiUrl}/register`, { email, password }, { withCredentials: true });
-  }
-
-  datiUtente(dati: DatiUtente) {
-    return this.http.post(`${this.apiUrl}/dati`, dati, { withCredentials: true });
+  // src/app/services/auth.ts (aggiungi)
+  register(email: string, password: string, dati: DatiUtente) {
+    return this.http.post<{ accessToken: string; user: User }>(
+      `${this.apiUrl}/register`,
+      { email, password, dati },
+      { withCredentials: true }
+    ).pipe(
+      map(res => {
+        this.setAccessToken(res.accessToken);
+        this.user$.next(res.user);
+        return res.user;
+      })
+    );
   }
 
   /** Login: salva access token e user */

@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EventEmitter, Output } from '@angular/core';
 import { AuthService, DatiUtente } from '../../services/auth';
+import { RegistrationBufferService } from '../../services/registrazione-buffer';
+
 
 /**
  * Component for collecting additional user information after registration.
@@ -45,8 +47,11 @@ export class Dati {
    * Constructor for InfoFormComponent
    * @param {Router} router - Angular router for navigation
    */
-  constructor(private router: Router, private authService: AuthService) {
-    // Initialize email from stored user data if available
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private buffer: RegistrationBufferService
+  ) {
     this.loadUserEmail();
   }
 
@@ -66,22 +71,6 @@ export class Dati {
   }
 
   /**
-   * Loads user email from stored registration data
-   * @private
-   */
-  private loadUserEmail(): void {
-    try {
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        this.email = user.email || '';
-      }
-    } catch (error) {
-      console.error('Error loading user email:', error);
-    }
-  }
-
-  /**
    * Validates Italian fiscal code format
    * @param {string} cf - The fiscal code to validate
    * @returns {boolean} True if fiscal code format is valid
@@ -90,6 +79,15 @@ export class Dati {
   private validateFiscalCode(cf: string): boolean {
     const fiscalCodeRegex = /^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$/;
     return fiscalCodeRegex.test(cf.toUpperCase());
+  }
+
+  /**
+   * Formats fiscal code input to uppercase as user types
+   * @param {Event} event - Input event
+   */
+  onFiscalCodeInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.codiceFiscale = target.value.toUpperCase();
   }
 
   /**
@@ -110,34 +108,29 @@ export class Dati {
     return age >= 18;
   }
 
+  private loadUserEmail(): void {
+    const draft = this.buffer.getDraft();
+    this.email = draft?.email ?? '';
+  }
+
   /**
    * Handles form submission
    * Validates all fields and saves user information
    * @returns {Promise<void>}
    */
   async onSubmit(): Promise<void> {
-    if (!this.isFormValid) {
-      this.errorMessage = 'Per favore, compila tutti i campi obbligatori.';
+    if (!this.isFormValid) { this.errorMessage = 'Per favore, compila tutti i campi obbligatori.'; return; }
+    if (!this.validateFiscalCode(this.codiceFiscale)) { this.errorMessage = 'Il formato del codice fiscale non è valido.'; return; }
+    if (!this.validateAge(this.dataNascita)) { this.errorMessage = 'Devi avere almeno 18 anni per registrarti.'; return; }
+
+    const draft = this.buffer.getDraft();
+    if (!draft) {
+      this.errorMessage = 'Sessione di registrazione scaduta. Riprova.';
       return;
     }
 
-    // Validate fiscal code format
-    if (!this.validateFiscalCode(this.codiceFiscale)) {
-      this.errorMessage = 'Il formato del codice fiscale non è valido.';
-      return;
-    }
+    this.isLoading = true; this.errorMessage = ''; this.successMessage = '';
 
-    // Validate age
-    if (!this.validateAge(this.dataNascita)) {
-      this.errorMessage = 'Devi avere almeno 18 anni per registrarti.';
-      return;
-    }
-
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-
-    // Prepare user data
     const dati: DatiUtente = {
       nome: this.nome.trim(),
       cognome: this.cognome.trim(),
@@ -146,26 +139,18 @@ export class Dati {
       sesso: this.sesso,
     };
 
-    this.authService.datiUtente(dati).subscribe({
-      next: (response) => {
+    this.authService.register(draft.email, draft.password, dati).subscribe({
+      next: () => {
         this.isLoading = false;
+        this.buffer.clear();
         this.close();
         window.location.reload();
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.error?.error || 'Errore durante il login';
+        this.errorMessage = error.error?.message || 'Errore durante la registrazione';
       }
     });
-  }
-
-  /**
-   * Formats fiscal code input to uppercase as user types
-   * @param {Event} event - Input event
-   */
-  onFiscalCodeInput(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    this.codiceFiscale = target.value.toUpperCase();
   }
 
   /**
