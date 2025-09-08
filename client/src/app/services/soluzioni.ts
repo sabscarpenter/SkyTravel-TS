@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Volo {
   numero: string;
@@ -27,7 +28,7 @@ export interface RoundTripResult {
 
 @Injectable({ providedIn: 'root' })
 export class SoluzioniService {
-  private apiUrl = 'http://localhost:3000/api/soluzioni';
+  private apiUrl = `${environment.apiBase}/soluzioni`;
 
   constructor(private http: HttpClient) {}
 

@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { TicketData } from '../shared/ticket/ticket';
+import { environment } from '../../environments/environment';
 
 export interface PassengerInfo {
   nome: string;
@@ -41,7 +42,7 @@ export interface StripeSavedMethod {
 })
 export class PasseggeroService {
 
-  private apiUrl = 'http://localhost:3000/api/passeggero';
+  private apiUrl = `${environment.apiBase}/passeggero`;
 
   constructor(private http: HttpClient) { }
 

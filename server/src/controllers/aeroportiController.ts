@@ -1,10 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { pool } from '../db';
 
-export const aeroportiRouter = Router();
-
-// GET /api/aeroporti
-aeroportiRouter.get("/list", async (req: Request, res: Response) => {
+export async function getAeroporti(req: Request, res: Response) {
     try {
         const rows = await pool.query("SELECT * FROM aeroporti ORDER BY nazione");
 
@@ -27,4 +24,5 @@ aeroportiRouter.get("/list", async (req: Request, res: Response) => {
         console.error("Errore nel recupero degli aeroporti:", error);
         res.status(500).json({ message: "Errore interno del server", error: error.message });
     }
-});
+}
+

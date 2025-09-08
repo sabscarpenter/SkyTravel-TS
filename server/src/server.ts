@@ -6,9 +6,9 @@ import path from 'path';
 import { pool } from './db';
 import { setJwtSecrets, generateRandomSecret } from './utils/jwt';
 import authRoutes from './routes/authRoutes';
-import { passeggeroRouter } from './routes/passeggero';
-import { aeroportiRouter } from './routes/aeroporti';
-import soluzioniRouter from './routes/soluzioni';
+import { passeggeroRouter } from './routes/passeggeroRouter';
+import { aeroportiRouter } from './routes/aeroportiRoutes';
+import soluzioniRouter from './routes/soluzioniRouter';
 
 dotenv.config();
 

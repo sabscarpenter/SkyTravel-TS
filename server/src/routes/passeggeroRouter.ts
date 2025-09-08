@@ -54,13 +54,13 @@ passeggeroRouter.get('/profile', requireAuth, requireRole('PASSEGGERO'), async (
 });
 
 // POST /api/passeggero/update-photo
-passeggeroRouter.post('/update-photo', upload.single('profile_picture'), (req: Request, res: Response) => {
+passeggeroRouter.post('/update-photo', requireAuth, requireRole('PASSEGGERO'), upload.single('profile_picture'), (req: Request, res: Response) => {
   const filename = (req.file && req.file.filename) || '';
   res.json({ message: 'Foto profilo aggiornata', filename });
 });
 
 // GET /api/passeggero/reservations
-passeggeroRouter.get('/reservations', async (req: Request, res: Response) => {
+passeggeroRouter.get('/reservations', requireAuth, requireRole('PASSEGGERO'), async (req: Request, res: Response) => {
   try {
     const sub  = req.user!.sub;
     if (!sub) return res.status(400).json({ message: 'id Mancante' });
@@ -99,7 +99,7 @@ passeggeroRouter.get('/reservations', async (req: Request, res: Response) => {
 });
 
 // GET /api/passeggero/statistics
-passeggeroRouter.get('/statistics', async (req: Request, res: Response) => {
+passeggeroRouter.get('/statistics', requireAuth, requireRole('PASSEGGERO'), async (req: Request, res: Response) => {
   try {
     const sub  = req.user!.sub;
     if (!sub) return res.status(400).json({ message: 'id Mancante' });
@@ -128,7 +128,7 @@ passeggeroRouter.get('/statistics', async (req: Request, res: Response) => {
 });
 
 // PUT /api/passeggero/aggiorna-email
-passeggeroRouter.put('/aggiorna-email', async (req: Request, res: Response) => {
+passeggeroRouter.put('/aggiorna-email', requireAuth, requireRole('PASSEGGERO'), async (req: Request, res: Response) => {
   const { email } = req.body || {};
   if (!email) return res.status(400).json({ message: 'Email mancante' });
   const sub  = req.user!.sub;
@@ -150,7 +150,7 @@ passeggeroRouter.put('/aggiorna-email', async (req: Request, res: Response) => {
 });
 
 // PUT /api/passeggero/aggiorna-password
-passeggeroRouter.put('/aggiorna-password', async (req: Request, res: Response) => {
+passeggeroRouter.put('/aggiorna-password', requireAuth, requireRole('PASSEGGERO'), async (req: Request, res: Response) => {
   const { passwordAttuale, nuovaPassword } = req.body || {};
   if (!passwordAttuale || !nuovaPassword) {
     return res.status(400).json({ message: 'Password mancanti' });
@@ -160,20 +160,20 @@ passeggeroRouter.put('/aggiorna-password', async (req: Request, res: Response) =
 });
 
 // POST /api/passeggero/stripe/setup-intent (stub)
-passeggeroRouter.post('/stripe/setup-intent', async (_req: Request, res: Response) => {
+passeggeroRouter.post('/stripe/setup-intent', requireAuth, requireRole('PASSEGGERO'), async (_req: Request, res: Response) => {
   // Stub client secret
   res.json({ clientSecret: 'seti_mock_client_secret' });
 });
 
 // GET /api/passeggero/stripe/payment-methods (stub)
-passeggeroRouter.get('/stripe/payment-methods', async (_req: Request, res: Response) => {
+passeggeroRouter.get('/stripe/payment-methods', requireAuth, requireRole('PASSEGGERO'), async (_req: Request, res: Response) => {
   res.json([
     { id: 'pm_1', brand: 'visa', last4: '4242', exp_month: 12, exp_year: 2030 },
   ]); 
 });
 
 // DELETE /api/passeggero/stripe/payment-methods/:pmId (stub)
-passeggeroRouter.delete('/stripe/payment-methods/:pmId', async (req: Request, res: Response) => {
+passeggeroRouter.delete('/stripe/payment-methods/:pmId', requireAuth, requireRole('PASSEGGERO'), async (req: Request, res: Response) => {
   const { pmId } = req.params;
   // TODO: delete pm from provider
   res.json({ message: `Metodo ${pmId} rimosso` });

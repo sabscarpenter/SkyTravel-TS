@@ -1,11 +1,7 @@
 import { Router, Request, Response } from "express";
 import { pool } from "../db";
-
-// Implementazioni leggere interne per evitare dipendenza esterna da date-fns
-function addHours(d: Date, h: number): Date { return new Date(d.getTime() + h * 3600_000); }
-function addMinutes(d: Date, m: number): Date { return new Date(d.getTime() + m * 60_000); }
-function differenceInMinutes(a: Date, b: Date): number { return Math.round((a.getTime() - b.getTime()) / 60_000); }
-function parseISO(v: string): Date { return new Date(v); }
+import { parseISO, addMinutes, addHours, differenceInMinutes } from 'date-fns';
+import { Volo } from "../types/types";
 
 const soluzioniRouter = Router();
 
@@ -39,19 +35,6 @@ function calcolaOre(dataAndata: string, dataRitorno: string): number {
   if (diffOre < 24) return 24;
   if (diffOre > 72) return 72;
   return Math.round(diffOre);
-}
-
-interface Volo {
-  numero: string;
-  data_ora_partenza: Date;
-  durata_minuti: number;
-  distanza: number;
-  tratta_partenza: string;
-  tratta_arrivo: string;
-  citta_partenza?: string;
-  citta_arrivo?: string;
-  modello: string;
-  compagnia: string;
 }
 
 /**
@@ -209,6 +192,7 @@ soluzioniRouter.get("/ricerca", async (req: Request, res: Response) => {
 
     const dtAndata = parseISO(String(data_andata));
 
+    // Converte un itinerario in formato JSON-friendly
     const toDict = (itin: Volo[]) => {
       const oraP = itin[0].data_ora_partenza;
       const oraA = addMinutes(itin[itin.length - 1].data_ora_partenza, itin[itin.length - 1].durata_minuti);
@@ -230,6 +214,7 @@ soluzioniRouter.get("/ricerca", async (req: Request, res: Response) => {
       };
     };
 
+    // Ricerca andata e ritorno o solo andata
     if (!data_ritorno) {
       const andataItinerari = await cercaItinerari(
         String(partenza),
