@@ -153,8 +153,8 @@ export async function getRoutes(req: Request, res: Response) {
             SELECT t.numero, t.partenza, t.arrivo, t.durata_minuti, t.distanza,
                     ap.nome AS partenza_nome, aa.nome AS arrivo_nome
             FROM tratte t
-            JOIN aeroporti ap ON t.partenza = ap.codice
-            JOIN aeroporti aa ON t.arrivo = aa.codice
+            JOIN aeroporti ap ON t.partenza = ap."codice_IATA"
+            JOIN aeroporti aa ON t.arrivo = aa."codice_IATA"
             WHERE t.compagnia = $1
             ORDER BY t.numero
             `, [id]

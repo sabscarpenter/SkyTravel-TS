@@ -12,6 +12,8 @@ import aeroportiRouter from './routes/aeroportiRoutes';
 import soluzioniRouter from './routes/soluzioniRoutes';
 import compagniaRouter from "./routes/compagniaRoutes";
 import bookingRouter from "./routes/bookingRoutes";
+import checkoutRouter from "./routes/checkoutRoutes";
+import { stripeWebhook } from './controllers/checkoutController';
 import { seedAdminIfMissing } from './admin';
 
 dotenv.config();
@@ -55,6 +57,9 @@ async function bootstrap() {
     origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:4200'],
     credentials: true,
   }));
+  // Stripe webhook: registrare raw body prima del json parser generale
+  app.post('/api/checkout/stripe-webhook', express.raw({ type: 'application/json' }), stripeWebhook);
+  // Parser JSON per il resto delle route
   app.use(express.json());
   app.use(cookieParser());
 
@@ -67,6 +72,7 @@ async function bootstrap() {
   app.use('/api/soluzioni', soluzioniRouter);
   app.use('/api/compagnia', compagniaRouter);
   app.use('/api/booking', bookingRouter);
+  app.use('/api/checkout', checkoutRouter);
 
   app.get("/", (_req: Request, res: Response) => res.send("Backend funzionante!"));
 
