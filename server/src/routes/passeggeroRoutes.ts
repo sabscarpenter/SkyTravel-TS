@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { requireRole } from '../middleware/role';
-import { getProfile, updateProfilePhoto, getReservations, getStatistics, updateEmail, updatePassword} from '../controllers/passeggeroController';
+import { getProfile, updateProfilePhoto, getReservations, 
+         getStatistics, updateEmail, updatePassword } from '../controllers/passeggeroController';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -10,7 +11,7 @@ import { randomUUID } from 'crypto';
 // METODI PER IL CARICAMENTO DELLE IMMAGINI
 const uploadsDir = path.join(process.cwd(), 'uploads', 'profile-pictures');
 fs.mkdirSync(uploadsDir, { recursive: true });
-
+// Configurazione multer: storage, limits, fileFilter
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
   filename: (_req, file, cb) => {
@@ -18,7 +19,7 @@ const storage = multer.diskStorage({
     cb(null, `${randomUUID()}${ext}`);
   },
 });
-
+// Limite di 5MB e solo immagini
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
@@ -32,7 +33,7 @@ const upload = multer({
 const passeggeroRouter = Router();
 
 passeggeroRouter.get('/profile', requireAuth, requireRole('PASSEGGERO'), getProfile);
-passeggeroRouter.post('/update-photo', requireAuth, requireRole('PASSEGGERO'), upload.single('profile_picture'), updateProfilePhoto); // DA CONTROLLARE
+passeggeroRouter.post('/update-photo', requireAuth, requireRole('PASSEGGERO'), upload.single('profile_picture'), updateProfilePhoto); 
 passeggeroRouter.get('/reservations', requireAuth, requireRole('PASSEGGERO'), getReservations);
 passeggeroRouter.get('/statistics', requireAuth, requireRole('PASSEGGERO'), getStatistics);
 passeggeroRouter.put('/aggiorna-email', requireAuth, requireRole('PASSEGGERO'), updateEmail);

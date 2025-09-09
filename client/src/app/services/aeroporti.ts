@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface Aeroporto {
 	iata: string;
@@ -15,13 +16,12 @@ export interface NazioniAeroporti {
     aeroporti: Aeroporto[];
 }
 
-
 @Injectable({
   providedIn: 'root'
 })
 export class AeroportiService {
 
-  private apiUrl = 'http://localhost:3000/api/aeroporti';
+  private apiUrl = `${environment.apiBase}/aeroporti`;
 
   constructor(private http: HttpClient) { }
 

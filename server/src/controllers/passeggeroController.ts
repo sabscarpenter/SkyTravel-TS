@@ -52,10 +52,9 @@ export async function getReservations(req: Request, res: Response) {
                   WHERE b.utente = $1`;
     const { rows } = await pool.query(query, [sub]);
 
-    const reservations = [];
-    for (const row of rows) {
+    const reservations = rows.map((row) => {
       let seat_class = row.classe_posto === 'E' ? 'economy' : row.classe_posto === 'B' ? 'business' : 'first';
-      reservations.push({
+      return {  
         firstName: row.nome,
         lastName: row.cognome,
         flightNumber: row.volo,
@@ -69,8 +68,8 @@ export async function getReservations(req: Request, res: Response) {
         seatClass: seat_class,
         seatPrice: row.prezzo,
         extraBags: row.bagagli
-      });
-    }
+      };
+    });
     res.json(reservations);
   } catch (err: any) {
     res.status(500).json({ message: 'Errore recupero prenotazioni', error: err.message });
@@ -121,33 +120,28 @@ export async function updateEmail(req: Request, res: Response) {
     const params = [email, sub];
     await pool.query(q, params);
     res.json({ message: 'Email aggiornata con successo' });
-  } catch (err) {
-    return res.status(500).json({ message: 'Errore aggiornamento email', error: (err as Error).message });
+  } catch (err: any) {
+    return res.status(500).json({ message: 'Errore aggiornamento email', error: err.message });
   }
 }
 
-
-// TODO: implementare hashing e verifica current password
 export async function updatePassword(req: Request, res: Response) {
-  const { currentPassword, newPassword } = req.body || {};
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ message: 'Password mancanti' });
-  }
+  const { passwordAttuale, nuovaPassword } = req.body || {};
+  if (!passwordAttuale || !nuovaPassword) return res.status(400).json({ message: 'Password mancanti' });
   const sub  = req.user!.sub;
   if (!sub) return res.status(400).json({ message: 'id Mancante' });
 
   try {
     const user = await pool.query('SELECT * FROM utenti WHERE id = $1', [sub]);
     if (!user.rows.length) return res.status(404).json({ message: 'Utente non trovato' });
+    const isMatch = await bcrypt.compare(passwordAttuale, user.rows[0].password);
+    if (!isMatch) return res.status(402).json({ message: 'Password attuale non valida' });
 
-    const isMatch = await bcrypt.compare(currentPassword, user.rows[0].password);
-    if (!isMatch) return res.status(401).json({ message: 'Password attuale non valida' });
-
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    const hashedNewPassword = await bcrypt.hash(nuovaPassword, 12);
     const query = 'UPDATE utenti SET password = $1 WHERE id = $2';
     await pool.query(query, [hashedNewPassword, sub]);
     res.json({ message: 'Password aggiornata con successo' });
-  } catch (err) {
-    return res.status(500).json({ message: 'Errore aggiornamento password', error: (err as Error).message });
+  } catch (err: any) {
+    return res.status(500).json({ message: 'Errore aggiornamento password', error: err.message });
   }
 }

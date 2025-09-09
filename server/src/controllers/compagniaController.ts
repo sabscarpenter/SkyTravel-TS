@@ -146,9 +146,6 @@ export async function getAircrafts(req: Request, res: Response) {
 export async function getRoutes(req: Request, res: Response) {
     try {
         const id = req.user!.sub;
-        if (!id) {
-            return res.status(401).json({ message: "Non autorizzato" });
-        }
 
         // Query alle tratte della compagnia
         const result = await pool.query(
@@ -186,35 +183,50 @@ export async function getRoutes(req: Request, res: Response) {
 export async function getBestRoutes(req: Request, res: Response) {
     try {
         const id = req.user!.sub;
-        if (!id) {
-            return res.status(401).json({ message: "Non autorizzato" });
-        }
+ 
         // Query alle tratte della compagnia con più biglietti venduti
         const result = await pool.query(
             `
-            SELECT t.numero, t.partenza, t.arrivo, t.durata_minuti, t.distanza,
-                     ap.nome AS partenza_nome, aa.nome AS arrivo_nome,
-                     COUNT(b.id) AS biglietti_venduti
+            WITH flights AS (
+                SELECT  v.numero AS volo_numero,
+                        v.tratta AS tratta_numero,
+                        (m.posti_economy + m.posti_business + m.posti_first) AS seats
+                FROM voli v
+                JOIN aerei a   ON v.aereo = a.numero
+                JOIN modelli m ON a.modello = m.nome
+                WHERE a.compagnia = $1
+            ),
+            seats_by_route AS (
+                SELECT f.tratta_numero, SUM(f.seats) AS posti_totali
+                FROM flights f
+                GROUP BY f.tratta_numero
+            ),
+            passengers_by_route AS (
+                SELECT v.tratta AS tratta_numero, COUNT(b.numero) AS passeggeri_totali
+                FROM voli v
+                JOIN biglietti b ON b.volo = v.numero
+                JOIN aerei a ON v.aereo = a.numero
+                WHERE a.compagnia = $1
+                GROUP BY v.tratta
+            )
+            SELECT t.partenza, t.arrivo,
+                COALESCE(p.passeggeri_totali, 0) AS passeggeri_totali,
+                COALESCE(s.posti_totali, 0)      AS posti_totali
             FROM tratte t
-            JOIN aeroporti ap ON t.partenza = ap.codice
-            JOIN aeroporti aa ON t.arrivo = aa.codice
-            LEFT JOIN biglietti b ON t.numero = b.tratta
+            JOIN seats_by_route s           ON s.tratta_numero = t.numero
+            LEFT JOIN passengers_by_route p ON p.tratta_numero = t.numero
             WHERE t.compagnia = $1
-            GROUP BY t.numero, t.partenza, t.arrivo, t.durata_minuti, t.distanza, ap.nome, aa.nome
-            ORDER BY biglietti_venduti DESC
-            LIMIT 5
+            ORDER BY passeggeri_totali DESC
+            LIMIT 5;
             `, [id]
         );
 
         const bestRoutes = result.rows.map(r => ({
-            numero: r.numero,
             partenza: r.partenza,
             arrivo: r.arrivo,
-            durata_min: r.durata_minuti,
-            lunghezza_km: r.distanza,
-            partenza_nome: r.partenza_nome,
-            arrivo_nome: r.arrivo_nome,
-            biglietti_venduti: r.biglietti_venduti
+            passeggeri_totali: parseInt(r.passeggeri_totali, 10) || 0,
+            posti_totali: parseInt(r.posti_totali, 10) || 0,
+            riempimento_percent: r.posti_totali > 0 ? ((r.passeggeri_totali / r.posti_totali) * 100): "0.00"
         }));
 
         return res.status(200).json(bestRoutes);
@@ -223,6 +235,237 @@ export async function getBestRoutes(req: Request, res: Response) {
         return res.status(500).json({
             message: "Errore server durante il recupero delle tratte migliori",
             error: err.message,
+        });
+    }
+}
+
+
+export async function getFlights(req: Request, res: Response) {
+    try {
+        const id = req.user!.sub;
+        if (!id) return res.status(400).json({ message: "Non autorizzato" });
+
+        // 1) Biglietti venduti per volo (solo voli della compagnia)
+        const soldRows = await pool.query(
+            `
+            SELECT b.volo, COUNT(b.numero) AS cnt
+            FROM biglietti b
+            JOIN voli v ON b.volo = v.numero
+            JOIN aerei a ON v.aereo = a.numero
+            WHERE a.compagnia = $1
+            GROUP BY b.volo
+            `, [id]
+        );
+
+        const soldMap: Record<string, number> = {};
+        for (const row of soldRows.rows) {
+            soldMap[row.volo] = parseInt(row.cnt, 10);
+        }
+
+        // 2) Carica i voli con tratta + modello aereo
+        const result = await pool.query(
+            `
+            SELECT v.numero, v.tratta, v.data_ora_partenza,
+                    a.modello, m.posti_economy, m.posti_business, m.posti_first,
+                    t.durata_minuti
+            FROM voli v
+            JOIN aerei a ON v.aereo = a.numero
+            JOIN modelli m ON a.modello = m.nome
+            JOIN tratte t ON v.tratta = t.numero
+            WHERE a.compagnia = $1
+            ORDER BY v.data_ora_partenza
+        `, [id]
+        );
+
+        // 3) Costruzione risposta
+        const flights = result.rows.map(row => {
+            const postiTotali = row.posti_economy + row.posti_business + row.posti_first;
+            const postiOccupati = soldMap[row.numero] || 0;
+            const postiDisponibili = postiTotali - postiOccupati;
+
+            const dtPart = new Date(row.data_ora_partenza);
+            const dtArr = new Date(dtPart.getTime() + row.durata_minuti * 60 * 1000);
+
+            const partenza = dtPart.toISOString().slice(0, 16).replace("T", " ");
+            const arrivo = dtArr.toISOString().slice(0, 16).replace("T", " ");
+
+            return {
+                numero: row.numero,
+                partenza,
+                arrivo,
+                tratta_id: row.tratta,
+                aereo_nome: row.modello,
+                posti_disponibili: postiDisponibili,
+            };
+        });
+
+        return res.status(200).json(flights);
+    } catch (err: any) {
+        console.error("Errore in get_company_flights:", err);
+        return res.status(500).json({
+            message: "Errore server durante il recupero dei voli",
+            error: err.message,
+        });
+    }
+}
+
+export async function addRoute(req: Request, res: Response) {
+    try {
+        const id = req.user!.sub;
+        const data = req.body;
+        if ( !data.numero || !data.partenza || !data.arrivo || !data.durata_min || !data.lunghezza_km ) {
+            return res.status(400).json({ message: "Parametri mancanti" });
+        }
+
+        await pool.query(
+            `
+            INSERT INTO tratte (numero, partenza, arrivo, durata_minuti, distanza, compagnia)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            `, [ data.numero, data.partenza, data.arrivo, data.durata_min, data.lunghezza_km, id ]
+        );
+
+        return res.status(201).json({ message: "Tratta aggiunta con successo" });
+    } catch (err: any) {
+        console.error("Errore in POST /routes:", err);
+        return res.status(500).json({
+            message: "Errore server durante l'inserimento della tratta",
+            error: err.message,
+        });
+    }
+}
+
+export async function deleteRoute(req: Request, res: Response) {
+    try {
+        const id = req.user!.sub;
+        if (!id) return res.status(400).json({ message: "Non autorizzato" });
+
+        const { numero } = req.params;
+
+        const result = await pool.query(
+            `
+            DELETE FROM tratte
+            WHERE numero = $1 AND compagnia = $2
+            RETURNING *
+            `, [numero, id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: "Tratta non trovata" });
+        }
+
+        return res.status(200).json(result.rows[0]);
+    } catch (err: any) {
+        console.error("Errore in delete_route:", err);
+        return res.status(500).json({
+            message: "Errore server durante la cancellazione della tratta",
+            error: err.message,
+        });
+    }
+}
+
+export async function addFlights(req: Request, res: Response) {
+    try {
+        const id = req.user!.sub;
+        if (!id) return res.status(400).json({ message: "Non autorizzato" });
+
+        const { routeNumber, aircraftNumber, frequency, departureTime, days, startDate, weeksCount=1 } = req.body;
+        if ( !routeNumber || !aircraftNumber || !frequency || !departureTime || !startDate ) {
+            return res.status(400).json({ message: "Parametri mancanti" });
+        }
+
+        // Parsing delle date
+        let startDt: Date;
+        let depHour: number, depMin: number;
+        const [y, m, d] = startDate.split("-").map((x: string) => parseInt(x, 10));
+        startDt = new Date(y, m - 1, d);
+        const [hh, mm] = departureTime.split(":").map((x: string) => parseInt(x, 10));
+        depHour = hh;
+        depMin = mm;
+
+        // Costruzione delle date
+        const createDates: Date[] = [];
+        if (frequency === "giornaliero") {
+            const totalDays = weeksCount * 7;
+            for (let offset = 0; offset < totalDays; offset++) {
+                const dte = new Date(startDt);
+                dte.setDate(startDt.getDate() + offset);
+                createDates.push(dte);
+            }
+        } else { // settimanale
+            const dayMap: Record<string, number> = {
+                Lun: 0, Mar: 1, Mer: 2, Gio: 3, Ven: 4, Sab: 5, Dom: 6,
+            };
+
+            const desiredIdxs = (days || []).map((d: string) => dayMap[d])
+                                .filter((x: number | undefined) => x !== undefined)
+                                .sort((a: number, b: number) => a - b);
+
+            if (!desiredIdxs.length) {
+                return res.status(400).json({ error: "Giorni settimanali non validi." });
+            }
+
+            const startWd = startDt.getDay(); // 0=Dom, 1=Lun, ..., 6=Sab
+            for (let w = 0; w < weeksCount; w++) {
+                const base = new Date(startDt);
+                base.setDate(startDt.getDate() + w * 7);
+
+                for (const di of desiredIdxs) {
+                    let delta = (di - (startWd === 0 ? 6 : startWd - 1)) % 7;
+                    if (delta < 0) delta += 7;
+
+                    let target = new Date(base);
+                    target.setDate(base.getDate() + delta);
+
+                    if (w === 0 && target < startDt) {
+                        target.setDate(target.getDate() + 7);
+                    }
+                    createDates.push(target);
+                }
+            }
+        }
+
+        const prefix = `${routeNumber}-`;
+
+        // Recupera ultimo suffisso numerico
+        const maxRes = await pool.query(
+            `
+            SELECT COALESCE(MAX(CAST(SUBSTRING(numero FROM '([0-9]{6})$') AS INT)), 0) AS max_seq
+            FROM voli
+            WHERE numero LIKE $1
+            `, [prefix + "%"]
+        );
+
+        let nextSeq = (maxRes.rows[0]?.max_seq || 0) + 1;
+
+        // Inserimento voli
+        const created: string[] = [];
+        for (const dte of createDates) {
+            const dt = new Date(dte);
+            dt.setHours(depHour, depMin, 0, 0);
+
+            const numero = `${prefix}${String(nextSeq).padStart(6, "0")}`;
+            nextSeq++;
+
+            await pool.query(
+                `
+                INSERT INTO voli (numero, aereo, tratta, data_ora_partenza)
+                VALUES ($1, $2, $3, $4)
+                `,
+                [numero, aircraftNumber, routeNumber, dt.toISOString()]
+            );
+
+            created.push(numero);
+        }
+
+        return res.status(201).json({
+            message: "Voli aggiunti con successo",
+            created,
+        });
+    } catch (err: any) {
+        console.error("Errore in POST /flights:", err);
+        return res.status(500).json({
+        message: "Errore server durante l'inserimento dei voli.",
+        error: err.message,
         });
     }
 }

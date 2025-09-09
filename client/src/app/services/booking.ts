@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Itinerario, Volo } from './soluzioni';
 import { TicketTemporaneo } from '../pages/posti/posti';
+import { environment } from '../../environments/environment';
 
 /**
  * Type of trip for the booking flow.
@@ -78,7 +79,7 @@ export interface ModelloConfigurazione {
 @Injectable({ providedIn: 'root' })
 export class BookingService {
 	private state: BookingState | null = null;
-	private apiUrl = 'http://localhost:3000/api/booking';
+	private apiUrl = `${environment.apiBase}/booking`;
 
 	constructor(private http: HttpClient) {}
 
@@ -197,7 +198,7 @@ export class BookingService {
 
 	getModelloConfigurazione(nome: string): Observable<ModelloConfigurazione> {
 		const params = new HttpParams().set('nome', nome);
-		return this.http.get<ModelloConfigurazione>(`${this.apiUrl}/configurazione`, { params });
+		return this.http.get<ModelloConfigurazione>(`${this.apiUrl}/configuration`, { params });
 	}
 
 	isSeatSelectionComplete(): boolean {
@@ -238,11 +239,11 @@ export class BookingService {
 	}
 
 	listaPostiOccupati(volo: string): Observable<{ occupied: string[] }> {
-    	return this.http.get<{ occupied: string[] }>(`${this.apiUrl}/posti`, { params: { volo } });
+    	return this.http.get<{ occupied: string[] }>(`${this.apiUrl}/seats`, { params: { volo } });
   	}
 
 	trattieniPosti(ticketsData: TicketTemporaneo[]): Observable<TicketTemporaneo[]> {
-    	return this.http.post<TicketTemporaneo[]>(`${this.apiUrl}/trattieni`, ticketsData);
+    	return this.http.post<TicketTemporaneo[]>(`${this.apiUrl}/seats/reserve`, ticketsData);
   	}
 }
 

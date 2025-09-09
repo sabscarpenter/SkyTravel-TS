@@ -395,7 +395,7 @@ export class Passeggero {
       },
       error: (error) => {
         this.openPopup(error.error?.message, 'error');
-        console.error('Errore nell\'aggiornamento email:', error.error?.error);
+        console.error('Errore nell\'aggiornamento email:', error);
       }
     });
   }
@@ -407,7 +407,7 @@ export class Passeggero {
       },
       error: (error) => {
         this.openPopup(error.error?.message, 'error');
-        console.error('Errore nell\'aggiornamento password:', error.error?.error);
+        console.error('Errore nell\'aggiornamento password:', error);
       }
     });
   }

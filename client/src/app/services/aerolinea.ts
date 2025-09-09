@@ -58,7 +58,7 @@ export class AerolineaService {
   constructor(private http: HttpClient) { }
 
   getAirlineProfile(): Observable<AerolineaInfo> {
-    return this.http.get<AerolineaInfo>(`${this.apiUrl}/profile`, { withCredentials: true });
+    return this.http.get<AerolineaInfo>(`${this.apiUrl}/profile`);
   }
 
   getPhotoUrl(filename: string): string {
@@ -67,35 +67,35 @@ export class AerolineaService {
   }
   
   getAirlineRoutes(): Observable<Route[]> {
-    return this.http.get<Route[]>(`${this.apiUrl}/routes`, { withCredentials: true });
+    return this.http.get<Route[]>(`${this.apiUrl}/routes`);
   }
 
   getAirlineStatistics(): Observable<AerolineaStatistics> {
-    return this.http.get<AerolineaStatistics>(`${this.apiUrl}/statistics`, { withCredentials: true });
+    return this.http.get<AerolineaStatistics>(`${this.apiUrl}/statistics`);
   }
 
   getBestRoutes(): Observable<Route[]> {
-    return this.http.get<Route[]>(`${this.apiUrl}/routes/best`, { withCredentials: true });
+    return this.http.get<Route[]>(`${this.apiUrl}/routes/best`);
   }
 
   getAirlineFlights(): Observable<Flight[]> {
-    return this.http.get<Flight[]>(`${this.apiUrl}/flights`, { withCredentials: true });
+    return this.http.get<Flight[]>(`${this.apiUrl}/flights`);
   }
 
   getAirlineAircrafts(): Observable<Aircraft[]> {
-    return this.http.get<Aircraft[]>(`${this.apiUrl}/aircrafts`, { withCredentials: true });
+    return this.http.get<Aircraft[]>(`${this.apiUrl}/aircrafts`);
   }
 
   addAirlineFlights(flight: NewFlightFormData): Observable<any> {
-  return this.http.post<any>(`${this.apiUrl}/flights`, flight, { withCredentials: true });
+  return this.http.post<any>(`${this.apiUrl}/flights`, flight);
   }
 
   addAirlineRoute(route: Route): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/routes`, route, { withCredentials: true });
+    return this.http.post<any>(`${this.apiUrl}/routes`, route);
   }
 
   deleteAirlineRoute(routeNumber: string): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/routes/${routeNumber}`, { withCredentials: true });
+    return this.http.delete<any>(`${this.apiUrl}/routes/${routeNumber}`);
   }
 
 }

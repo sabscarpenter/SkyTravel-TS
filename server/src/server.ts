@@ -10,6 +10,8 @@ import passeggeroRouter from './routes/passeggeroRoutes';
 import aeroportiRouter from './routes/aeroportiRoutes';
 import soluzioniRouter from './routes/soluzioniRoutes';
 import compagniaRouter from "./routes/compagniaRoutes";
+import bookingRouter from "./routes/bookingRoutes";
+// import checkoutRouter from "./routes/checkoutRoutes";
 
 dotenv.config();
 
@@ -67,6 +69,8 @@ app.use('/api/passeggero', passeggeroRouter);
 app.use('/api/aeroporti', aeroportiRouter);
 app.use('/api/soluzioni', soluzioniRouter);
 app.use('/api/compagnia', compagniaRouter);
+app.use('/api/booking', bookingRouter);
+// app.use('/api/checkout', checkoutRouter);
 
 // Rotta di prova
 app.get("/", (req: Request, res: Response) => {
