@@ -14,3 +14,4 @@ psql -U admin -d SkyTravelDb
 docker compose exec server node -e "const {Client}=require('pg');const c=new Client({connectionString:process.env.DATABASE_URL});c.connect().then(()=>{console.log('OK');c.end()}).catch(e=>{console.error(e);process.exit(1)})"
 npx ts-node src/server.ts
 npx tsx watch src/server.ts
+& "C:\Users\itali\Documents\Tools\stripe\stripe.exe" listen --forward-to http://localhost:5000/api/checkout/stripe-webhook

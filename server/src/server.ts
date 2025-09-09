@@ -12,6 +12,7 @@ import aeroportiRouter from './routes/aeroportiRoutes';
 import soluzioniRouter from './routes/soluzioniRoutes';
 import compagniaRouter from "./routes/compagniaRoutes";
 import bookingRouter from "./routes/bookingRoutes";
+import adminRouter from "./routes/adminRoutes";
 import checkoutRouter from "./routes/checkoutRoutes";
 import { stripeWebhook } from './controllers/checkoutController';
 import { seedAdminIfMissing } from './admin';
@@ -72,6 +73,7 @@ async function bootstrap() {
   app.use('/api/soluzioni', soluzioniRouter);
   app.use('/api/compagnia', compagniaRouter);
   app.use('/api/booking', bookingRouter);
+  app.use('/api/admin', adminRouter);
   app.use('/api/checkout', checkoutRouter);
 
   app.get("/", (_req: Request, res: Response) => res.send("Backend funzionante!"));
