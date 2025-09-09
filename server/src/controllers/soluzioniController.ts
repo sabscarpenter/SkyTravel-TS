@@ -1,7 +1,19 @@
 import { Request, Response } from "express";
 import { pool } from "../db";
 import { parseISO, addMinutes, addHours, differenceInMinutes } from 'date-fns';
-import { Volo } from "../types/types";
+
+export interface Volo {
+  numero: string;
+  data_ora_partenza: Date;
+  durata_minuti: number;
+  distanza: number;
+  tratta_partenza: string;
+  tratta_arrivo: string;
+  citta_partenza?: string;
+  citta_arrivo?: string;
+  modello: string;
+  compagnia: string;
+}
 
 /**
  * Formatta una durata (in minuti) come stringa tipo "9h 05m"

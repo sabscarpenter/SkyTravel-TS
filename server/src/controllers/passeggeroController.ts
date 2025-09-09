@@ -23,7 +23,6 @@ export async function getProfile(req: Request, res: Response) {
   }
 }
 
-// TODO: controllare che funzioni correttamente
 export async function updateProfilePhoto(req: Request, res: Response) {
   try {
     const sub  = req.user!.sub;
@@ -53,7 +52,7 @@ export async function getReservations(req: Request, res: Response) {
     const { rows } = await pool.query(query, [sub]);
 
     const reservations = rows.map((row) => {
-      let seat_class = row.classe_posto === 'E' ? 'economy' : row.classe_posto === 'B' ? 'business' : 'first';
+      let seat_class = row.classe === 'e' ? 'economy' : row.classe === 'b' ? 'business' : 'first';
       return {  
         firstName: row.nome,
         lastName: row.cognome,
