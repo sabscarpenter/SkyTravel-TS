@@ -2,7 +2,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Login } from '../login/login';
 import { Registrazione } from '../registrazione/registrazione';
-import { Dati } from '../dati/dati';
+import { DatiPasseggero } from '../dati-passeggero/dati-passeggero';
 import { AuthService, User } from '../../services/auth';
 import { PasseggeroService } from '../../services/passeggero';
 import { AerolineaService } from '../../services/aerolinea';
@@ -12,7 +12,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [Login, Registrazione, Dati, CommonModule],
+  imports: [Login, Registrazione, DatiPasseggero, CommonModule],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
 })
@@ -21,7 +21,7 @@ export class Navbar implements OnInit {
   user: User | null = null;
 
   isAuthPopupOpen = false;
-  authMode: 'login' | 'register' | 'dati' = 'login';
+  authMode: 'login' | 'register' | 'datiPasseggero' = 'login';
 
   // Stato caricamento immagine profilo (placeholder fino al load)
   imageLoaded = false;
@@ -42,7 +42,6 @@ export class Navbar implements OnInit {
       next: (user: User | null) => {
         this.isAuthenticated = !!user;
         this.user = user;
-        // Reset del placeholder ad ogni cambio utente/foto
         this.imageLoaded = false;
       },
       error: () => {
@@ -61,7 +60,7 @@ export class Navbar implements OnInit {
   closeAuthPopup() { this.isAuthPopupOpen = false; }
   switchToLogin() { this.authMode = 'login'; }
   switchToRegister() { this.authMode = 'register'; }
-  switchToDati() { this.authMode = 'dati'; }
+  switchToDatiPasseggero() { this.authMode = 'datiPasseggero'; }
 
   onLoginSuccess(_: any) {
     this.checkAuthStatus();
@@ -70,8 +69,8 @@ export class Navbar implements OnInit {
   onRegisterSuccess(_: any) {
     this.checkAuthStatus();
   }
-  onOpenDati(_: any) { this.switchToDati(); }
-  onDatiComplete() {
+  onOpenDatiPasseggero(_: any) { this.switchToDatiPasseggero(); }
+  onDatiPasseggeroComplete() {
     this.checkAuthStatus();
     this.closeAuthPopup();
   }
@@ -101,10 +100,12 @@ export class Navbar implements OnInit {
   }
 
   goToProfile() {
-    this.user && this.user.id >= 100
+    this.user && this.user.role === 'PASSEGGERO'
       ? this.router.navigate(['/passeggero'])
       : this.router.navigate(['/aerolinea']);
   }
+
+  goToAdminDashboard() { this.router.navigate(['/admin']); }
 
   goToHome() { this.router.navigate(['/home']); }
 

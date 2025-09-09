@@ -54,7 +54,7 @@ export async function register(req: Request, res: Response) {
 
     // 1) utenti
     const insUser = await client.query(
-      'INSERT INTO utenti (email, password, foto) VALUES ($1, $2, NULL) RETURNING id, email, foto',
+      'INSERT INTO utenti (id, email, password, foto) VALUES (NULL, $1, $2, NULL) RETURNING id, email, foto',
       [email, hash]
     );
     const userRow = insUser.rows[0] as { id: number; email: string; foto: string | null };
@@ -110,11 +110,11 @@ export async function login(req: Request, res: Response) {
       'SELECT id, email, password FROM utenti WHERE LOWER(email)=LOWER($1)',
       [email]
     );
-    if (!result.rowCount) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!result.rowCount) return res.status(400).json({ message: 'Email non trovata' });
 
     const row = result.rows[0] as { id: number; email: string; password: string };
     const ok = await bcrypt.compare(password, row.password);
-    if (!ok) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!ok) return res.status(400).json({ message: 'Credenziali non valide' });
 
     const u = await getUserById(row.id);
 
@@ -199,7 +199,7 @@ export async function logout(req: Request, res: Response) {
 // ------------------ LOGOUT ALL ------------------
 export async function logoutAll(req: Request, res: Response) {
   const userId = (req as any).user?.sub as number | undefined;
-  if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+  if (userId === undefined || userId === null) return res.status(401).json({ message: 'Unauthorized' });
 
   try {
     await pool.query(
@@ -218,7 +218,7 @@ export async function logoutAll(req: Request, res: Response) {
 // ------------------ ME (protetta) ------------------
 export async function me(req: Request, res: Response) {
   const uid = (req as any).user?.sub as number | undefined;
-  if (!uid) return res.status(401).json({ message: 'Unauthorized' });
+  if (uid === undefined || uid === null) return res.status(400).json({ message: 'Unauthorized' });
   try {
     const u = await getUserById(uid);
     return res.json({ id: u.id, email: u.email, role: u.role, foto: u.foto ?? '' });

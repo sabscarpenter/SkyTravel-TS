@@ -14,7 +14,7 @@ export class Registrazione {
   @Output() onRegisterSuccess = new EventEmitter<any>();
   @Output() onSwitchToLogin = new EventEmitter<void>();
   @Output() onClose = new EventEmitter<void>();
-  @Output() onOpenDati = new EventEmitter<any>();
+  @Output() onOpenDatiPasseggero = new EventEmitter<any>();
 
   email: string = '';
   password: string = '';
@@ -52,8 +52,8 @@ export class Registrazione {
     this.buffer.setDraft(this.email, this.password);
     this.isLoading = false;
 
-    // Mostra step Dati
-    this.onOpenDati.emit({ email: this.email });
+    // Mostra step Dati Passeggero
+    this.onOpenDatiPasseggero.emit({ email: this.email });
   }
 
   switchToLogin() {

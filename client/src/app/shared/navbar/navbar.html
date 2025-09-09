@@ -8,7 +8,7 @@
   <!-- Menu mobile toggle -->
   <div class="flex-none lg:hidden">
     <div class="dropdown dropdown-end">
-      <label tabindex="0" class="btn btn-ghost btn-circle text-blue-600 hover:bg-blue-100">
+      <label tabindex="0" class="btn btn-ghost btn-circle text-blue-900 hover:bg-blue-100">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           class="h-5 w-5"
@@ -19,10 +19,30 @@
                 d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
       </label>
-      <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow-xl bg-white rounded-xl w-52 border border-blue-100">
-        <li><a class="text-blue-600 hover:bg-blue-50 rounded-lg">Profile</a></li>
-        <li><a class="text-blue-600 hover:bg-blue-50 rounded-lg">Logout</a></li>
-        <li><a class="text-blue-600 hover:bg-blue-50 rounded-lg">Logout Tutti</a></li>
+      <ul
+        tabindex="0"
+        class="menu menu-sm dropdown-content bg-white/95 backdrop-blur-md rounded-xl z-[1] mt-3 w-52 p-3 shadow-xl border border-blue-100">
+        <li>
+          <div class="text-blue-800 font-semibold px-2 py-1">
+            {{ user?.email }}
+          </div>
+        </li>
+        <div class="divider my-1"></div>
+        <li>
+          <a (click)="goToProfile()" class="text-blue-600 hover:bg-blue-50 rounded-lg font-medium"> 
+            Profilo
+          </a>
+        </li>
+        <li>
+          <a (click)="logout()" class="text-red-500 hover:bg-red-50 rounded-lg font-medium cursor-pointer">
+            Logout
+          </a>
+        </li>
+        <li>
+          <a (click)="logoutAll()" class="text-red-500 hover:bg-red-50 rounded-lg font-medium cursor-pointer">
+            Logout Tutti
+          </a>
+        </li>
       </ul>
     </div>
   </div>
@@ -59,11 +79,20 @@
               </div>
             </li>
             <div class="divider my-1"></div>
-            <li>
+            @if (user?.role === 'ADMIN') {
+              <li>
+                <a (click)="goToAdminDashboard()" class="text-blue-600 hover:bg-blue-50 rounded-lg font-medium"> 
+                  Dashboard Admin
+                </a>
+              </li>
+            }
+            @else {
+              <li>
               <a (click)="goToProfile()" class="text-blue-600 hover:bg-blue-50 rounded-lg font-medium"> 
                 Profilo
               </a>
             </li>
+            }
             <li>
               <a (click)="logout()" class="text-red-500 hover:bg-red-50 rounded-lg font-medium cursor-pointer">
                 Logout
@@ -122,13 +151,13 @@
           (onRegisterSuccess)="onRegisterSuccess($event)"
           (onSwitchToLogin)="switchToLogin()"
           (onClose)="closeAuthPopup()"
-          (onOpenDati)="onOpenDati($event)">
+          (onOpenDatiPasseggero)="onOpenDatiPasseggero($event)">
         </app-registrazione>
-      } @else if (authMode === 'dati') {
-        <app-dati 
-          (onComplete)="onDatiComplete()"
+      } @else if (authMode === 'datiPasseggero') {
+        <app-dati-passeggero 
+          (onComplete)="onDatiPasseggeroComplete()"
           (onClose)="closeAuthPopup()">
-        </app-dati>
+        </app-dati-passeggero>
       }
     </div>
   </div>

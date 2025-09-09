@@ -1,3 +1,4 @@
+// server/src/server.ts
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -11,7 +12,7 @@ import aeroportiRouter from './routes/aeroportiRoutes';
 import soluzioniRouter from './routes/soluzioniRoutes';
 import compagniaRouter from "./routes/compagniaRoutes";
 import bookingRouter from "./routes/bookingRoutes";
-// import checkoutRouter from "./routes/checkoutRoutes";
+import { seedAdminIfMissing } from './admin';
 
 dotenv.config();
 
@@ -32,7 +33,6 @@ function pickSecrets() {
     console.log('[jwt] rotate ON → uso secrets random ad ogni avvio');
     return { access, refresh, rotated: true };
   }
-  // usa env se presenti, altrimenti genera
   const access = process.env.JWT_ACCESS_SECRET || generateRandomSecret();
   const refresh = process.env.JWT_REFRESH_SECRET || generateRandomSecret();
   if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
@@ -43,41 +43,41 @@ function pickSecrets() {
   return { access, refresh, rotated: false };
 }
 
-const { access, refresh, rotated } = pickSecrets();
-setJwtSecrets(access, refresh);
+async function bootstrap() {
+  const { access, refresh, rotated } = pickSecrets();
+  setJwtSecrets(access, refresh);
+  if (rotated) await invalidateAllSessions();
 
-if (rotated) {
-  invalidateAllSessions();
+  const app: Application = express();
+  const PORT = Number(process.env.PORT || 3000);
+
+  app.use(cors({
+    origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:4200'],
+    credentials: true,
+  }));
+  app.use(express.json());
+  app.use(cookieParser());
+
+  app.use('/api/passeggero/uploads/profile-pictures',
+    express.static(path.join(process.cwd(), 'uploads', 'profile-pictures')));
+
+  app.use('/api/auth', authRoutes);
+  app.use('/api/passeggero', passeggeroRouter);
+  app.use('/api/aeroporti', aeroportiRouter);
+  app.use('/api/soluzioni', soluzioniRouter);
+  app.use('/api/compagnia', compagniaRouter);
+  app.use('/api/booking', bookingRouter);
+
+  app.get("/", (_req: Request, res: Response) => res.send("Backend funzionante!"));
+
+  await seedAdminIfMissing();
+
+  app.listen(PORT, () => {
+    console.log(`Server avviato su http://localhost:${PORT}`);
+  });
 }
 
-const app: Application = express();
-
-const PORT: number = 3000;
-app.use(cors({
-  origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:4200'],
-  credentials: true,
-}));
-app.use(express.json());
-app.use(cookieParser());
-
-// Static for uploaded profile pictures
-app.use('/api/passeggero/uploads/profile-pictures', express.static(path.join(process.cwd(), 'uploads', 'profile-pictures')));
-
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/passeggero', passeggeroRouter);
-app.use('/api/aeroporti', aeroportiRouter);
-app.use('/api/soluzioni', soluzioniRouter);
-app.use('/api/compagnia', compagniaRouter);
-app.use('/api/booking', bookingRouter);
-// app.use('/api/checkout', checkoutRouter);
-
-// Rotta di prova
-app.get("/", (req: Request, res: Response) => {
-  res.send("Backend funzionante!");
-});
-
-// Avvio server
-app.listen(PORT, () => {
-  console.log(`Server avviato su http://localhost:${PORT}`);
+bootstrap().catch(err => {
+  console.error('Errore bootstrap server:', err);
+  process.exit(1);
 });

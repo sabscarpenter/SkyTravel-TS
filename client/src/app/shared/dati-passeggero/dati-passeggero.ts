@@ -20,13 +20,13 @@ import { RegistrationBufferService } from '../../services/registrazione-buffer';
  * @version 1.0.0
  */
 @Component({
-  selector: 'app-dati',
+  selector: 'app-dati-passeggero',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './dati.html',
-  styleUrl: './dati.css'
+  templateUrl: './dati-passeggero.html',
+  styleUrl: './dati-passeggero.css'
 })
-export class Dati {
+export class DatiPasseggero {
 
   @Output() onComplete = new EventEmitter<any>();
   @Output() onClose = new EventEmitter<void>();

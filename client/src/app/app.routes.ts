@@ -4,6 +4,7 @@ import { Home } from './pages/home/home';
 import { Voli } from './pages/voli/voli';
 import { Passeggero } from './pages/passeggero/passeggero';
 import { Aerolinea } from './pages/aerolinea/aerolinea';
+import { Admin } from './pages/admin/admin';
 import { Posti } from './pages/posti/posti';
 import { Checkout } from './pages/checkout/checkout';
 import { Dettagli } from './pages/dettagli/dettagli';
@@ -24,6 +25,13 @@ export const routes: Routes = [
     component: Aerolinea,
     canActivate: [authRoleGuard],
     data: { role: 'COMPAGNIA' }
+  },
+
+  {
+    path: 'admin',
+    component: Admin,
+    canActivate: [authRoleGuard],
+    data: { role: 'ADMIN' }
   },
 
   { path: 'dettagli',
