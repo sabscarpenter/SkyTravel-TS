@@ -54,7 +54,7 @@ export async function register(req: Request, res: Response) {
 
     // 1) utenti
     const insUser = await client.query(
-      'INSERT INTO utenti (id, email, password, foto) VALUES (NULL, $1, $2, NULL) RETURNING id, email, foto',
+      'INSERT INTO utenti (email, password, foto) VALUES ($1, $2, NULL) RETURNING id, email, foto',
       [email, hash]
     );
     const userRow = insUser.rows[0] as { id: number; email: string; foto: string | null };

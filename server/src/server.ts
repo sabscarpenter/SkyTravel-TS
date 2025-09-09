@@ -12,6 +12,7 @@ import aeroportiRouter from './routes/aeroportiRoutes';
 import soluzioniRouter from './routes/soluzioniRoutes';
 import compagniaRouter from "./routes/compagniaRoutes";
 import bookingRouter from "./routes/bookingRoutes";
+import adminRoutes from "./routes/adminRoutes";
 import { seedAdminIfMissing } from './admin';
 
 dotenv.config();
@@ -67,6 +68,7 @@ async function bootstrap() {
   app.use('/api/soluzioni', soluzioniRouter);
   app.use('/api/compagnia', compagniaRouter);
   app.use('/api/booking', bookingRouter);
+  app.use('/api/admin', adminRoutes);
 
   app.get("/", (_req: Request, res: Response) => res.send("Backend funzionante!"));
 

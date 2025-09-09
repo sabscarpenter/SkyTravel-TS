@@ -1,18 +1,8 @@
 import { Component } from '@angular/core';
+import { AdminService } from '../../services/admin';
+import { Compagnia, Passeggero } from '../../services/admin';
+import { PasseggeroService } from '../../services/passeggero';
 
-type Company = {
-  codice_iata: string;
-  nome: string;
-  nazione?: string;
-  contatto?: string | null;
-};
-
-type User = {
-  id: number;
-  email: string;
-  nome?: string | null;
-  ruolo?: string | null;
-};
 
 @Component({
   selector: 'app-admin',
@@ -22,17 +12,57 @@ type User = {
 })
 export class Admin {
   // Placeholder data to be replaced by API wiring
-  companies: Company[] = [];
-  users: User[] = [];
+  compagnie: Compagnia[] = [];
+  passeggeri: Passeggero[] = [];
+  isLoadingCompagnie = false;
+  isLoadingPasseggeri = false;
 
   // Search UI state
   searchQuery = '';
-  filteredUsers: User[] = [];
+  passeggeriFiltrati: Passeggero[] = [];
 
-  constructor() {
+  constructor(private adminService: AdminService, private passeggeroService: PasseggeroService) {
     // initialize filtered list
-    this.filteredUsers = this.users;
   }
+
+  ngOnInit() {
+    // Load initial data here if needed
+    this.loadCompagnie();
+    this.loadPasseggeri();
+  }
+
+  loadCompagnie() {
+  this.isLoadingCompagnie = true;
+  this.adminService.getCompagnie().subscribe({
+      next: (response) => {
+        this.compagnie = response;
+    this.passeggeriFiltrati = this.passeggeri;
+    this.isLoadingCompagnie = false;
+      },
+      error: (err) => {
+        console.error('[admin] error loading compagnie:', err);
+    this.isLoadingCompagnie = false;
+      }
+    });
+  }
+
+  loadPasseggeri() {
+  this.isLoadingPasseggeri = true;
+  this.adminService.getPasseggeri().subscribe({
+      next: (response) => {
+        this.passeggeri = response;
+    if (!this.searchQuery) this.passeggeriFiltrati = response;
+    this.isLoadingPasseggeri = false;
+      },
+      error: (err) => {
+        console.error('[admin] error loading passeggeri:', err);
+    this.isLoadingPasseggeri = false;
+      }
+    });
+  }
+
+  refreshCompagnie() { this.loadCompagnie(); }
+  refreshPasseggeri() { this.loadPasseggeri(); }
 
   // Minimal UX: open create-company flow (to be wired by you)
   openNuovaCompagnia() {
@@ -56,15 +86,41 @@ export class Admin {
   private applyUserFilter() {
     const q = this.searchQuery.toLowerCase();
     if (!q) {
-      this.filteredUsers = this.users;
+      this.passeggeriFiltrati = this.passeggeri;
       return;
     }
 
     // match by exact/partial id or email (case-insensitive)
-    this.filteredUsers = this.users.filter(u => {
+    this.passeggeriFiltrati = this.passeggeri.filter(u => {
       const emailMatch = (u.email || '').toLowerCase().includes(q);
-      const idMatch = String(u.id).includes(q);
+      const idMatch = String(u.utente).includes(q);
       return emailMatch || idMatch;
     });
+  }
+
+  removeCompagnia(c: Compagnia) {
+    this.adminService.removeCompagnia(c.utente).subscribe({
+      next: (response) => {
+        this.refreshCompagnie();
+      },
+      error: (err) => {
+        console.error('[admin] error removing company:', err);
+      }
+    });
+  }
+
+  removePasseggero(u: Passeggero) {
+    this.adminService.removePasseggero(u.utente).subscribe({
+      next: (response) => {
+        this.refreshPasseggeri();
+      },
+      error: (err) => {
+        console.error('[admin] error removing passenger:', err);
+      }
+    });
+  }
+
+  getPasseggeroPhoto(u: Passeggero): string {
+    return u.foto ? this.passeggeroService.getPhotoUrl(u.foto) : '';
   }
 }

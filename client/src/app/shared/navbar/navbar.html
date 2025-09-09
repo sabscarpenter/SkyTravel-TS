@@ -51,7 +51,16 @@
       @if (isAuthenticated) {
         <!-- Utente autenticato - Mostra avatar -->
         <div class="dropdown dropdown-end">
-          <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar hover:bg-blue-100 ring-2 ring-blue-200">
+          @if (user?.role === 'ADMIN') {
+            <div
+              tabindex="0"
+              role="button"
+              class="inline-flex select-none items-center gap-1.5 mr-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-300 to-yellow-400 text-amber-900 font-semibold border border-amber-300/80 shadow-sm hover:shadow-md hover:from-amber-400 hover:to-yellow-500 transition-all duration-200 ring-1 ring-amber-200/60 hover:ring-amber-300/80"
+              title="Amministratore">
+              Admin
+            </div>
+          } @else {
+            <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar hover:bg-blue-100 ring-2 ring-blue-200">
             <div class="w-10 h-10 rounded-full overflow-hidden relative">
               @if (!imageLoaded) {
                 <div class="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center z-10">
@@ -70,15 +79,10 @@
                 alt="Avatar" />
             </div>
           </div>
+          }
           <ul
             tabindex="0"
             class="menu menu-sm dropdown-content bg-white/95 backdrop-blur-md rounded-xl z-[1] mt-3 w-52 p-3 shadow-xl border border-blue-100">
-            <li>
-              <div class="text-blue-800 font-semibold px-2 py-1">
-                {{ user?.email }}
-              </div>
-            </li>
-            <div class="divider my-1"></div>
             @if (user?.role === 'ADMIN') {
               <li>
                 <a (click)="goToAdminDashboard()" class="text-blue-600 hover:bg-blue-50 rounded-lg font-medium"> 
@@ -87,7 +91,13 @@
               </li>
             }
             @else {
-              <li>
+            <li>
+              <div class="text-blue-800 font-semibold px-2 py-1">
+                {{ user?.email }}
+              </div>
+            </li>
+            <div class="divider my-1"></div>
+            <li>
               <a (click)="goToProfile()" class="text-blue-600 hover:bg-blue-50 rounded-lg font-medium"> 
                 Profilo
               </a>
