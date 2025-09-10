@@ -8,7 +8,7 @@ import fs from 'fs';
 import { randomUUID } from 'crypto';
 
 // METODI PER IL CARICAMENTO DELLE IMMAGINI
-const uploadsDir = path.join(process.cwd(), 'uploads', 'loghi-compagnie');
+const uploadsDir = path.join(process.cwd(), 'uploads', 'compagnie');
 fs.mkdirSync(uploadsDir, { recursive: true });
 // Configurazione multer: storage, limits, fileFilter
 const storage = multer.diskStorage({
@@ -33,6 +33,6 @@ adminRouter.get('/compagnie', requireAuth, requireRole('ADMIN'), compagnie);
 adminRouter.get('/passeggeri', requireAuth, requireRole('ADMIN'), passeggeri);
 adminRouter.delete('/compagnie/:id', requireAuth, requireRole('ADMIN'), removeCompagnia);
 adminRouter.delete('/passeggeri/:id', requireAuth, requireRole('ADMIN'), removePasseggero);
-adminRouter.post('/aggiungi', requireAuth, requireRole('ADMIN'), upload.single('logo'), aggiungi);
+adminRouter.post('/aggiungi', requireAuth, requireRole('ADMIN'), upload.single('file'), aggiungi);
 
 export default adminRouter;

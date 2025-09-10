@@ -52,7 +52,7 @@ export class PasseggeroService {
 
   getPhotoUrl(filename: string): string {
     if (!filename) return '';
-    return `${this.apiUrl}/uploads/profile-pictures/${filename}`;
+    return `${this.apiUrl}/uploads/passeggeri/${filename}`;
   }
 
   updateProfilePhoto(file: File): Observable<any> {

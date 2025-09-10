@@ -63,7 +63,7 @@ export class AerolineaService {
 
   getPhotoUrl(filename: string): string {
     if (!filename) return '';
-    return `${this.apiUrl}/uploads/loghi/${filename}`;
+    return `${this.apiUrl}/uploads/compagnie/${filename}`;
   }
   
   getAirlineRoutes(): Observable<Route[]> {

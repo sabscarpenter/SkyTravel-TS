@@ -12,7 +12,7 @@ import { randomUUID } from 'crypto';
 
 
 // METODI PER IL CARICAMENTO DELLE IMMAGINI
-const uploadsDir = path.join(process.cwd(), 'uploads', 'profile-pictures');
+const uploadsDir = path.join(process.cwd(), 'uploads', 'passeggeri');
 fs.mkdirSync(uploadsDir, { recursive: true });
 // Configurazione multer: storage, limits, fileFilter
 const storage = multer.diskStorage({
@@ -36,7 +36,7 @@ const upload = multer({
 const passeggeroRouter = Router();
 
 passeggeroRouter.get('/profile', requireAuth, requireRole('PASSEGGERO'), getProfile);
-passeggeroRouter.post('/update-photo', requireAuth, requireRole('PASSEGGERO'), upload.single('profile_picture'), updateProfilePhoto); 
+passeggeroRouter.post('/update-photo', requireAuth, requireRole('PASSEGGERO'), upload.single('file'), updateProfilePhoto); 
 passeggeroRouter.get('/reservations', requireAuth, requireRole('PASSEGGERO'), getReservations);
 passeggeroRouter.get('/statistics', requireAuth, requireRole('PASSEGGERO'), getStatistics);
 passeggeroRouter.put('/aggiorna-email', requireAuth, requireRole('PASSEGGERO'), updateEmail);

@@ -64,7 +64,7 @@ export async function getProfile(req: Request, res: Response) {
     }
 }
 
-const uploadsDir = path.join(process.cwd(), 'uploads', 'logo');
+const uploadsDir = path.join(process.cwd(), 'uploads', 'compagnie');
 // DA VERIFICARE
 export async function getLogoImage(req: Request, res: Response) { 
     try {

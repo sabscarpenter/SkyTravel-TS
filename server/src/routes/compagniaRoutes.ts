@@ -8,7 +8,7 @@ const compagniaRouter = Router();
 
 compagniaRouter.get('/profile', requireAuth, requireRole('COMPAGNIA'), getProfile);
 compagniaRouter.post('/setup', requireAuth, requireRole('COMPAGNIA'), setupCompany);
-compagniaRouter.get('/uploads/logo/:filename', requireAuth, requireRole('COMPAGNIA'), getLogoImage);
+compagniaRouter.get('/uploads/compagnie/:filename', requireAuth, requireRole('COMPAGNIA'), getLogoImage);
 compagniaRouter.get('/statistics', requireAuth, requireRole('COMPAGNIA'), getStatistics);
 compagniaRouter.get('/aircrafts', requireAuth, requireRole('COMPAGNIA'), getAircrafts);
 compagniaRouter.get('/routes', requireAuth, requireRole('COMPAGNIA'), getRoutes);
