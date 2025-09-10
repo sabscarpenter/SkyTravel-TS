@@ -67,6 +67,9 @@ async function bootstrap() {
   app.use('/api/passeggero/uploads/profile-pictures',
     express.static(path.join(process.cwd(), 'uploads', 'profile-pictures')));
 
+  app.use('/api/admin/uploads/loghi-compagnie',
+  express.static(path.join(process.cwd(), 'uploads', 'loghi-compagnie')));
+
   app.use('/api/auth', authRoutes);
   app.use('/api/passeggero', passeggeroRouter);
   app.use('/api/aeroporti', aeroportiRouter);

@@ -41,4 +41,12 @@ export class AdminService {
   removePasseggero(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/passeggeri/${id}`);
   }
+
+  aggiungiCompagnia(email: string, password: string, logo: File) {
+    const form = new FormData();
+    form.append('email', email);
+    form.append('password', password);
+    form.append('logo', logo);
+    return this.http.post<void>(`${this.apiUrl}/aggiungi`, form);
+  }
 }

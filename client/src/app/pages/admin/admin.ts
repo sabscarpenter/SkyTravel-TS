@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { NuovaCompagnia } from './nuova-compagnia/nuova-compagnia';
 import { AdminService } from '../../services/admin';
 import { Compagnia, Passeggero } from '../../services/admin';
 import { PasseggeroService } from '../../services/passeggero';
@@ -6,7 +7,7 @@ import { PasseggeroService } from '../../services/passeggero';
 
 @Component({
   selector: 'app-admin',
-  imports: [],
+  imports: [NuovaCompagnia],
   templateUrl: './admin.html',
   styleUrl: './admin.css'
 })
@@ -20,6 +21,9 @@ export class Admin {
   // Search UI state
   searchQuery = '';
   passeggeriFiltrati: Passeggero[] = [];
+
+  // Modal state
+  isNuovaCompagniaOpen = false;
 
   constructor(private adminService: AdminService, private passeggeroService: PasseggeroService) {
     // initialize filtered list
@@ -66,9 +70,12 @@ export class Admin {
 
   // Minimal UX: open create-company flow (to be wired by you)
   openNuovaCompagnia() {
-    // Placeholder for modal or navigation
-    // TODO: wire to your modal/component or router
-    console.log('[admin] richiesta creazione nuova compagnia');
+    this.isNuovaCompagniaOpen = true;
+  }
+
+  onCompagniaCreata() {
+    this.isNuovaCompagniaOpen = false;
+    this.refreshCompagnie();
   }
 
   onSearchChange(event: Event) {

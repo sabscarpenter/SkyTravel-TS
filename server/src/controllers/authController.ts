@@ -53,10 +53,16 @@ export async function register(req: Request, res: Response) {
     const hash = await bcrypt.hash(password, 12);
 
     // 1) utenti
+    await client.query('SELECT pg_advisory_xact_lock($1)', [1002]);
     const insUser = await client.query(
-      'INSERT INTO utenti (email, password, foto) VALUES ($1, $2, NULL) RETURNING id, email, foto',
-      [email, hash]
+      `WITH prossimo AS ( SELECT GREATEST(100, COALESCE((SELECT MAX(u.id) FROM utenti u WHERE u.id >= 100), 99)) + 1 AS id )
+       INSERT INTO utenti (id, email, password, foto)
+       SELECT p.id, $1, $2, $3
+       FROM prossimo p
+       RETURNING id, email, foto`,
+      [email, hash, null]
     );
+
     const userRow = insUser.rows[0] as { id: number; email: string; foto: string | null };
 
     // 2) passeggeri (FK su utenti.id)

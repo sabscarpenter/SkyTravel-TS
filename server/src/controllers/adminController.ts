@@ -49,3 +49,66 @@ export async function removePasseggero(req: Request, res: Response) {
     return res.status(500).json({ message: 'Internal server error' });
   }
 }
+
+export async function aggiungi(req: Request, res: Response) {
+  const { email, password } = req.body as { email: string; password: string };
+  const file = req.file as Express.Multer.File | undefined;
+
+  if (!email || !password || !file) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Email unica (case-insensitive)
+    const exists = await client.query(
+      'SELECT 1 FROM utenti WHERE LOWER(email)=LOWER($1)',
+      [email]
+    );
+    if (exists.rowCount) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ message: 'Email già registrata' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await client.query('SELECT pg_advisory_xact_lock($1)', [1001]);
+
+    const insCompany = await client.query(
+      `
+      WITH max_id AS (
+        SELECT COALESCE(
+                 (SELECT MAX(u.id) FROM utenti u WHERE u.id BETWEEN 10 AND 99),
+                 9
+               ) AS m
+      ),
+      prossimo AS (
+        SELECT (m + 1) AS id FROM max_id
+      )
+      INSERT INTO utenti (id, email, password, foto)
+      SELECT p.id, $1, $2, $3
+      FROM prossimo p
+      WHERE p.id <= 99
+      RETURNING id
+      `,
+      [email, hashedPassword, file.filename]
+    );
+
+    // Se non c'è RETURNING, hai esaurito 10..99
+    if (insCompany.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ message: 'Range ID compagnie esaurito' });
+    }
+
+    await client.query('COMMIT');
+
+    return res.status(201).json({ message: 'Compagnia creata con successo', id: insCompany.rows[0].id });
+  } catch (err: any) {
+    return res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+}
+
