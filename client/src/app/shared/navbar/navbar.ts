@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { Login } from '../login/login';
 import { Registrazione } from '../registrazione/registrazione';
 import { DatiPasseggero } from '../dati-passeggero/dati-passeggero';
+import { DatiCompagnia } from '../dati-compagnia/dati-compagnia';
 import { AuthService, User } from '../../services/auth';
 import { PasseggeroService } from '../../services/passeggero';
 import { AerolineaService } from '../../services/aerolinea';
@@ -12,7 +13,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [Login, Registrazione, DatiPasseggero, CommonModule],
+  imports: [Login, Registrazione, DatiPasseggero, DatiCompagnia, CommonModule],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
 })
@@ -25,6 +26,8 @@ export class Navbar implements OnInit {
 
   // Stato caricamento immagine profilo (placeholder fino al load)
   imageLoaded = false;
+  // Mostra form setup compagnia se COMPAGNIA e profilo non ancora settato
+  showCompanySetup = false;
 
   constructor(
     private authService: AuthService,
@@ -43,6 +46,10 @@ export class Navbar implements OnInit {
         this.isAuthenticated = !!user;
         this.user = user;
         this.imageLoaded = false;
+        if (user?.role === 'COMPAGNIA') {
+          // tentativo di caricare profilo; se 404 allora mostra setup
+          this.loadCompanyProfile();
+        }
       },
       error: () => {
         this.isAuthenticated = false;
@@ -50,6 +57,25 @@ export class Navbar implements OnInit {
         this.imageLoaded = false;
       }
     });
+  }
+
+  private loadCompanyProfile() {
+    this.airlineService.getAirlineProfile().subscribe({
+      next: () => { 
+        this.showCompanySetup = false; 
+      },
+      error: (err: any) => {
+        console.warn('[loadCompanyProfile] errore profilo', err?.status, err?.error);
+        if (err.status === 404) {
+          this.showCompanySetup = true;
+        }
+      }
+    });
+  }
+
+  onCompanyComplete() {
+    this.showCompanySetup = false;
+    this.checkAuthStatus();
   }
 
   toggleAuthPopup() {

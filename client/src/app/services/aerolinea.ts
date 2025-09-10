@@ -98,4 +98,8 @@ export class AerolineaService {
     return this.http.delete<any>(`${this.apiUrl}/routes/${routeNumber}`);
   }
 
+  setupCompany(data: { nome:string; codiceIATA:string; contatto:string; nazione:string; password:string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/setup`, data);
+  }
+
 }

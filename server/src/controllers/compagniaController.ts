@@ -1,26 +1,63 @@
 import { pool } from '../db';
 import { Request, Response } from 'express';
-import { parseISO, addMinutes, addHours, differenceInMinutes } from 'date-fns';
 import path from 'path';
 import fs from 'fs';
-import compagniaRouter from '../routes/compagniaRoutes';
+import bcrypt from 'bcrypt';
+
+export async function setupCompany(req: Request, res: Response) {
+    const userId = req.user!.sub;
+    const { nome, codiceIATA, contatto, nazione, password } = req.body;
+    if (!nome || !codiceIATA || !contatto || !nazione || !password) {
+        return res.status(400).json({ message: 'Parametri mancanti' });
+    }
+    if (codiceIATA.length !== 2 || codiceIATA.toUpperCase() !== codiceIATA) {
+        return res.status(400).json({ message: 'Codice IATA non valido' });
+    }
+    if (!/^[+]?([0-9 ]+)$/.test(contatto) || contatto.replace(/\s+/g,'').length < 7) {
+        return res.status(400).json({ message: 'Telefono non valido' });
+    }
+    try {
+        const exists = await pool.query('SELECT 1 FROM compagnie WHERE utente = $1', [userId]);
+        if (exists.rowCount) return res.status(409).json({ message: 'Profilo già configurato' });
+        const hash = await bcrypt.hash(password, 12);
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            await client.query('UPDATE utenti SET password = $1 WHERE id = $2', [hash, userId]);
+            await client.query(
+                'INSERT INTO compagnie (utente, nome, "codice_IATA", contatto, nazione) VALUES ($1,$2,$3,$4,$5)',
+                [userId, nome, codiceIATA, contatto, nazione]
+            );
+            await client.query('COMMIT');
+        } catch (e) {
+            await client.query('ROLLBACK');
+            throw e;
+        }
+        return res.status(201).json({ nome, codice_iata: codiceIATA, contatto, nazione });
+    } catch (error) {
+        console.error('Errore setup compagnia:', error);
+        return res.status(500).json({ message: 'Errore interno del server' });
+    }
+}
 
 export async function getProfile(req: Request, res: Response) {
     try {
         const id  = req.user!.sub;
-        const query = await pool.query('SELECT * FROM compagnie c JOIN utenti u ON c.utente = u.id WHERE u.id = $1', [id]);
-        if (!query) {
-            return res.status(404).json({ message: 'Compagnia non trovata' });
+        const query = await pool.query(
+            'SELECT c.nome, c."codice_IATA" AS codice_iata, c.contatto, c.nazione, u.foto FROM compagnie c JOIN utenti u ON c.utente = u.id WHERE u.id = $1',
+            [id]
+        );
+        if (query.rowCount === 0) {
+            return res.status(404).json({ code: 'PROFILE_MISSING', message: 'Profilo compagnia non configurato' });
         }
-        const result = {
-            nome: query.rows[0].nome,
-            codice_iata: query.rows[0].codice_iata,
-            contatto: query.rows[0].contatto,
-            nazione: query.rows[0].nazione,
-            foto: query.rows[0].foto
-        };
-
-        res.json(result);
+        const row = query.rows[0];
+        return res.json({
+            nome: row.nome,
+            codice_iata: row.codice_iata,
+            contatto: row.contatto,
+            nazione: row.nazione,
+            foto: row.foto || ''
+        });
     } catch (error) {
         console.error('Errore recupero profilo compagnia:', error);
         res.status(500).json({ message: 'Errore interno del server' });

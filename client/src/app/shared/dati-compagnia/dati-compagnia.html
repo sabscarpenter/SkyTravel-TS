@@ -1,0 +1,76 @@
+<!-- Header -->
+<div class="text-center mb-8">
+	<h2 class="text-2xl font-bold text-blue-900 mb-2">Registra la tua Compagnia</h2>
+	<p class="text-blue-600">Inserisci le informazioni base per iniziare a gestire voli e tratte</p>
+</div>
+
+<form (ngSubmit)="submit()" class="space-y-6">
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		<!-- Nome -->
+		<div class="form-control">
+			<label class="label"><span class="label-text text-blue-800 font-semibold">Nome Compagnia *</span></label>
+			<input type="text" [(ngModel)]="nome" name="nome" placeholder="SkyTravel Airlines" class="input w-full bg-white/80 border-2 border-blue-200 focus:border-blue-400 rounded-xl focus:outline-none" required />
+		</div>
+
+		<!-- Codice IATA -->
+		<div class="form-control">
+			<label class="label"><span class="label-text text-blue-800 font-semibold">Codice IATA *</span></label>
+			<input type="text" [(ngModel)]="codiceIATA" (input)="onIataInput($event)" name="codiceIATA" maxlength="2" placeholder="AB" class="input uppercase w-full bg-white/80 border-2 border-blue-200 focus:border-blue-400 rounded-xl focus:outline-none tracking-widest text-center" required />
+		</div>
+	</div>
+
+	<!-- Contatto (Telefono) -->
+	<div class="form-control">
+		<label class="label"><span class="label-text text-blue-800 font-semibold">Telefono Contatto *</span></label>
+		<input type="text" [(ngModel)]="contatto" name="contatto" placeholder="+39 345 123 4567" class="input w-full bg-white/80 border-2 border-blue-200 focus:border-blue-400 rounded-xl focus:outline-none" required />
+		@if (contatto && !isPhoneValid) {
+			<p class="text-sm text-red-600 mt-1">Numero non valido.</p>
+		}
+	</div>
+
+	<!-- Nazione -->
+	<div class="form-control">
+		<label class="label"><span class="label-text text-blue-800 font-semibold">Nazione *</span></label>
+		<input type="text" [(ngModel)]="nazione" name="nazione" placeholder="Italia" class="input w-full bg-white/80 border-2 border-blue-200 focus:border-blue-400 rounded-xl focus:outline-none" required />
+	</div>
+
+	<!-- Sezione cambio password obbligatoria -->
+	<div class="mt-6 p-4 rounded-xl border border-blue-300 bg-blue-50/80">
+		<h3 class="text-blue-800 font-semibold mb-3">Imposta Password</h3>
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<div class="form-control">
+				<label class="label"><span class="label-text text-blue-700">Nuova Password *</span></label>
+				<input type="password" [(ngModel)]="newPassword" name="newPassword" required placeholder="Min 8 caratteri" class="input w-full bg-white/90 border-2 border-blue-200 focus:border-blue-400 rounded-xl focus:outline-none" />
+			</div>
+			<div class="form-control">
+				<label class="label"><span class="label-text text-blue-700">Conferma Password *</span></label>
+				<input type="password" [(ngModel)]="confirmPassword" name="confirmPassword" required placeholder="Ripeti password" class="input w-full bg-white/90 border-2 border-blue-200 focus:border-blue-400 rounded-xl focus:outline-none" />
+			</div>
+		</div>
+		@if (!isPasswordSectionValid && (newPassword || confirmPassword)) {
+			<p class="mt-2 text-sm text-red-600 font-medium">Le password devono coincidere e avere almeno 8 caratteri.</p>
+		} @else if (isPasswordSectionValid && newPassword && confirmPassword) {
+			<p class="mt-2 text-sm text-green-600">Password valida.</p>
+		}
+	</div>
+
+	<!-- Messaggi -->
+	@if (errorMessage) {
+		<div class="alert alert-error shadow-lg rounded-xl border-red-200">
+			<span>{{ errorMessage }}</span>
+		</div>
+	}
+	@if (successMessage) {
+		<div class="alert alert-success shadow-lg rounded-xl border-green-200">
+			<span>{{ successMessage }}</span>
+		</div>
+	}
+
+	<!-- Pulsanti -->
+	<div class="flex gap-3">
+		<button type="button" (click)="close()" class="flex-1 btn bg-gray-300 hover:bg-gray-400 text-gray-800 border-none rounded-xl">Annulla</button>
+		<button type="submit" [disabled]="!isFormValid || isLoading" class="flex-1 btn bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white border-none rounded-xl">
+			@if (!isLoading) { <span>Salva</span> } @else { <span class="flex items-center"><div class="loading loading-spinner loading-sm mr-2"></div>Salvataggio...</span> }
+		</button>
+	</div>
+</form>

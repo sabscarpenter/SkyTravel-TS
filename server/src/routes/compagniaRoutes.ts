@@ -2,11 +2,12 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { requireRole } from '../middleware/role';
 import { getProfile, getLogoImage, getStatistics, getAircrafts, getRoutes, 
-         getBestRoutes, getFlights, addFlights, addRoute, deleteRoute } from '../controllers/compagniaController';
+         getBestRoutes, getFlights, addFlights, addRoute, deleteRoute, setupCompany } from '../controllers/compagniaController';
 
 const compagniaRouter = Router();
 
 compagniaRouter.get('/profile', requireAuth, requireRole('COMPAGNIA'), getProfile);
+compagniaRouter.post('/setup', requireAuth, requireRole('COMPAGNIA'), setupCompany);
 compagniaRouter.get('/uploads/logo/:filename', requireAuth, requireRole('COMPAGNIA'), getLogoImage);
 compagniaRouter.get('/statistics', requireAuth, requireRole('COMPAGNIA'), getStatistics);
 compagniaRouter.get('/aircrafts', requireAuth, requireRole('COMPAGNIA'), getAircrafts);

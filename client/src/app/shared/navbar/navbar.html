@@ -172,3 +172,12 @@
     </div>
   </div>
 }
+
+<!-- Popup setup compagnia al primo login -->
+@if (showCompanySetup && user?.role === 'COMPAGNIA') {
+  <div class="fixed inset-0 z-[90] flex items-center justify-center p-4" style="background: rgba(0,0,0,0.45);">
+    <div class="bg-white/95 backdrop-blur-xl border border-blue-200/50 rounded-2xl shadow-2xl p-8 w-[520px] max-w-[calc(100vw-2rem)] mx-4 relative">
+      <app-dati-compagnia (onComplete)="onCompanyComplete()" (onClose)="logout()"></app-dati-compagnia>
+    </div>
+  </div>
+}
