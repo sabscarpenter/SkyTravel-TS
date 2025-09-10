@@ -361,5 +361,5 @@
 </div>
 
 <!-- Modals moved to standalone components -->
-<app-nuova-rotta #routeModal [airports]="airportsByCountry" [companyIata]="aerolineaInfo!.codice_iata" (created)="loadRoutes()"></app-nuova-rotta>
+<app-nuova-rotta #routeModal [airports]="airportsByCountry" [companyIata]="aerolineaInfo?.codice_iata ?? ''" (created)="loadRoutes()"></app-nuova-rotta>
 <app-nuovo-volo #flightModal [routes]="companyRoutes" [aircrafts]="companyAircrafts" (created)="loadFlights()"></app-nuovo-volo>
