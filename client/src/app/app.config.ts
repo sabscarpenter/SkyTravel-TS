@@ -9,14 +9,6 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(withInterceptors([authInterceptor])),
-    {
-      provide: 'APP_BOOTSTRAP', // nome arbitrario
-      multi: true,
-      useFactory: (auth: AuthService) => {
-        return () => auth.bootstrap(); // <-- ritorna Promise<void>
-      },
-      deps: [AuthService],
-    },
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withInMemoryScrolling({
