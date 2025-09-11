@@ -99,8 +99,6 @@ export class Aerolinea implements OnInit{
       error: (error) => {
         console.error('Errore nel caricamento delle tratte:', error);
         console.error('Dettagli errore:', error.error);
-      // opzionale: mostra un popup non bloccante
-      // this.openPopup('Errore nel caricamento delle tratte. Riprova più tardi.', 'error');
       }
     });
   }
@@ -186,7 +184,6 @@ export class Aerolinea implements OnInit{
 
   onImageError(): void {
     this.imageLoaded = false;
-    // Opzionalmente, potresti impostare un'immagine di fallback
     console.warn('Errore nel caricamento del logo della compagnia');
   }
 

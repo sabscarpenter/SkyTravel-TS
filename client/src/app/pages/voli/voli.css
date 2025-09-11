@@ -1,5 +1,3 @@
-
-/* Enhanced flight card animations with blue theme */
 .flight-card {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(8px);
@@ -18,63 +16,3 @@
   transform: translateY(-2px);
 }
 
-/* Enhanced availability badges with blue theme */
-.badge-success {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.badge-warning {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-}
-
-.badge-error {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-}
-
-/* Enhanced loading animation with blue theme */
-@keyframes pulse-blue {
-  0%, 100% {
-    opacity: 1;
-    background-color: rgba(59, 130, 246, 0.1);
-  }
-  50% {
-    opacity: 0.7;
-    background-color: rgba(59, 130, 246, 0.2);
-  }
-}
-
-.loading-flights {
-  animation: pulse-blue 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  border-radius: 1rem;
-}
-
-/* Enhanced responsive styles */
-@media (max-width: 768px) {
-  .card-body {
-    padding: 1.5rem;
-  }
-  
-  .text-3xl {
-    font-size: 1.75rem;
-  }
-  
-  .text-2xl {
-    font-size: 1.5rem;
-  }
-  
-  /* Enhanced mobile container padding */
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  .flight-card {
-    margin-bottom: 1rem;
-  }
-}

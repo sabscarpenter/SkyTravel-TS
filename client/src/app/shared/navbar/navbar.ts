@@ -1,5 +1,5 @@
 // src/app/shared/navbar/navbar.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Login } from '../login/login';
 import { Registrazione } from '../registrazione/registrazione';
 import { DatiPasseggero } from '../dati-passeggero/dati-passeggero';
@@ -9,6 +9,7 @@ import { PasseggeroService } from '../../services/passeggero';
 import { AerolineaService } from '../../services/aerolinea';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -17,7 +18,7 @@ import { Router } from '@angular/router';
   templateUrl: './navbar.html',
   styleUrl: './navbar.css'
 })
-export class Navbar implements OnInit {
+export class Navbar implements OnInit, OnDestroy {
   isAuthenticated = false;
   user: User | null = null;
 
@@ -28,6 +29,7 @@ export class Navbar implements OnInit {
   imageLoaded = false;
   // Mostra form setup compagnia se COMPAGNIA e profilo non ancora settato
   showCompanySetup = false;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private authService: AuthService,
@@ -37,8 +39,20 @@ export class Navbar implements OnInit {
   ) {}
 
   ngOnInit() {
+    // Aggiorna subito lo stato da server
     this.checkAuthStatus();
+    // Reagisci a login/logout eseguiti altrove (es. modale in Dettagli)
+    this.authService.userChanges$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(u => {
+        this.user = u;
+        this.isAuthenticated = !!u;
+        if (u?.role === 'COMPAGNIA') {
+          this.loadCompanyProfile();
+        }
+      });
   }
+  ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   checkAuthStatus() {
     this.authService.me$().subscribe({

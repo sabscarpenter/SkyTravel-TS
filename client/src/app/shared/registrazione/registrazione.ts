@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '../../services/auth';
 import { RegistrationBufferService } from '../../services/registrazione-buffer';
 
 @Component({
@@ -25,7 +24,7 @@ export class Registrazione {
   acceptTerms: boolean = false;
   errorMessage: string = '';
 
-  constructor(private authService: AuthService, private buffer: RegistrationBufferService) {}
+  constructor(private buffer: RegistrationBufferService) {}
 
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;

@@ -7,8 +7,7 @@ type PopupType = 'info' | 'warning' | 'error' | 'success';
   selector: 'app-popup',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './popup.html',
-  styleUrls: ['./popup.css'] // usa styleUrls (plurale) se non sei su Angular 17+
+  templateUrl: './popup.html'
 })
 export class Popup {
   @Input() message = '';

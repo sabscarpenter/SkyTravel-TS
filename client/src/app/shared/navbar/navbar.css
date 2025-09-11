@@ -1,7 +1,19 @@
-/* Custom navbar styles */
+/* Minimal, essential navbar/popup overrides */
 .navbar {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
+}
+
+.auth-popup-overlay {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.auth-popup-container {
+  min-height: 500px;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
 }
 
 /* Logo animation */
@@ -29,28 +41,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-/* Badge pulse animation */
-.badge {
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-/* Mobile menu improvements */
-@media (max-width: 1024px) {
-  .navbar {
-    padding-left: 1rem;
-    padding-right: 1rem;
   }
 }
 
@@ -88,7 +78,7 @@
   display: none;
 }
 
-/* Enhanced button hover effects */
+/* Button effects */
 .auth-popup-container button:hover {
   transform: translateY(-2px) scale(1.02);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -98,6 +88,12 @@
   transform: translateY(0) scale(0.98);
   transition: all 0.1s ease;
 }
+
+.auth-popup-container .btn-circle:hover {
+  background: rgba(59, 130, 246, 0.1);
+  transform: rotate(90deg) scale(1.1);
+}
+
 
 /* Glassmorphism for dropdown menus */
 .dropdown-content {
@@ -146,27 +142,6 @@
   }
 }
 
-/* Enhanced button gradients */
-.btn-gradient-primary {
-  background: linear-gradient(135deg, 
-    rgb(37, 99, 235) 0%, 
-    rgb(29, 78, 216) 50%, 
-    rgb(30, 64, 175) 100%);
-  box-shadow: 
-    0 4px 15px 0 rgba(37, 99, 235, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.btn-gradient-primary:hover {
-  background: linear-gradient(135deg, 
-    rgb(29, 78, 216) 0%, 
-    rgb(30, 64, 175) 50%, 
-    rgb(30, 58, 138) 100%);
-  box-shadow: 
-    0 8px 25px 0 rgba(37, 99, 235, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
 /* Avatar enhanced styling */
 .avatar {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -177,187 +152,6 @@
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
 }
 
-/* Close button styling */
-.auth-popup-container .btn-circle:hover {
-  background: rgba(59, 130, 246, 0.1);
-  transform: rotate(90deg) scale(1.1);
-}
 
-/* Divider styling */
-.auth-popup-container .border-blue-200 {
-  background: linear-gradient(to right, 
-    transparent, 
-    rgba(147, 197, 253, 0.5), 
-    transparent);
-  height: 1px;
-  border: none;
-}
 
-/* Link hover effects */
-.auth-popup-container a:hover {
-  color: rgb(29, 78, 216);
-  text-decoration-color: rgb(29, 78, 216);
-}
 
-/* Enhanced focus states */
-button:focus-visible {
-  outline: 2px solid rgb(59, 130, 246);
-  outline-offset: 2px;
-}
-
-/* Smooth transitions for all interactive elements */
-* {
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
-
-/* Mobile responsive adjustments */
-@media (max-width: 1024px) {
-  .navbar {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-}
-
-/* Responsive popup styles for mobile devices */
-@media (max-width: 768px) {
-  .auth-popup-container {
-    width: calc(100vw - 2rem) !important;
-    max-width: 400px !important;
-    margin: 1rem !important;
-    padding: 1.5rem !important;
-    max-height: calc(100vh - 2rem) !important;
-    overflow-y: auto !important;
-    min-height: 400px !important;
-  }
-  
-  /* Reduce spacing for mobile */
-  .auth-popup-container .space-y-6 > * + * {
-    margin-top: 1rem !important;
-  }
-  
-  /* Adjust header text size for mobile */
-  .auth-popup-container h2 {
-    font-size: 1.5rem !important;
-  }
-  
-  /* Adjust button padding for mobile */
-  .auth-popup-container .btn {
-    padding-top: 0.75rem !important;
-    padding-bottom: 0.75rem !important;
-    font-size: 1rem !important;
-  }
-  
-  /* Adjust input sizing for mobile */
-  .auth-popup-container .input {
-    padding: 0.75rem !important;
-    font-size: 1rem !important;
-  }
-  
-  /* Make close button more accessible on mobile */
-  .auth-popup-container .btn-circle {
-    width: 2.5rem !important;
-    height: 2.5rem !important;
-    top: 0.5rem !important;
-    right: 0.5rem !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .auth-popup-container {
-    width: calc(100vw - 1rem) !important;
-    margin: 0.5rem !important;
-    padding: 1rem !important;
-    border-radius: 1rem !important;
-    min-height: 350px !important;
-  }
-  
-  /* Further reduce spacing for small screens */
-  .auth-popup-container .space-y-6 > * + * {
-    margin-top: 0.75rem !important;
-  }
-  
-  .auth-popup-container .space-y-6 {
-    gap: 0.75rem !important;
-  }
-  
-  /* Adjust footer text for small screens */
-  .auth-popup-container .text-sm {
-    font-size: 0.75rem !important;
-    line-height: 1rem !important;
-  }
-  
-  /* Make checkboxes and labels more touch-friendly */
-  .auth-popup-container .checkbox {
-    width: 1.25rem !important;
-    height: 1.25rem !important;
-  }
-  
-  .auth-popup-container .label-text {
-    font-size: 0.875rem !important;
-  }
-}
-
-/* Touch-friendly improvements for mobile */
-@media (max-width: 768px) {
-  /* Increase tap targets for mobile */
-  .auth-popup-container button,
-  .auth-popup-container input,
-  .auth-popup-container .checkbox {
-    min-height: 44px;
-  }
-  
-  /* Improve readability on mobile */
-  .auth-popup-container input::placeholder {
-    color: rgba(59, 130, 246, 0.6);
-  }
-  
-  /* Better spacing for mobile forms */
-  .auth-popup-container .label {
-    margin-bottom: 0.5rem;
-  }
-  
-  /* Improve scrolling on mobile */
-  .auth-popup-container {
-    -webkit-overflow-scrolling: touch;
-    /* Hide scrollbar on mobile too */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  
-  .auth-popup-container::-webkit-scrollbar {
-    display: none;
-  }
-  
-  /* Ensure overlay is touch-friendly */
-  .auth-popup-overlay {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-}
-
-/* Prevent body scroll and content shift when popup is open */
-body.popup-open {
-  overflow: hidden;
-  padding-right: 0 !important;
-}
-
-/* Additional styles to prevent layout shifts */
-.auth-popup-container .login-container,
-.auth-popup-container .register-container {
-  min-height: 400px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-/* Ensure consistent spacing regardless of content */
-.auth-popup-container .space-y-6 {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}

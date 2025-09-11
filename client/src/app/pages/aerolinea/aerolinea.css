@@ -4,16 +4,6 @@ input.input:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Button hover animations */
-.btn {
-  transition: all 0.3s ease;
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-}
-
 /* Enhanced table styling */
 .table th {
   font-weight: 600;
@@ -55,21 +45,3 @@ input.input:focus {
   }
 }
 
-/* Enhanced scrollbar for tables */
-.overflow-x-auto::-webkit-scrollbar {
-  height: 8px;
-}
-
-.overflow-x-auto::-webkit-scrollbar-track {
-  background: rgba(59, 130, 246, 0.1);
-  border-radius: 4px;
-}
-
-.overflow-x-auto::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.3);
-  border-radius: 4px;
-}
-
-.overflow-x-auto::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.5);
-}
