@@ -124,8 +124,8 @@ export async function login(req: Request, res: Response) {
 
     const u = await getUserById(row.id);
 
-    const accessToken = signAccessToken({ sub: u.id, role: u.role as Role });
-    const { token: refreshToken, jti, exp } = signRefreshToken({ sub: u.id, role: u.role as Role });
+    const accessToken = signAccessToken({ sub: u.id, role: u.role });
+    const { token: refreshToken, jti, exp } = signRefreshToken({ sub: u.id, role: u.role });
     await insertSession(jti, u.id, exp);
 
     res.cookie(REFRESH_COOKIE, refreshToken, {
@@ -234,7 +234,7 @@ export async function me(req: Request, res: Response) {
 }
 
 // ------------------ Helpers DB ------------------
-async function getUserById(id: number): Promise<{ id:number; email:string; role:string; foto:string | null }> {
+async function getUserById(id: number): Promise<{ id:number; email:string; role:Role; foto:string | null }> {
   const r = await pool.query('SELECT id, email, foto FROM utenti WHERE id = $1', [id]);
   if (!r.rowCount) throw new Error('User not found');
   const row = r.rows[0] as { id:number; email:string; foto:string | null };

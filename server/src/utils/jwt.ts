@@ -1,9 +1,9 @@
 // server/src/utils/jwt.ts
-import jwt, { Secret, SignOptions, TokenExpiredError, JwtPayload as LibJwtPayload } from 'jsonwebtoken';
+import jwt, { Secret, SignOptions, TokenExpiredError } from 'jsonwebtoken';
 import crypto from 'crypto';
 
 export type Role = 'ADMIN' | 'COMPAGNIA' | 'PASSEGGERO';
-export interface JwtPayload { sub: number; role: Role }
+export interface JwtPayload { sub: number; role: Role; exp?: number | undefined; }
 
 // === Secrets mutabili, inizializzate a runtime ===
 let ACCESS_SECRET: Secret  = 'accesso_segreto';
@@ -35,8 +35,9 @@ export function verifyAccessToken(token: string): JwtPayload {
 export function signRefreshToken(payload: JwtPayload): { token: string; jti: string; exp: number } {
   const jti = randId();
   const token = jwt.sign(payload, REFRESH_SECRET, { expiresIn: REFRESH_EXPIRES, jwtid: jti });
-  const decoded = jwt.decode(token) as LibJwtPayload | null;
-  const exp = decoded?.exp ?? Math.floor(Date.now()/1000) + 7*24*3600;
+  const decoded = jwt.decode(token) as JwtPayload | null;
+  const exp = decoded?.exp;
+  if (!exp) throw new Error('Cannot extract exp from just-signed refresh token');
   return { token, jti, exp };
 }
 export function verifyRefreshToken(token: string): JwtPayload & { jti?: string; exp?: number } {
