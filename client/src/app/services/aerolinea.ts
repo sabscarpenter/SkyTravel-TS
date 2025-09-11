@@ -45,7 +45,15 @@ export interface Flight {
 export interface Aircraft {
   numero: string;
   modello: string;
+  posti_economy: number;
+  posti_business: number;
+  posti_first: number;
   compagnia: string;
+}
+
+export interface AircraftModel {
+  nome: string;
+  sigla: string;
 }
 
 @Injectable({
@@ -84,6 +92,18 @@ export class AerolineaService {
 
   getAirlineAircrafts(): Observable<Aircraft[]> {
     return this.http.get<Aircraft[]>(`${this.apiUrl}/aircrafts`);
+  }
+
+  addAirlineAircraft(aircraft: { modello: string }): Observable<{ numero: string; modello: string }> {
+    return this.http.post<{ numero: string; modello: string }>(`${this.apiUrl}/aircrafts`, aircraft);
+  }
+
+  deleteAirlineAircraft(numero: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/aircrafts/${encodeURIComponent(numero)}`);
+  }
+
+  getAircraftModels(): Observable<AircraftModel[]> {
+    return this.http.get<AircraftModel[]>(`${this.apiUrl}/models`);
   }
 
   addAirlineFlights(flight: NewFlightFormData): Observable<any> {

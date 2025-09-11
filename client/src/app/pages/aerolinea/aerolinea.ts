@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AerolineaService, AerolineaInfo, Route, AerolineaStatistics, Flight, Aircraft } from '../../services/aerolinea';
+import { AerolineaService, AerolineaInfo, Route, AerolineaStatistics, Flight, Aircraft, AircraftModel} from '../../services/aerolinea';
 import { AeroportiService, NazioniAeroporti } from '../../services/aeroporti';
 import { NuovaRotta } from './nuova-rotta/nuova-rotta';
 import { NuovoVolo } from './nuovo-volo/nuovo-volo';
@@ -19,13 +19,25 @@ export class Aerolinea implements OnInit{
   companyRoutes: Route[] = [];
   companyFlights: Flight[] = [];
   filteredFlights: Flight[] = [];
+
   companyAircrafts: Aircraft[] = [];
+  newAircraft = { numero: '', modello: '' };
+  get generatedAircraftNumber(): string {
+    if (!this.aerolineaInfo?.codice_iata || !this.newAircraft.modello) return '';
+    const modelSigla = this.availableModels.find(m => m.nome === this.newAircraft.modello)?.sigla;
+    if (!modelSigla) return '';
+    // La sequenza reale è generata dal server; qui mostriamo il prefisso come anteprima
+    return `${this.aerolineaInfo.codice_iata}-${modelSigla}-[auto]`;
+  }
+  availableModels: AircraftModel[] = [];
+
   selectedRouteFilter: string = 'all';
   bestRoutes: any = [];
   imageLoaded: boolean = false;
   airlineStatistics: AerolineaStatistics | null = null;
   airportsByCountry: NazioniAeroporti[] = [];
   private deletingRoutes = new Set<string>();
+  private deletingAircrafts = new Set<string>();
   @ViewChild('routeModal') routeModal?: NuovaRotta;
   @ViewChild('flightModal') flightModal?: NuovoVolo;
 
@@ -48,6 +60,7 @@ export class Aerolinea implements OnInit{
     this.loadBestRoutes();
     this.loadFlights();
     this.loadAircrafts();
+    this.loadModels();
     this.loadAirports();
   }
 
@@ -144,8 +157,65 @@ export class Aerolinea implements OnInit{
     });
   }
 
+  loadModels(): void {
+    this.airlineService.getAircraftModels().subscribe({
+      next: (models) => { this.availableModels = models; },
+      error: (err) => console.error('Errore nel caricamento modelli:', err)
+    });
+  }
+
+  addAircraft(): void {
+    const { modello } = this.newAircraft;
+    if (!modello.trim()) {
+      this.openPopup('Seleziona un modello', 'warning');
+      return;
+    }
+    this.airlineService.addAirlineAircraft({ modello: modello.trim() }).subscribe({
+      next: (created) => {
+        this.openPopup(`Aereo ${created.numero} aggiunto`, 'success');
+        this.newAircraft = { numero: '', modello: '' };
+        this.loadAircrafts();
+        this.loadCompanyStatistics();
+      },
+      error: (err) => {
+        const msg = err?.error?.message || 'Errore durante l\'aggiunta dell\'aereo';
+        this.openPopup(msg, 'error');
+      }
+    });
+  }
+
   openNuovoVoloModal(): void {
     this.flightModal?.open();
+  }
+
+  // Aircraft deletion
+  isAircraftDeleting(numero: string): boolean {
+    return this.deletingAircrafts.has(numero);
+  }
+
+  deleteAircraft(a: Aircraft): void {
+    const code = a.numero;
+    this.openConfirm(`Confermi l'eliminazione dell'aereo ${code}?`, () => {
+      this.performDeleteAircraft(code);
+    });
+  }
+
+  private performDeleteAircraft(numero: string) {
+    this.deletingAircrafts.add(numero);
+    this.airlineService.deleteAirlineAircraft(numero).subscribe({
+      next: () => {
+        this.deletingAircrafts.delete(numero);
+        // Aggiorna lista e statistiche
+        this.loadAircrafts();
+        this.loadCompanyStatistics();
+        this.openPopup('Aereo eliminato', 'success');
+      },
+      error: (err) => {
+        this.deletingAircrafts.delete(numero);
+        const msg = err?.error?.message || 'Errore durante l\'eliminazione dell\'aereo';
+        this.openPopup(msg, 'error');
+      }
+    });
   }
 
   // Filtro voli per tratta

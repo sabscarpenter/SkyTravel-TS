@@ -94,7 +94,6 @@
   transform: rotate(90deg) scale(1.1);
 }
 
-
 /* Glassmorphism for dropdown menus */
 .dropdown-content {
   backdrop-filter: blur(16px);

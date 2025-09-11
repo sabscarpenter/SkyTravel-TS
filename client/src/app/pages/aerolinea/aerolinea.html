@@ -97,28 +97,80 @@
       <!-- Fleet Information -->
       <div class="card bg-white border border-blue-100 shadow-2xl">
         <div class="card-body bg-gradient-to-br from-blue-50 via-white to-sky-50 rounded-2xl">
-          <h2 class="card-title text-2xl mb-4 text-blue-900">
-            Flotta Aerea
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="stat bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div class="stat-figure text-blue-600">
-                <div class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
-                  <span class="text-2xl">✈️</span>
-                </div>
-              </div>
-              <div class="font-bold text-blue-800">Aeromobili Totali</div>
-              <div class="stat-value text-3xl font-black text-blue-700">{{ airlineStatistics?.numero_aerei }}</div>
+          <div class="flex items-center justify-between mb-2">
+            <h2 class="card-title text-2xl text-blue-900">Flotta Aerea</h2>
+            <div class="badge bg-blue-600 text-white border-0 shadow-md">
+              Aeromobili totali: <span class="font-bold ml-2">{{ airlineStatistics?.numero_aerei }}</span>
             </div>
-            <div class="stat bg-gradient-to-br from-sky-50 to-sky-100 border-2 border-sky-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div class="stat-figure text-sky-600">
-                <div class="w-12 h-12 bg-sky-600 rounded-full flex items-center justify-center shadow-lg">
-                  <span class="text-2xl">🌍</span>
-                </div>
+          </div>
+
+          <!-- Add Aircraft Section -->
+          <div class="mt-6 p-4 bg-white border border-blue-200 rounded-xl shadow-sm">
+            <h3 class="text-lg font-semibold text-blue-900 mb-3">Aggiungi Aereo</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+              <div class="form-control">
+                <label class="label" for="numero-aereo">
+                  <span class="label-text text-blue-800">Numero Aereo</span>
+                </label>
+                <input id="numero-aereo" [value]="generatedAircraftNumber" type="text" readonly class="input input-bordered border-blue-200 bg-gray-50" />
               </div>
-              <div class="font-bold text-sky-800">Destinazioni</div>
-              <div class="stat-value text-3xl font-black text-sky-700">{{ airlineStatistics?.numero_destinazioni }}</div>
+              <div class="form-control">
+                <label class="label" for="modello-aereo">
+                  <span class="label-text text-blue-800">Modello</span>
+                </label>
+                <select id="modello-aereo" [(ngModel)]="newAircraft.modello" class="select select-bordered border-blue-200 bg-white">
+                  <option value="" disabled selected>Seleziona un modello</option>
+                  @for (m of availableModels; track m.nome) {
+                    <option [value]="m.nome">{{ m.nome }}</option>
+                  }
+                </select>
+              </div>
+              <div class="flex justify-end">
+                <button class="btn bg-blue-600 hover:bg-blue-700 text-white mt-6" (click)="addAircraft()">Aggiungi</button>
+              </div>
             </div>
+          </div>
+
+          <!-- Aircrafts list -->
+          <div class="overflow-x-auto border border-blue-200 rounded-lg shadow-sm mt-6" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-zebra">
+              <thead class="sticky top-0 bg-blue-50 z-10">
+                <tr class="text-blue-900">
+                  <th>Numero</th>
+                  <th>Modello</th>
+                  <th class="text-right">Economy</th>
+                  <th class="text-right">Business</th>
+                  <th class="text-right">First</th>
+                  <th class="text-right">Totale</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @if(companyAircrafts && companyAircrafts.length > 0) {
+                  @for(a of companyAircrafts; track a.numero){
+                    <tr>
+                      <td><div class="font-semibold">{{ a.numero }}</div></td>
+                      <td>{{ a.modello }}</td>
+                      <td class="text-right">{{ a.posti_economy }}</td>
+                      <td class="text-right">{{ a.posti_business }}</td>
+                      <td class="text-right">{{ a.posti_first }}</td>
+                      <td class="text-right font-semibold">{{ a.posti_economy + a.posti_business + a.posti_first }}</td>
+                      <td class="text-right">
+                        <button class="btn btn-error btn-xs text-white"
+                                (click)="deleteAircraft(a)"
+                                [disabled]="isAircraftDeleting(a.numero)">
+                          @if (isAircraftDeleting(a.numero)) { Eliminazione... } @else { Elimina }
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                } @else {
+                  <tr>
+                    <td colspan="7" class="text-center py-6 text-blue-700">Nessun aereo registrato.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

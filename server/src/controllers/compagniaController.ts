@@ -168,10 +168,13 @@ export async function getStatistics(req: Request, res: Response) {
 export async function getAircrafts(req: Request, res: Response) {
     try {
         const id = req.user!.sub;
-        const result = await pool.query('SELECT * FROM aerei WHERE compagnia = $1', [id]);
+        const result = await pool.query('SELECT * FROM aerei JOIN modelli ON aerei.modello = modelli.nome WHERE aerei.compagnia = $1', [id]);
         const aircrafts = result.rows.map(row => ({
             numero: row.numero,
-            modello: row.modello
+            modello: row.modello,
+            posti_economy: row.posti_economy,
+            posti_business: row.posti_business,
+            posti_first: row.posti_first
         }));
         res.json(aircrafts);
     } catch (error) {
@@ -504,5 +507,85 @@ export async function addFlights(req: Request, res: Response) {
         message: "Errore server durante l'inserimento dei voli.",
         error: err.message,
         });
+    }
+}
+
+export async function getModels(req: Request, res: Response) {
+    try {
+        const result = await pool.query(
+            'SELECT nome, sigla FROM modelli ORDER BY nome'
+        );
+        return res.json(result.rows);
+    } catch (error) {
+        console.error('Errore recupero modelli aerei:', error);
+        return res.status(500).json({ message: 'Errore interno del server' });
+    }
+}
+
+export async function addAircraft(req: Request, res: Response) {
+    try {
+        const compagniaId = req.user!.sub;
+        const { modello } = req.body as { modello?: string };
+        if (!modello) return res.status(400).json({ message: 'modello è obbligatorio' });
+
+        // Recupera codice IATA della compagnia
+        const compRes = await pool.query('SELECT "codice_IATA" AS iata FROM compagnie WHERE utente = $1', [compagniaId]);
+        if (compRes.rowCount === 0) return res.status(400).json({ message: 'Profilo compagnia non configurato' });
+        const iata: string = compRes.rows[0].iata;
+
+        // Recupera sigla del modello
+        const modRes = await pool.query('SELECT sigla FROM modelli WHERE nome = $1', [modello]);
+        if (modRes.rowCount === 0) return res.status(400).json({ message: 'Modello inesistente' });
+        const sigla: string = modRes.rows[0].sigla;
+
+        const prefix = `${iata}-${sigla}-`;
+
+        // Calcola la prossima sequenza per la combinazione IATA-sigla
+        const seqRes = await pool.query(
+            `SELECT COALESCE(MAX(CAST(SPLIT_PART(numero, '-', 3) AS INT)), 0) AS max_seq
+             FROM aerei
+             WHERE compagnia = $1 AND numero LIKE $2`,
+            [compagniaId, `${prefix}%`]
+        );
+        let nextSeq = (seqRes.rows[0]?.max_seq ?? 0) + 1;
+        let numero = `${prefix}${nextSeq}`;
+
+        await pool.query(
+            'INSERT INTO aerei (numero, modello, compagnia) VALUES ($1, $2, $3)',
+            [numero, modello, compagniaId]
+        );
+
+        return res.status(201).json({ numero, modello });
+    } catch (error) {
+        console.error('Errore creazione aereo:', error);
+        return res.status(500).json({ message: 'Errore interno del server' });
+    }
+}
+
+export async function deleteAircraft(req: Request, res: Response) {
+    try {
+        const compagniaId = req.user!.sub;
+        const { numero } = req.params as { numero: string };
+        if (!numero) return res.status(400).json({ message: 'Numero aereo mancante' });
+
+        // Verifica appartenenza aereo alla compagnia
+        const ownRes = await pool.query(
+            'SELECT 1 FROM aerei WHERE numero = $1 AND compagnia = $2',
+            [numero, compagniaId]
+        );
+        if (ownRes.rowCount === 0) {
+            return res.status(404).json({ message: 'Aereo non trovato' });
+        }
+        
+        // Elimina l'aereo
+        await pool.query(
+            'DELETE FROM aerei WHERE numero = $1 AND compagnia = $2',
+            [numero, compagniaId]
+        );
+
+        return res.status(200).json({ message: 'Aereo eliminato' });
+    } catch (error: any) {
+        console.error('Errore eliminazione aereo:', error);
+        return res.status(500).json({ message: 'Errore interno del server', error: error?.message });
     }
 }
