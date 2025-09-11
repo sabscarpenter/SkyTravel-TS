@@ -239,7 +239,7 @@ async function getUserById(id: number): Promise<{ id:number; email:string; role:
   if (!r.rowCount) throw new Error('User not found');
   const row = r.rows[0] as { id:number; email:string; foto:string | null };
   const role = deriveRoleFromId(row.id);
-  return { id: row.id, email: row.email, role, foto: row.foto };
+  return { id: row.id, email: row.email, role: role, foto: row.foto };
 }
 
 export function deriveRoleFromId(id: number): Role {
