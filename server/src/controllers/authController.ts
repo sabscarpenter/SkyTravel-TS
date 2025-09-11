@@ -3,11 +3,11 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken'; // usato solo per decode fallback
 import bcrypt from 'bcrypt';
 import { pool } from '../db';
-import { deriveRoleFromId } from '../utils/role';
 import {
   signAccessToken,
   signRefreshToken,
   verifyRefreshToken,
+  Role
 } from '../utils/jwt';
 
 const REFRESH_COOKIE = 'rt';
@@ -124,8 +124,8 @@ export async function login(req: Request, res: Response) {
 
     const u = await getUserById(row.id);
 
-    const accessToken = signAccessToken({ sub: u.id, role: u.role as any });
-    const { token: refreshToken, jti, exp } = signRefreshToken({ sub: u.id, role: u.role as any });
+    const accessToken = signAccessToken({ sub: u.id, role: u.role as Role });
+    const { token: refreshToken, jti, exp } = signRefreshToken({ sub: u.id, role: u.role as Role });
     await insertSession(jti, u.id, exp);
 
     res.cookie(REFRESH_COOKIE, refreshToken, {
@@ -149,7 +149,7 @@ export async function refresh(req: Request, res: Response) {
     const decoded = verifyRefreshToken(token);
     const { sub } = decoded;
     const oldJti = (decoded as any).jti as string | undefined;
-    if (!oldJti) return res.status(401).json({ message: 'Invalid refresh token' });
+    if (!oldJti) return res.status(401).json({ message: 'Missing refresh token' });
 
     const valid = await isSessionValid(oldJti, sub);
     if (!valid) return res.status(401).json({ message: 'Invalid refresh token' });
@@ -242,6 +242,12 @@ async function getUserById(id: number): Promise<{ id:number; email:string; role:
   return { id: row.id, email: row.email, role, foto: row.foto };
 }
 
+export function deriveRoleFromId(id: number): Role {
+  if (id === 0) return 'ADMIN';
+  if (id >= 1 && id <= 99) return 'COMPAGNIA';
+  return 'PASSEGGERO';
+}
+
 async function insertSession(jti: string, userId: number, expUnix: number) {
   await pool.query(
     'INSERT INTO sessioni (jti, utente, scadenza) VALUES ($1,$2,to_timestamp($3))',
@@ -253,10 +259,10 @@ async function revokeSession(jti: string) {
   await pool.query('UPDATE sessioni SET revocato = TRUE WHERE jti = $1', [jti]);
 }
 
-async function isSessionValid(jti: string, userId: number) {
+async function isSessionValid(jti: string, utente: number) {
   const r = await pool.query(
     'SELECT revocato, scadenza FROM sessioni WHERE jti = $1 AND utente = $2',
-    [jti, userId]
+    [jti, utente]
   );
   if (r.rowCount === 0) return false;
   const row = r.rows[0] as { revocato: boolean; scadenza: Date };
