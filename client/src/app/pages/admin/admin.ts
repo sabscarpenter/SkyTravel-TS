@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { NuovaCompagnia } from './nuova-compagnia/nuova-compagnia';
 import { AdminService } from '../../services/admin';
-import { Compagnia, Passeggero } from '../../services/admin';
+import { Compagnia, Passeggero, CompagniaInAttesa } from '../../services/admin';
 import { PasseggeroService } from '../../services/passeggero';
 
 
@@ -15,8 +15,10 @@ export class Admin {
   // Placeholder data to be replaced by API wiring
   compagnie: Compagnia[] = [];
   passeggeri: Passeggero[] = [];
+  compagnieInAttesa: CompagniaInAttesa[] = [];
   isLoadingCompagnie = false;
   isLoadingPasseggeri = false;
+  isLoadingCompagnieInAttesa = false;
 
   // Search UI state
   searchQuery = '';
@@ -33,6 +35,7 @@ export class Admin {
     // Load initial data here if needed
     this.loadCompagnie();
     this.loadPasseggeri();
+    this.loadCompagnieInAttesa();
   }
 
   loadCompagnie() {
@@ -46,6 +49,20 @@ export class Admin {
       error: (err) => {
         console.error('[admin] error loading compagnie:', err);
     this.isLoadingCompagnie = false;
+      }
+    });
+  }
+
+  loadCompagnieInAttesa() {
+    this.isLoadingCompagnieInAttesa = true;
+    this.adminService.getCompagnieInAttesa().subscribe({
+      next: (response) => {
+        this.compagnieInAttesa = response || [];
+        this.isLoadingCompagnieInAttesa = false;
+      },
+      error: (response) => {
+        console.error('[admin] error loading compagnie in attesa:', response);
+        this.isLoadingCompagnieInAttesa = false;
       }
     });
   }
@@ -65,8 +82,13 @@ export class Admin {
     });
   }
 
+  getPasseggeroPhoto(u: Passeggero): string {
+    return u.foto ? this.passeggeroService.getPhotoUrl(u.foto) : '';
+  }
+
   refreshCompagnie() { this.loadCompagnie(); }
   refreshPasseggeri() { this.loadPasseggeri(); }
+  refreshCompagnieInAttesa() { this.loadCompagnieInAttesa(); }
 
   // Minimal UX: open create-company flow (to be wired by you)
   openNuovaCompagnia() {
@@ -76,6 +98,7 @@ export class Admin {
   onCompagniaCreata() {
     this.isNuovaCompagniaOpen = false;
     this.refreshCompagnie();
+    this.refreshCompagnieInAttesa();
   }
 
   onSearchChange(event: Event) {
@@ -116,6 +139,13 @@ export class Admin {
     });
   }
 
+  removeCompagniaInAttesa(c: CompagniaInAttesa) {
+    this.adminService.removeCompagniaInAttesa(c.utente).subscribe({
+      next: () => this.refreshCompagnieInAttesa(),
+      error: (err) => console.error('[admin] error removing pending company:', err)
+    });
+  }
+
   removePasseggero(u: Passeggero) {
     this.adminService.removePasseggero(u.utente).subscribe({
       next: (response) => {
@@ -125,9 +155,5 @@ export class Admin {
         console.error('[admin] error removing passenger:', err);
       }
     });
-  }
-
-  getPasseggeroPhoto(u: Passeggero): string {
-    return u.foto ? this.passeggeroService.getPhotoUrl(u.foto) : '';
   }
 }

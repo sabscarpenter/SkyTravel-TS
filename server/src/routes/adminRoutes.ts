@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { compagnie, passeggeri, removeCompagnia, removePasseggero, aggiungi } from '../controllers/adminController';
+import { compagnie, passeggeri, removeCompagnia, removePasseggero, aggiungi, compagnieInAttesa, removeCompagniaInAttesa } from '../controllers/adminController';
 import { requireAuth } from '../middleware/auth';
 import { requireRole } from '../middleware/role';
 import multer from 'multer';
@@ -34,5 +34,7 @@ adminRouter.get('/passeggeri', requireAuth, requireRole('ADMIN'), passeggeri);
 adminRouter.delete('/compagnie/:id', requireAuth, requireRole('ADMIN'), removeCompagnia);
 adminRouter.delete('/passeggeri/:id', requireAuth, requireRole('ADMIN'), removePasseggero);
 adminRouter.post('/aggiungi', requireAuth, requireRole('ADMIN'), upload.single('file'), aggiungi);
+adminRouter.get('/compagnie/attesa', requireAuth, requireRole('ADMIN'), compagnieInAttesa);
+adminRouter.delete('/compagnie/attesa/:id', requireAuth, requireRole('ADMIN'), removeCompagniaInAttesa);
 
 export default adminRouter;

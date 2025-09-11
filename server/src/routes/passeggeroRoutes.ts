@@ -36,7 +36,7 @@ const upload = multer({
 const passeggeroRouter = Router();
 
 passeggeroRouter.get('/profile', requireAuth, requireRole('PASSEGGERO'), getProfile);
-passeggeroRouter.post('/update-photo', requireAuth, requireRole('PASSEGGERO'), upload.single('file'), updateProfilePhoto); 
+passeggeroRouter.post('/update/foto', requireAuth, requireRole('PASSEGGERO'), upload.single('file'), updateProfilePhoto); 
 passeggeroRouter.get('/reservations', requireAuth, requireRole('PASSEGGERO'), getReservations);
 passeggeroRouter.get('/statistics', requireAuth, requireRole('PASSEGGERO'), getStatistics);
 passeggeroRouter.put('/aggiorna-email', requireAuth, requireRole('PASSEGGERO'), updateEmail);

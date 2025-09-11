@@ -1,46 +1,13 @@
 @if (isOpen) {
 <div class="modal modal-open">
-  <!-- Popup overlay above the route modal -->
-  @if (popup.visible) {
-    <div class="fixed inset-0 z-[120] flex items-center justify-center pointer-events-none bg-black/20 backdrop-blur-sm">
-      <div class="w-full max-w-xl mx-auto px-6 pointer-events-auto">
-        <div 
-          class="rounded-2xl border shadow-2xl transition-all p-6 flex flex-col gap-3"
-          [ngClass]="{
-            'bg-blue-50 border-blue-200': popup.type === 'info',
-            'bg-yellow-50 border-yellow-200': popup.type === 'warning',
-            'bg-green-50 border-green-200': popup.type === 'success',
-            'bg-red-50 border-red-200': popup.type === 'error'
-          }"
-          role="alert"
-          aria-live="assertive">
-          <div class="flex items-center justify-between gap-4">
-            <h3 class="font-bold text-lg"
-                [ngClass]="{
-                  'text-blue-800': popup.type === 'info',
-                  'text-yellow-800': popup.type === 'warning',
-                  'text-green-800': popup.type === 'success',
-                  'text-red-800': popup.type === 'error'
-                }">{{ getPopupTitle() }}</h3>
-          </div>
-          <div class="flex justify-between items-center gap-6">
-            <div class="text-base font-medium"
-                 [ngClass]="{
-                   'text-blue-800': popup.type === 'info',
-                   'text-yellow-800': popup.type === 'warning',
-                   'text-green-800': popup.type === 'success',
-                   'text-red-800': popup.type === 'error'
-                 }">{{ popup.message }}</div>
-            <button type="button" class="btn btn-sm rounded-xl"
-                    (click)="closePopup()"
-                    [ngClass]="{
-                      'bg-blue-600 text-white hover:bg-blue-700 border-blue-600': popup.type === 'info',
-                      'bg-yellow-600 text-white hover:bg-yellow-700 border-yellow-600': popup.type === 'warning',
-                      'bg-green-600 text-white hover:bg-green-700 border-green-600': popup.type === 'success',
-                      'bg-red-600 text-white hover:bg-red-700 border-red-600': popup.type === 'error'
-                    }" aria-label="Chiudi avviso">OK</button>
-          </div>
-        </div>
+  @if (isOpenPopup) {
+    <div class="fixed inset-0 z-[120] flex items-center justify-center bg-black/20 backdrop-blur-sm">
+      <div class="w-full max-w-xl mx-auto px-6">
+        <app-popup
+          [message]="popupMessage"
+          [type]="popupType"
+          (onClose)="closePopup()"
+        ></app-popup>
       </div>
     </div>
   }

@@ -10,17 +10,31 @@
   
   <!-- Modal Login inline -->
   @if (showLoginForm) {
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative border border-blue-100">
-        <button (click)="closeLogin()" class="absolute top-4 right-4 btn btn-ghost btn-sm btn-circle text-blue-600 hover:bg-blue-100 z-10">
+    <div 
+      class="fixed inset-0 z-[100] flex items-center justify-center p-4 auth-popup-overlay"
+      (click)="closeLogin()">
+      <!-- Overlay with blur -->
+      <div class="absolute inset-0 bg-gradient-to-br from-blue-900/40 to-blue-800/50 backdrop-blur-md"></div>
+
+      <!-- Popup container -->
+      <div 
+        class="relative bg-white/95 backdrop-blur-xl border border-blue-200/50 rounded-2xl shadow-2xl p-8 w-[500px] max-w-[calc(100vw-2rem)] mx-4 transform transition-all duration-300 hover:shadow-3xl max-h-[90vh] overflow-hidden auth-popup-container"
+        (click)="$event.stopPropagation()">
+        
+        <!-- Close button -->
+        <button 
+          (click)="closeLogin()"
+          class="absolute top-4 right-4 btn btn-ghost btn-sm btn-circle text-blue-600 hover:bg-blue-100 z-10">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
+
         <app-login [disableReload]="true" (onLoginSuccess)="onLoginSuccess()" (onClose)="closeLogin()"></app-login>
       </div>
     </div>
   }
+
   <div class="bg-white rounded-xl shadow border border-blue-100 p-6 max-w-3xl mx-auto">
     <h1 class="text-2xl font-bold text-blue-900 mb-4">Dati Passeggeri</h1>
     <p class="text-blue-700 mb-6">I dati inseriti verranno usati per tutti i voli selezionati.</p>

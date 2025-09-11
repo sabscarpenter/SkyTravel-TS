@@ -1,15 +1,19 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, ViewChild, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { AdminService } from '../../../services/admin';
+import { Popup } from '../../../shared/popup/popup';
 
 @Component({
   selector: 'app-nuova-compagnia',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, Popup],
   templateUrl: './nuova-compagnia.html',
   styleUrl: './nuova-compagnia.css'
 })
 export class NuovaCompagnia {
+  @ViewChild(Popup) popup!: Popup;
+
   @Input() autoOpen = false;
   @Output() created = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
@@ -23,14 +27,14 @@ export class NuovaCompagnia {
   logoFile: File | null = null;
   logoPreview: string | null = null;
 
-  // Popup (toast) state
-  popup = {
-    visible: false,
-    message: '',
-    type: 'info' as 'info' | 'warning' | 'error' | 'success'
-  };
+  // stato per il popup
+  isOpenPopup = false;
+  criticita = false;
+  completa = false;
+  popupMessage = '';
+  popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
 
-  constructor(private adminService: AdminService) {}
+  constructor(private router: Router, private adminService: AdminService) {}
 
   ngOnInit() {
     if (this.autoOpen) this.open();
@@ -43,13 +47,31 @@ export class NuovaCompagnia {
     this.password = '';
     this.logoFile = null;
     this.logoPreview = null;
-    this.popup.visible = false;
-    this.popup.message = '';
+    this.isOpenPopup = false;
+    this.criticita = false;
+    this.completa = false;
+    this.popupMessage = '';
   }
 
   close(): void {
     this.isOpen = false;
     this.closed.emit();
+  }
+
+  openPopup(message: string, type: 'info' | 'warning' | 'error' | 'success', criticita = false, completa = false) {
+    this.popupMessage = message;
+    this.popupType = type;
+    this.criticita = criticita;
+    this.completa = completa;
+    this.isOpenPopup = true; // il figlio verrà creato con *ngIf e vedrà subito gli @Input
+  }
+
+  closePopup() {
+    this.isOpenPopup = false;
+    if (this.completa) this.close();
+    if (this.criticita) {
+      this.router.navigate(['/']);
+    }
   }
 
   // File input handler
@@ -68,67 +90,34 @@ export class NuovaCompagnia {
     }
   }
 
-  // Popup helpers
-  showPopup(type: 'info' | 'warning' | 'error' | 'success', message: string): void {
-    this.popup.type = type;
-    this.popup.message = message;
-    this.popup.visible = true;
-  }
-
-  closePopup(): void {
-    const wasSuccess = this.popup.type === 'success';
-    this.popup.visible = false;
-    if (wasSuccess) {
-      this.created.emit();
-      this.close();
-    }
-  }
-
-  getPopupTitle(): string {
-    switch (this.popup.type) {
-      case 'info': return 'Informazione';
-      case 'warning': return 'Attenzione';
-      case 'success': return 'Operazione riuscita';
-      case 'error':
-      default: return 'Errore';
-    }
-  }
-
   private isValidEmail(email: string): boolean {
     return /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email);
   }
 
   onCreateClick(): void {
     if (!this.email || !this.isValidEmail(this.email)) {
-      this.showPopup('error', 'Inserisci un\'email valida.');
+      this.openPopup('Inserisci un\'email valida.', 'error');
       return;
     }
     if (!this.password || this.password.length < 6) {
-      this.showPopup('error', 'La password deve avere almeno 6 caratteri.');
+      this.openPopup('La password deve avere almeno 6 caratteri.', 'error');
       return;
     }
     if (!this.logoFile) {
-      this.showPopup('error', 'Seleziona un\'immagine per la compagnia.');
+      this.openPopup('Seleziona un\'immagine per la compagnia.', 'error');
       return;
     }
     
     this.submitting = true;
     this.adminService.aggiungiCompagnia(this.email, this.password, this.logoFile).subscribe({
-      next: () => {
+      next: (response) => {
         this.submitting = false;
-        this.showPopup('success', 'Compagnia registrata con successo.');
+        this.openPopup('Compagnia creata con successo!', 'success', false, true);
+        this.created.emit();
       },
-      error: (err) => {
+      error: (response) => {
         this.submitting = false;
-        const msg: string = err?.error?.error || 'Errore durante la registrazione della compagnia.';
-        const m = (msg || '').toLowerCase();
-        const isDuplicate = m.includes('violates unique constraint') || m.includes('duplicate') || m.includes('esiste gi\u00E0');
-        if (isDuplicate) {
-          this.showPopup('error', 'Esiste gi\u00E0 una compagnia registrata con questa email.');
-        } else {
-          this.showPopup('error', msg);
-        }
-        console.error('[nuova-compagnia] create error:', err);
+        this.openPopup(response?.error?.message, 'error', true);
       }
     });
   }

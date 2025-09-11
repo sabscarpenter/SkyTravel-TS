@@ -10,12 +10,13 @@ import { BookingService, BookingSegment } from '../../services/booking';
 import { ReservationTimerService } from '../../services/reservation-timer';
 import { CheckoutService } from '../../services/checkout';
 import { Ticket, TicketData } from '../../shared/ticket/ticket';
+import { Popup } from '../../shared/popup/popup';
 
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, FormsModule, Ticket],
+  imports: [CommonModule, FormsModule, Ticket, Popup],
   templateUrl: './checkout.html',
   styleUrls: ['./checkout.css']
 })
@@ -56,14 +57,11 @@ export class Checkout implements OnInit, OnDestroy {
   // Modal successo
   showSuccessModal = false;
 
-  // Popup (toast) state - stile passeggero
-  popup = {
-    visible: false,
-    message: '',
-    type: 'info' as 'info' | 'warning' | 'error' | 'success'
-  };
-
-  fatalError: boolean = false;
+  // Popup (shared) state - come passeggero
+  isOpenPopup = false;
+  popupMessage = '';
+  popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
+  fatalError = false;
 
   constructor(
     private router: Router,
@@ -151,7 +149,7 @@ export class Checkout implements OnInit, OnDestroy {
       error: (error) => {
       const msg = error?.error?.error || 'Errore durante la conferma del pagamento. Prenotazione scaduta o non valida.';
       this.fatalError = true;
-      this.showPopup(msg, 'error');
+  this.openPopup(msg, 'error', true);
       this.loading = false;
       }
     });
@@ -199,8 +197,8 @@ export class Checkout implements OnInit, OnDestroy {
       const paymentElement = this.elements.create('payment');
       paymentElement.mount('#payment-element');
     } catch (e: any) {
-      this.message = e?.message || 'Errore nel pagamento.';
-      this.showPopup(this.message, 'error');
+  this.message = e?.message || 'Errore nel pagamento.';
+  this.openPopup(this.message, 'error', true);
     } finally {
       this.loading = false;
     }
@@ -218,8 +216,8 @@ export class Checkout implements OnInit, OnDestroy {
     });
 
     if (error) {
-      this.message = error?.message || 'Errore nel pagamento.';
-      this.showPopup(this.message, 'error');
+  this.message = error?.message || 'Errore nel pagamento.';
+  this.openPopup(this.message, 'error');
       this.loading = false;
       return;
     }
@@ -236,17 +234,17 @@ export class Checkout implements OnInit, OnDestroy {
         }
         if (s?.status === 'requires_payment_method' || s?.status === 'canceled') {
           this.message = 'Errore nel pagamento.';
-          this.showPopup(this.message, 'error');
+          this.openPopup(this.message, 'error');
           this.loading = false;
           return;
         }
         await new Promise(r => setTimeout(r, 1500));
       }
-      this.message = 'Pagamento in elaborazione... aggiorna tra poco.';
-      this.showPopup(this.message, 'info');
+  this.message = 'Pagamento in elaborazione... aggiorna tra poco.';
+  this.openPopup(this.message, 'info');
     } catch {
-      this.message = 'Errore nel verificare lo stato del pagamento.';
-      this.showPopup(this.message, 'error');
+  this.message = 'Errore nel verificare lo stato del pagamento.';
+  this.openPopup(this.message, 'error');
     } finally {
       this.loading = false;
     }
@@ -273,32 +271,18 @@ export class Checkout implements OnInit, OnDestroy {
     this.router.navigate(['/']);
   }
 
-  // Popup helpers (same API as Passeggero)
-  showPopup(message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info') {
-    this.popup.message = message;
-    this.popup.type = type;
-    this.popup.visible = true;
+  // Popup helpers (stessa API di Passeggero/NuovaCompagnia)
+  openPopup(message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info', fatal = false) {
+    this.popupMessage = message;
+    this.popupType = type;
+    this.fatalError = fatal;
+    this.isOpenPopup = true;
   }
 
-  closePopup(fatalError: boolean) {
-    this.popup.visible = false;
-    if (fatalError) {
+  closePopup() {
+    this.isOpenPopup = false;
+    if (this.fatalError) {
       this.router.navigate(['/']);
-    }
-  }
-
-  getPopupTitle(): string {
-    switch (this.popup.type) {
-      case 'info':
-        return 'Informazione';
-      case 'warning':
-        return 'Attenzione';
-      case 'success':
-        return 'Operazione completata';
-      case 'error':
-        return 'Errore';
-      default:
-        return 'Avviso';
     }
   }
 }

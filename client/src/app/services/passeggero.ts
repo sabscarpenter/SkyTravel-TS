@@ -57,8 +57,8 @@ export class PasseggeroService {
 
   updateProfilePhoto(file: File): Observable<any> {
     const formData = new FormData();
-    formData.append('profile_picture', file);
-    return this.http.post<any>(`${this.apiUrl}/update-photo`, formData);
+    formData.append('file', file);
+    return this.http.post<any>(`${this.apiUrl}/update/foto`, formData);
   }
 
   getPassengerReservations(): Observable<TicketData[]> {

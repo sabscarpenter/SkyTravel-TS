@@ -2,11 +2,12 @@ import { Component, EventEmitter, Output, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Aeroporto, NazioniAeroporti } from '../../../services/aeroporti';
 import { AerolineaService, Route } from '../../../services/aerolinea';
+import { Popup } from '../../../shared/popup/popup';
 
 @Component({
   selector: 'app-nuova-rotta',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, Popup],
   templateUrl: './nuova-rotta.html',
   styleUrl: './nuova-rotta.css'
 })
@@ -24,13 +25,12 @@ export class NuovaRotta {
   duration_minutes: number = 0;
   submitting = false;
   errorMsg = '';
-
-  // Popup (toast) state for errors/info
-  popup = {
-    visible: false,
-    message: '',
-    type: 'info' as 'info' | 'warning' | 'error' | 'success'
-  };
+  // Popup (shared component) state
+  isOpenPopup = false;
+  popupMessage = '';
+  popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
+  criticita = false;
+  completa = false;
 
   // Flattened list for easy rendering
   get airportsFlat(): Aeroporto[] {
@@ -57,8 +57,10 @@ export class NuovaRotta {
     this.duration_hours = 0;
     this.duration_minutes = 0;
     this.errorMsg = '';
-    this.popup.visible = false;
-    this.popup.message = '';
+  this.isOpenPopup = false;
+  this.popupMessage = '';
+  this.criticita = false;
+  this.completa = false;
   }
 
   close(): void {
@@ -87,11 +89,11 @@ export class NuovaRotta {
 
     // Basic validation
     if (!(payload.numero && payload.partenza && payload.arrivo && payload.durata_min > 0 && payload.lunghezza_km > 0)) {
-      this.showPopup('error', 'Compila tutti i campi obbligatori.');
+      this.openPopup('Compila tutti i campi obbligatori.', 'error');
       return;
     }
     if (payload.partenza === payload.arrivo) {
-      this.showPopup('error', 'La partenza e l\'arrivo non possono essere uguali.');
+      this.openPopup('La partenza e l\'arrivo non possono essere uguali.', 'error');
       return;
     }
 
@@ -99,7 +101,7 @@ export class NuovaRotta {
     this.airlineService.addAirlineRoute(payload).subscribe({
       next: () => {
         this.submitting = false;
-        this.showPopup('success', 'Tratta creata con successo.');
+        this.openPopup('Tratta creata con successo.', 'success', false, true);
       },
       error: (err: any) => {
         this.submitting = false;
@@ -108,9 +110,9 @@ export class NuovaRotta {
         const m = msg.toLowerCase();
         const isDuplicate = m.includes('violates unique constraint') || m.includes('duplicate key')
         if (isDuplicate) {
-          this.showPopup('error', 'Esiste già una tratta con questo codice.');
+          this.openPopup('Esiste già una tratta con questo codice.', 'error');
         } else {
-          this.showPopup('error', msg);
+          this.openPopup(msg, 'error');
         }
         console.error('Create route error:', err);
       }
@@ -136,29 +138,20 @@ export class NuovaRotta {
     this.duration_minutes = Math.min(59, mins);
   }
 
-  // Popup helpers
-  showPopup(type: 'info' | 'warning' | 'error' | 'success', message: string): void {
-    this.popup.type = type;
-    this.popup.message = message;
-    this.popup.visible = true;
+  // Popup helpers (shared)
+  openPopup(message: string, type: 'info' | 'warning' | 'error' | 'success', criticita = false, completa = false): void {
+    this.popupMessage = message;
+    this.popupType = type;
+    this.criticita = criticita;
+    this.completa = completa;
+    this.isOpenPopup = true;
   }
 
   closePopup(): void {
-    const wasSuccess = this.popup.type === 'success';
-    this.popup.visible = false;
-    if (wasSuccess) {
+    this.isOpenPopup = false;
+    if (this.completa) {
       this.created.emit();
       this.close();
-    }
-  }
-
-  getPopupTitle(): string {
-    switch (this.popup.type) {
-      case 'info': return 'Informazione';
-      case 'warning': return 'Attenzione';
-      case 'success': return 'Operazione riuscita';
-      case 'error':
-      default: return 'Errore';
     }
   }
 }

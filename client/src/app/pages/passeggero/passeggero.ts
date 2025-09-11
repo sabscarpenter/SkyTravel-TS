@@ -204,9 +204,9 @@ export class Passeggero {
     this.isOpenPopup = true; // il figlio verrà creato con *ngIf e vedrà subito gli @Input
   }
 
-  closePopup(criticita = false) {
+  closePopup() {
     this.isOpenPopup = false;
-    if (criticita || this.criticita) {
+    if (this.criticita) {
       this.router.navigate(['/']);
     }
   }

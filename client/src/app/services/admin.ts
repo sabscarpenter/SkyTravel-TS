@@ -19,6 +19,11 @@ export interface Passeggero {
     foto?: string | null;
 }
 
+export interface CompagniaInAttesa {
+  utente: number;
+  email: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private apiUrl = `${environment.apiBase}/admin`;
@@ -42,11 +47,21 @@ export class AdminService {
     return this.http.delete<void>(`${this.apiUrl}/passeggeri/${id}`);
   }
 
-  aggiungiCompagnia(email: string, password: string, logo: File) {
+  aggiungiCompagnia(email: string, password: string, file: File) {
     const form = new FormData();
     form.append('email', email);
     form.append('password', password);
-    form.append('logo', logo);
+    form.append('file', file);
     return this.http.post<void>(`${this.apiUrl}/aggiungi`, form);
+  }
+
+  // Elenco compagnie in attesa di approvazione (endpoint presunto)
+  getCompagnieInAttesa(): Observable<CompagniaInAttesa[]> {
+    return this.http.get<CompagniaInAttesa[]>(`${this.apiUrl}/compagnie/attesa`);
+  }
+
+  // Rimuove una compagnia in attesa (endpoint presunto)
+  removeCompagniaInAttesa(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/compagnie/attesa/${id}`);
   }
 }

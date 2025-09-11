@@ -175,47 +175,50 @@
 				</div>
 			</div>
 
-      <!-- Attività recenti -->
+      <!-- Compagnie in attesa -->
       <div class="card bg-white border border-blue-100 shadow-2xl">
         <div class="card-body bg-gradient-to-br from-blue-50 via-white to-sky-50 rounded-2xl">
-          <div class="flex items-center justify-between mb-2">
-            <h2 class="card-title text-2xl text-blue-900 flex items-center gap-2">Attività recenti</h2>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="card-title text-2xl text-blue-900 flex items-center gap-2">Compagnie in attesa</h2>
           </div>
-          <ul class="space-y-3">
-            <li class="flex items-start gap-3 p-3 rounded-lg border border-blue-100 bg-white/60">
-              <div class="rounded-full bg-blue-100 text-blue-700 p-2 border border-blue-200">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
-                </svg>
-              </div>
-              <div class="flex-1">
-                <p class="text-sm text-blue-900"><span class="font-semibold">Nuova compagnia</span> registrata.</p>
-                <p class="text-xs text-blue-600/80">2 ore fa</p>
-              </div>
-            </li>
-            <li class="flex items-start gap-3 p-3 rounded-lg border border-blue-100 bg-white/60">
-              <div class="rounded-full bg-blue-100 text-blue-700 p-2 border border-blue-200">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-              </div>
-              <div class="flex-1">
-                <p class="text-sm text-blue-900">Utente ha aggiornato le <span class="font-semibold">informazioni profilo</span>.</p>
-                <p class="text-xs text-blue-600/80">4 ore fa</p>
-              </div>
-            </li>
-            <li class="flex items-start gap-3 p-3 rounded-lg border border-blue-100 bg-white/60">
-              <div class="rounded-full bg-blue-100 text-blue-700 p-2 border border-blue-200">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                </svg>
-              </div>
-              <div class="flex-1">
-                <p class="text-sm text-blue-900">Rimosso un <span class="font-semibold">utente inattivo</span>.</p>
-                <p class="text-xs text-blue-600/80">Ieri</p>
-              </div>
-            </li>
-          </ul>
+          <div class="overflow-x-auto border border-blue-200 rounded-lg shadow-sm" style="max-height: 300px; overflow-y: auto;">
+            <table class="table table-zebra">
+              <thead class="sticky top-0 bg-blue-50 z-10">
+                <tr class="text-blue-900">
+                  <th>ID</th>
+                  <th>Email</th>
+                  <th>Azioni</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (compagnieInAttesa && compagnieInAttesa.length > 0) {
+                  @for (c of compagnieInAttesa; track c.utente) {
+                    <tr class="hover:bg-blue-50/50 transition-colors">
+                      <td><div class="font-bold">{{ c.utente }}</div></td>
+                      <td><div class="font-semibold">{{ c.email }}</div></td>
+                      <td>
+                        <button class="btn btn-error btn-xs text-white transition-transform hover:scale-105" (click)="removeCompagniaInAttesa(c)">Cancella invito</button>
+                      </td>
+                    </tr>
+                  }
+                } @else {
+                  <tr>
+                    <td colspan="3" class="text-center py-8">
+                      <div class="text-blue-700">Nessuna compagnia in attesa</div>
+                    </td>
+                  </tr>
+                }
+                @if (isLoadingCompagnieInAttesa) {
+                  @for (r of [0,1,2]; track r) {
+                    <tr>
+                      <td><div class="skeleton h-4 w-10"></div></td>
+                      <td><div class="skeleton h-4 w-56"></div></td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 		</div>
@@ -242,10 +245,11 @@
 			<div class="card bg-white border border-blue-100 shadow-2xl">
 				<div class="card-body bg-gradient-to-br from-blue-50 via-white to-sky-50 rounded-2xl">
 					<h3 class="card-title mb-4 text-blue-900">Azioni rapide</h3>
-					<div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-2 gap-3">
 						<button class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white border-0 shadow" (click)="openNuovaCompagnia()">Nuova Compagnia</button>
 						<button class="btn btn-sm border-blue-200" (click)="refreshCompagnie()">Ricarica Compagnie</button>
 						<button class="btn btn-sm border-blue-200" (click)="refreshPasseggeri()">Ricarica Utenti</button>
+            <button class="btn btn-sm border-blue-200" (click)="refreshCompagnieInAttesa()">Ricarica In Attesa</button>
 					</div>
 				</div>
 			</div>
@@ -255,9 +259,9 @@
 				<div class="card-body bg-gradient-to-br from-blue-50 via-white to-sky-50 rounded-2xl">
 					<h3 class="card-title mb-4 text-blue-900">Suggerimenti</h3>
 					<ul class="list-disc list-inside text-sm text-blue-900/90 space-y-2">
-						<li>Usa la ricerca per filtrare rapidamente gli utenti per <span class="font-semibold">ID</span> o <span class="font-semibold">email</span>.</li>
-						<li>Controlla le <span class="font-semibold">attività recenti</span> per monitorare cambiamenti importanti.</li>
-						<li>Ricorda di effettuare un <span class="font-semibold">backup</span> periodico dei dati.</li>
+            <li>Filtra rapidamente gli utenti con la ricerca per <span class="font-semibold">ID</span> o <span class="font-semibold">email</span>.</li>
+            <li>Controlla regolarmente le <span class="font-semibold">compagnie in attesa</span> e gestiscile con le azioni dedicate.</li>
+            <li>Ricorda di eseguire un <span class="font-semibold">backup</span> periodico dei dati.</li>
 					</ul>
 				</div>
 			</div>
