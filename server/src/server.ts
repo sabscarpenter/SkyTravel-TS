@@ -64,10 +64,10 @@ async function bootstrap() {
   app.use(express.json());
   app.use(cookieParser());
 
-  app.use('/api/passeggero/uploads/profile-pictures',
+  app.use('/api/passeggero/uploads/passeggeri',
     express.static(path.join(process.cwd(), 'uploads', 'passeggeri')));
 
-  app.use('/api/admin/uploads/loghi-compagnie',
+  app.use('/api/admin/uploads/compagnie',
   express.static(path.join(process.cwd(), 'uploads', 'compagnie')));
 
   app.use('/api/auth', authRoutes);
