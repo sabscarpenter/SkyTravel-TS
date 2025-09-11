@@ -4,12 +4,12 @@
 
 @if (isConfirmOpen) {
   <div class="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl border border-blue-200 p-6 w-[90%] max-w-md">
+    <div class="bg-white rounded-2xl shadow-2xl border border-blue-200 p-6 w-[90%] max-w-md text-center">
       <h3 class="text-lg font-semibold text-blue-900 mb-3">Conferma</h3>
       <p class="text-blue-700 mb-6">{{ confirmMessage }}</p>
-      <div class="flex justify-end gap-3">
-        <button class="btn btn-ghost" (click)="cancelConfirm()">Annulla</button>
-        <button class="btn bg-red-600 hover:bg-red-700 text-white" (click)="acceptConfirm()">Conferma</button>
+      <div class="flex justify-center gap-3">
+        <button class="btn btn-ghost btn-sm" (click)="cancelConfirm()">Annulla</button>
+        <button class="btn btn-error btn-sm text-white" (click)="acceptConfirm()">Conferma</button>
       </div>
     </div>
   </div>
@@ -142,7 +142,7 @@
                   <th class="text-right">Business</th>
                   <th class="text-right">First</th>
                   <th class="text-right">Totale</th>
-                  <th></th>
+                  <th class="text-right">Azioni</th>
                 </tr>
               </thead>
               <tbody>
@@ -198,9 +198,11 @@
               <thead class="sticky top-0 bg-blue-50 z-10">
                 <tr class="text-blue-900">
                   <th>Codice Tratta</th>
-                  <th>Percorso</th>
-                  <th>Distanza</th>
-                  <th>Durata Media</th>
+                  <th>Andata</th>
+                  <th>Ritorno</th>
+                  <th class="text-right">Distanza</th>
+                  <th class="text-right">Durata Media</th>
+                  <th class="text-right">Azioni</th>
                 </tr>
               </thead>
               <tbody>
@@ -211,29 +213,35 @@
                         <div class="font-bold">{{route.numero}}</div>
                       </td>
                       <td>
-                        <div class="font-semibold">{{route.partenza}} → {{route.arrivo}}</div>
-                        <div class="text-sm opacity-50 truncate max-w-xs" [title]="route.partenza_nome + ' → ' + route.arrivo_nome">
-                          {{route.partenza_nome}} → {{route.arrivo_nome}}
+                        <div class="font-semibold">{{route.partenza}}</div>
+                        <div class="text-sm opacity-50 max-w-xs" [title]="route.partenza_nome">
+                          {{route.partenza_nome}}
                         </div>
                       </td>
                       <td>
+                        <div class="font-semibold">{{route.arrivo}}</div>
+                        <div class="text-sm opacity-50 max-w-xs" [title]="route.arrivo_nome">
+                          {{route.arrivo_nome}}
+                        </div>
+                      </td>
+                      <td class="text-right">
                         <div class="font-semibold">{{route.lunghezza_km}} km</div>
                       </td>
-                      <td>
-                        <div class="flex items-center gap-18">
+                      <td class="text-right">
                           <div class="font-semibold">{{route.durata_min}} min</div>
-                          <button class="btn btn-error btn-xs text-white"
-                                  (click)="deleteRoute(route)"
-                                  [disabled]="isRouteDeleting(route.numero)">
-                            @if (isRouteDeleting(route.numero)) { Eliminazione... } @else { Elimina }
-                          </button>
-                        </div>
                       </td>
-                    </tr>
-                  }
-                } @else {
-                  <tr>
-                    <td colspan="4" class="text-center py-8">
+                      <td class="text-right">
+                        <button class="btn btn-error btn-xs text-white"
+                                (click)="deleteRoute(route)"
+                                [disabled]="isRouteDeleting(route.numero)">
+                          @if (isRouteDeleting(route.numero)) { Eliminazione... } @else { Elimina }
+                        </button>
+                    </td>
+                  </tr>
+                }
+              } @else {
+                <tr>
+                  <td colspan="4" class="text-center py-8">
                       <div class="text-gray-500">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-12 mx-auto mb-3 text-gray-400">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />

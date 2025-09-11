@@ -1,18 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
 import { NuovaCompagnia } from './nuova-compagnia/nuova-compagnia';
 import { AdminService } from '../../services/admin';
 import { Compagnia, Passeggero, CompagniaInAttesa } from '../../services/admin';
+import { Popup } from '../../shared/popup/popup';
 import { PasseggeroService } from '../../services/passeggero';
 
 
 @Component({
   selector: 'app-admin',
-  imports: [NuovaCompagnia],
+  imports: [NuovaCompagnia, Popup],
   templateUrl: './admin.html',
   styleUrl: './admin.css'
 })
 export class Admin {
-  // Placeholder data to be replaced by API wiring
+  @ViewChild(Popup) popup!: Popup;
+
   compagnie: Compagnia[] = [];
   passeggeri: Passeggero[] = [];
   compagnieInAttesa: CompagniaInAttesa[] = [];
@@ -27,7 +30,13 @@ export class Admin {
   // Modal state
   isNuovaCompagniaOpen = false;
 
-  constructor(private adminService: AdminService, private passeggeroService: PasseggeroService) {
+  // stato per il popup
+  isOpenPopup = false;
+  criticita = false;
+  popupMessage = '';
+  popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
+
+  constructor(private router: Router, private adminService: AdminService, private passeggeroService: PasseggeroService) {
     // initialize filtered list
   }
 
@@ -97,6 +106,7 @@ export class Admin {
 
   onCompagniaCreata() {
     this.isNuovaCompagniaOpen = false;
+    this.openPopup('Compagnia creata con successo.', 'success', false);
     this.refreshCompagnie();
     this.refreshCompagnieInAttesa();
   }
@@ -130,30 +140,51 @@ export class Admin {
 
   removeCompagnia(c: Compagnia) {
     this.adminService.removeCompagnia(c.utente).subscribe({
-      next: (response) => {
+      next: () => {
+        this.openPopup('Compagnia rimossa con successo.', 'success', false);
         this.refreshCompagnie();
       },
-      error: (err) => {
-        console.error('[admin] error removing company:', err);
+      error: () => {
+        this.openPopup('Errore durante la rimozione della compagnia.', 'error');
       }
     });
   }
 
   removeCompagniaInAttesa(c: CompagniaInAttesa) {
     this.adminService.removeCompagniaInAttesa(c.utente).subscribe({
-      next: () => this.refreshCompagnieInAttesa(),
-      error: (err) => console.error('[admin] error removing pending company:', err)
+      next: () => {
+        this.openPopup('Compagnia in attesa rimossa con successo.', 'success', false);
+        this.refreshCompagnieInAttesa();
+      },
+      error: () => {
+        this.openPopup('Errore durante la rimozione della compagnia in attesa.', 'error');
+      }
     });
   }
 
   removePasseggero(u: Passeggero) {
     this.adminService.removePasseggero(u.utente).subscribe({
-      next: (response) => {
+      next: () => {
+        this.openPopup('Passeggero rimosso con successo.', 'success', false);
         this.refreshPasseggeri();
       },
-      error: (err) => {
-        console.error('[admin] error removing passenger:', err);
+      error: () => {
+        this.openPopup('Errore durante la rimozione del passeggero.', 'error');
       }
     });
+  }
+
+  openPopup(message: string, type: 'info' | 'warning' | 'error' | 'success', criticita = false) {
+    this.popupMessage = message;
+    this.popupType = type;
+    this.criticita = criticita;
+    this.isOpenPopup = true; // il figlio verrà creato con *ngIf e vedrà subito gli @Input
+  }
+
+  closePopup() {
+    this.isOpenPopup = false;
+    if (this.criticita) {
+      this.router.navigate(['/']);
+    }
   }
 }

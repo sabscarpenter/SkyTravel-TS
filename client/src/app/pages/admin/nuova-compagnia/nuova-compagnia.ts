@@ -63,7 +63,7 @@ export class NuovaCompagnia {
     this.popupType = type;
     this.criticita = criticita;
     this.completa = completa;
-    this.isOpenPopup = true; // il figlio verrà creato con *ngIf e vedrà subito gli @Input
+    this.isOpenPopup = true;
   }
 
   closePopup() {
@@ -110,7 +110,7 @@ export class NuovaCompagnia {
     
     this.submitting = true;
     this.adminService.aggiungiCompagnia(this.email, this.password, this.logoFile).subscribe({
-      next: (response) => {
+      next: () => {
         this.submitting = false;
         this.openPopup('Compagnia creata con successo!', 'success', false, true);
         this.created.emit();
