@@ -148,18 +148,10 @@ export async function refresh(req: Request, res: Response) {
     const valid = await isSessionValid(jti);
     if (!valid) return res.status(401).json({ message: 'Invalid refresh token' });
 
-    await revokeSession(jti);
-
     const u = await getUserById(sub);
 
-    const accessToken = signAccessToken({ sub: u.id, role: u.role as any });
-    const { token: newRt, jti: newJti, exp } = signRefreshToken({ sub: u.id, role: u.role as any });
-    await insertSession(newJti, u.id, exp);
+    const accessToken = signAccessToken({ sub: u.id, role: u.role });
 
-    res.cookie('rt', newRt, {
-      httpOnly: true, sameSite: 'lax', secure: false,
-      path: '/api/auth', maxAge: 7*24*60*60*1000
-    });
     return res.json({ accessToken, user: { id: u.id, email: u.email, role: u.role, foto: u.foto ?? '' } });
   } catch {
     return res.status(401).json({ message: 'Invalid refresh token' });
