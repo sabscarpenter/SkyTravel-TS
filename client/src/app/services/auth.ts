@@ -39,7 +39,6 @@ export class AuthService {
 
   // --- getters ---
   get token() { return localStorage.getItem('accessToken'); }
-  get userChanges$() { return this.user$.asObservable(); }
 
   // src/app/services/auth.ts (aggiungi)
   register(email: string, password: string, dati: DatiUtente) {
