@@ -18,7 +18,6 @@ interface DecodedToken {
   sub: number;
   role: Role;
   exp: number;
-  iat: number;
 }
 
 export interface DatiUtente {
@@ -32,7 +31,7 @@ export interface DatiUtente {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = `${environment.apiBase}/auth`;
-  private user$ = new BehaviorSubject<User | null>(null);
+  private user: User | null = null;
   private _me$?: Observable<User | null>;
 
   constructor(private http: HttpClient) {
@@ -40,7 +39,6 @@ export class AuthService {
 
   // --- getters ---
   get token() { return localStorage.getItem('accessToken'); }
-  get user()  { return this.user$.value; }
   get userChanges$() { return this.user$.asObservable(); }
 
   // src/app/services/auth.ts (aggiungi)
@@ -67,8 +65,8 @@ export class AuthService {
       { withCredentials: true }
     ).pipe(
       map(res => {
-        this.setAccessToken(res.accessToken);
-        this.user$.next(res.user);
+        localStorage.setItem('accessToken', res.accessToken);
+        this.user = res.user;
         return res.user;
       })
     );
@@ -76,16 +74,16 @@ export class AuthService {
 
   /** Logout: cancella token locale e cookie refresh lato server */
   logout() {
-    this.user$.next(null);
     this._me$ = undefined;
     localStorage.removeItem('accessToken');
+    this.user = null;
     return this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true });
   }
 
   logoutAll() {
     return this.http.post(`${this.apiUrl}/logout-all`, {}, { withCredentials: true }).pipe(
       finalize(() => {
-        this.user$.next(null);
+        this.user = null;
         this._me$ = undefined;
         localStorage.removeItem('accessToken');
       })
@@ -108,25 +106,9 @@ export class AuthService {
     ).pipe(
       map(res => {
         this.setAccessToken(res.accessToken);
-        if (res.user) this.user$.next(res.user);
+        if (res.user) this.user = res.user;
         return true;
       })
     );
-  }
-
-  // --- Helpers ---
-  private setAccessToken(token: string) {
-    localStorage.setItem('accessToken', token);
-
-    try {
-      const decoded = jwtDecode<DecodedToken>(token);
-
-      const email = this.user?.email ?? '';
-      const user: User = { id: decoded.sub, email: email, role: decoded.role };
-      this.user$.next(user);
-    } catch (err) {
-      console.error('Token malformato', err);
-      this.logout().subscribe();
-    }
   }
 }
