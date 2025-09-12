@@ -59,6 +59,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
 
         return auth.refresh().pipe(
           switchMap(() => {
+            console.log('Refresh ok');
             isRefreshing = false;
             refreshDone$.next(true);
             const newToken = auth.token;
