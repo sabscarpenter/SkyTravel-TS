@@ -51,7 +51,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
       if (err.status !== 401 || shouldSkipRefresh(req.url)) {
         return throwError(() => err);
       }
-      
+
       const alreadyRetried = req.headers.get('x-retried') === '1';
 
       if (!isRefreshing && !alreadyRetried) {
@@ -71,14 +71,12 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
           catchError((refreshErr) => {
             isRefreshing = false;
             refreshDone$.next(false);
-            auth.logout().subscribe(); // svuota stato locale e cookie lato server
+            auth.logout().subscribe();
             return throwError(() => refreshErr);
           })
         );
       } else {
-        // coda: aspetta l’esito del refresh in corso
         return refreshDone$.pipe(
-          filter(ok => ok !== undefined),
           take(1),
           switchMap(ok => {
             if (!ok || alreadyRetried) {
