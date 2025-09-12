@@ -145,7 +145,7 @@ export async function refresh(req: Request, res: Response) {
     const jti = decoded.jti;
     if (!jti) return res.status(401).json({ message: 'Missing refresh token' });
 
-    console.error('refresh error:', jti);
+    console.log('refresh error:', jti);
 
     const valid = await isSessionValid(jti);
     if (!valid) return res.status(401).json({ message: 'Invalid refresh token' });
