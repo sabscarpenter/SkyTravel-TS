@@ -94,8 +94,8 @@ export class AerolineaService {
     return this.http.get<Aircraft[]>(`${this.apiUrl}/aircrafts`);
   }
 
-  addAirlineAircraft(aircraft: { modello: string }): Observable<{ numero: string; modello: string }> {
-    return this.http.post<{ numero: string; modello: string }>(`${this.apiUrl}/aircrafts`, aircraft);
+  addAirlineAircraft(aircraft: { modello: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/aircrafts`, aircraft);
   }
 
   deleteAirlineAircraft(numero: string): Observable<any> {
