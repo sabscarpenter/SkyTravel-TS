@@ -31,7 +31,7 @@ export interface DatiUtente {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = `${environment.apiBase}/auth`;
-  private user: User | null = null;
+  private user$ = new BehaviorSubject<User | null>(null);
   private _me$?: Observable<User | null>;
 
   constructor(private http: HttpClient) {
@@ -39,8 +39,9 @@ export class AuthService {
 
   // --- getters ---
   get token() { return localStorage.getItem('accessToken'); }
+  get user()  { return this.user$.value; }
+  get userChanges$() { return this.user$.asObservable(); }
 
-  // src/app/services/auth.ts (aggiungi)
   register(email: string, password: string, dati: DatiUtente) {
     return this.http.post<{ accessToken: string; user: User }>(
       `${this.apiUrl}/register`,
@@ -65,7 +66,7 @@ export class AuthService {
     ).pipe(
       map(res => {
         localStorage.setItem('accessToken', res.accessToken);
-        this.user = res.user;
+        this.user$.next(res.user);
         return res.user;
       })
     );
@@ -73,16 +74,16 @@ export class AuthService {
 
   /** Logout: cancella token locale e cookie refresh lato server */
   logout() {
+    this.user$.next(null);
     this._me$ = undefined;
     localStorage.removeItem('accessToken');
-    this.user = null;
     return this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true });
   }
 
   logoutAll() {
     return this.http.post(`${this.apiUrl}/logout-all`, {}, { withCredentials: true }).pipe(
       finalize(() => {
-        this.user = null;
+        this.user$.next(null);
         this._me$ = undefined;
         localStorage.removeItem('accessToken');
       })
@@ -105,9 +106,8 @@ export class AuthService {
     ).pipe(
       map(res => {
         this.setAccessToken(res.accessToken);
-        if (res.user) this.user = res.user;
+        if (res.user) this.user$.next(res.user);
         return true;
       })
     );
   }
-}
