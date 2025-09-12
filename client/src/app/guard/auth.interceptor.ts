@@ -9,16 +9,17 @@ let isRefreshing = false;
 const refreshDone$ = new Subject<boolean>();
 
 const EXCLUDED = [
-  '/auth/register',
-  '/auth/login',
-  '/auth/refresh',
-  '/auth/logout',
+  'api/auth/register',
+  'api/auth/login',
+  'api/auth/refresh',
+  'api/auth/logout',
 ];
 
 function pathIn(url: string, list: string[]): boolean {
   try {
     const u = new URL(url, window.location.origin);
     const p = u.pathname;
+    console.log(p);
     return list.some(item => p === item);
   } catch {
     return list.some(item => url === item || url.endsWith(item));
@@ -47,12 +48,10 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
 
   return next(initial).pipe(
     catchError((err: HttpErrorResponse) => {
-      // Se non è 401 o se l'endpoint è nella lista NO_REFRESH → non provare il refresh
       if (err.status !== 401 || shouldSkipRefresh(req.url)) {
         return throwError(() => err);
       }
-
-      // evita retry infinito
+      
       const alreadyRetried = req.headers.get('x-retried') === '1';
 
       if (!isRefreshing && !alreadyRetried) {

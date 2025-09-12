@@ -10,6 +10,7 @@ import { AuthService } from '../../services/auth';
   styleUrl: './login.css'
 })
 export class Login {
+  @Input() disableReload: boolean = false;
   @Output() onLoginSuccess = new EventEmitter<any>();
   @Output() onSwitchToRegister = new EventEmitter<void>();
   @Output() onClose = new EventEmitter<void>();
@@ -36,7 +37,9 @@ export class Login {
           this.isLoading = false;
           this.onLoginSuccess.emit();
           this.close();
-          window.location.reload();
+          if (!this.disableReload) {
+            window.location.reload();
+          }
         },
         error: (error) => {
           this.isLoading = false;
