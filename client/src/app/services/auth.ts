@@ -49,9 +49,8 @@ export class AuthService {
       { withCredentials: true }
     ).pipe(
       map(res => {
-        // this.setAccessToken(res.accessToken);
+        localStorage.setItem('accessToken', res.accessToken);
         this.user$.next(res.user);
-        return res.user;
       })
     );
   }
@@ -67,7 +66,6 @@ export class AuthService {
       map(res => {
         localStorage.setItem('accessToken', res.accessToken);
         this.user$.next(res.user);
-        return res.user;
       })
     );
   }

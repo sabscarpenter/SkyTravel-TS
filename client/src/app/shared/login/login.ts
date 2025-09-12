@@ -33,7 +33,7 @@ export class Login {
       this.errorMessage = '';
       
       this.authService.login(this.email, this.password).subscribe({
-        next: (response) => {
+        next: () => {
           this.isLoading = false;
           this.onLoginSuccess.emit();
           this.close();

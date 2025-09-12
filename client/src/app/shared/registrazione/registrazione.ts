@@ -51,7 +51,6 @@ export class Registrazione {
     this.buffer.setDraft(this.email, this.password);
     this.isLoading = false;
 
-    // Mostra step Dati Passeggero
     this.onOpenDatiPasseggero.emit({ email: this.email });
   }
 

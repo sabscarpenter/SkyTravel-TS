@@ -158,10 +158,10 @@
         </app-login>
       } @else if (authMode === 'register') {
         <app-registrazione 
-          (onRegisterSuccess)="onRegisterSuccess($event)"
+          (onRegisterSuccess)="onRegisterSuccess()"
           (onSwitchToLogin)="switchToLogin()"
           (onClose)="closeAuthPopup()"
-          (onOpenDatiPasseggero)="onOpenDatiPasseggero($event)">
+          (onOpenDatiPasseggero)="onOpenDatiPasseggero()">
         </app-registrazione>
       } @else if (authMode === 'datiPasseggero') {
         <app-dati-passeggero 

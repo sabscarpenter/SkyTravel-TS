@@ -1,4 +1,3 @@
-// src/app/services/registration-buffer.ts
 import { Injectable } from '@angular/core';
 
 export interface RegistrationDraft {

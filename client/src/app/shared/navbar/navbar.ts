@@ -108,11 +108,12 @@ export class Navbar implements OnInit, OnDestroy {
     this.closeAuthPopup();
   }
 
-  onRegisterSuccess(_: any) {
+  onRegisterSuccess() {
     this.checkAuthStatus();
   }
 
-  onOpenDatiPasseggero(_: any) { this.switchToDatiPasseggero(); }
+  onOpenDatiPasseggero() { this.switchToDatiPasseggero(); }
+  
   onDatiPasseggeroComplete() {
     this.checkAuthStatus();
     this.closeAuthPopup();
