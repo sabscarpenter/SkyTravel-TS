@@ -32,21 +32,16 @@ export interface DatiUtente {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = `${environment.apiBase}/auth`;
-  private accessToken$ = new BehaviorSubject<string | null>(localStorage.getItem('accessToken'));
   private user$ = new BehaviorSubject<User | null>(null);
   private _me$?: Observable<User | null>;
 
   constructor(private http: HttpClient) {
-    const saved = this.accessToken$.value;
-    if (saved) this.setAccessToken(saved);
   }
 
   // --- getters ---
-  get token() { return this.accessToken$.value; }
+  get token() { return localStorage.getItem('accessToken'); }
   get user()  { return this.user$.value; }
   get userChanges$() { return this.user$.asObservable(); }
-
-  // --- API ---
 
   // src/app/services/auth.ts (aggiungi)
   register(email: string, password: string, dati: DatiUtente) {
@@ -81,7 +76,6 @@ export class AuthService {
 
   /** Logout: cancella token locale e cookie refresh lato server */
   logout() {
-    this.accessToken$.next(null);
     this.user$.next(null);
     this._me$ = undefined;
     localStorage.removeItem('accessToken');
@@ -91,7 +85,6 @@ export class AuthService {
   logoutAll() {
     return this.http.post(`${this.apiUrl}/logout-all`, {}, { withCredentials: true }).pipe(
       finalize(() => {
-        this.accessToken$.next(null);
         this.user$.next(null);
         this._me$ = undefined;
         localStorage.removeItem('accessToken');
@@ -123,7 +116,6 @@ export class AuthService {
 
   // --- Helpers ---
   private setAccessToken(token: string) {
-    this.accessToken$.next(token);
     localStorage.setItem('accessToken', token);
 
     try {

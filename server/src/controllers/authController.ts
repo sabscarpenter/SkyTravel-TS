@@ -10,8 +10,6 @@ import {
   Role
 } from '../utils/jwt';
 
-const REFRESH_COOKIE = 'rt';
-
 // ------------------ REGISTER ------------------
 export async function register(req: Request, res: Response) {
   const { email, password, dati } = req.body as {
@@ -128,7 +126,7 @@ export async function login(req: Request, res: Response) {
     const { token: refreshToken, jti, exp } = signRefreshToken({ sub: u.id, role: u.role });
     await insertSession(jti, u.id, exp);
 
-    res.cookie(REFRESH_COOKIE, refreshToken, {
+    res.cookie('rt', refreshToken, {
       httpOnly: true, sameSite: 'lax', secure: false,
       path: '/api/auth', maxAge: 7*24*60*60*1000
     });
@@ -142,7 +140,7 @@ export async function login(req: Request, res: Response) {
 
 // ------------------ REFRESH (rotazione) ------------------
 export async function refresh(req: Request, res: Response) {
-  const token = req.cookies?.[REFRESH_COOKIE];
+  const token = req.cookies?.['rt'];
   if (!token) return res.status(401).json({ message: 'Missing refresh token' });
 
   try {
@@ -162,7 +160,7 @@ export async function refresh(req: Request, res: Response) {
     const { token: newRt, jti: newJti, exp } = signRefreshToken({ sub: u.id, role: u.role as any });
     await insertSession(newJti, u.id, exp);
 
-    res.cookie(REFRESH_COOKIE, newRt, {
+    res.cookie('rt', newRt, {
       httpOnly: true, sameSite: 'lax', secure: false,
       path: '/api/auth', maxAge: 7*24*60*60*1000
     });
@@ -174,7 +172,7 @@ export async function refresh(req: Request, res: Response) {
 
 // ------------------ LOGOUT ------------------
 export async function logout(req: Request, res: Response) {
-  const rt = req.cookies?.[REFRESH_COOKIE];
+  const rt = req.cookies?.['rt'];
 
   if (rt) {
     let jti: string | undefined;
@@ -198,7 +196,7 @@ export async function logout(req: Request, res: Response) {
     }
   }
 
-  res.clearCookie(REFRESH_COOKIE, { path: '/api/auth' });
+  res.clearCookie('rt', { path: '/api/auth' });
   return res.json({ ok: true });
 }
 
