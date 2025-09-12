@@ -49,7 +49,7 @@ export class AuthService {
       { withCredentials: true }
     ).pipe(
       map(res => {
-        this.setAccessToken(res.accessToken);
+        // this.setAccessToken(res.accessToken);
         this.user$.next(res.user);
         return res.user;
       })
@@ -105,9 +105,10 @@ export class AuthService {
       `${this.apiUrl}/refresh`, {}, { withCredentials: true }
     ).pipe(
       map(res => {
-        this.setAccessToken(res.accessToken);
+        // this.setAccessToken(res.accessToken);
         if (res.user) this.user$.next(res.user);
         return true;
       })
     );
   }
+}

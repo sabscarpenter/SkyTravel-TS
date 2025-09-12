@@ -152,7 +152,7 @@
       <!-- Dynamic content based on authMode -->
       @if (authMode === 'login') {
         <app-login 
-          (onLoginSuccess)="onLoginSuccess($event)"
+          (onLoginSuccess)="onLoginSuccess()"
           (onSwitchToRegister)="switchToRegister()"
           (onClose)="closeAuthPopup()">
         </app-login>

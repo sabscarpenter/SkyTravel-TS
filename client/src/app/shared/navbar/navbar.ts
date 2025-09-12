@@ -51,7 +51,8 @@ export class Navbar implements OnInit, OnDestroy {
           this.loadCompanyProfile();
         }
       });
-  }
+    }
+  
   ngOnDestroy() { this.destroy$.next(); this.destroy$.complete(); }
 
   checkAuthStatus() {
@@ -102,7 +103,7 @@ export class Navbar implements OnInit, OnDestroy {
   switchToRegister() { this.authMode = 'register'; }
   switchToDatiPasseggero() { this.authMode = 'datiPasseggero'; }
 
-  onLoginSuccess(_: any) {
+  onLoginSuccess() {
     this.checkAuthStatus();
     this.closeAuthPopup();
   }
@@ -110,7 +111,7 @@ export class Navbar implements OnInit, OnDestroy {
   onRegisterSuccess(_: any) {
     this.checkAuthStatus();
   }
-  
+
   onOpenDatiPasseggero(_: any) { this.switchToDatiPasseggero(); }
   onDatiPasseggeroComplete() {
     this.checkAuthStatus();

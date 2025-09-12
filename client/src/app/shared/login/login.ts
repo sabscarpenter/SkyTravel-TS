@@ -35,7 +35,7 @@ export class Login {
       this.authService.login(this.email, this.password).subscribe({
         next: (response) => {
           this.isLoading = false;
-          this.onLoginSuccess.emit(response);
+          this.onLoginSuccess.emit();
           this.close();
           if (!this.disableReload) {
             window.location.reload();
