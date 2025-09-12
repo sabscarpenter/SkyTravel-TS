@@ -134,7 +134,7 @@ export async function login(req: Request, res: Response) {
   }
 }
 
-// ------------------ REFRESH (rotazione) ------------------
+// ------------------ REFRESH ------------------
 export async function refresh(req: Request, res: Response) {
   const token = req.cookies?.['rt'];
   if (!token) return res.status(401).json({ message: 'Missing refresh token' });
@@ -142,13 +142,13 @@ export async function refresh(req: Request, res: Response) {
   try {
     const decoded = verifyRefreshToken(token);
     const { sub } = decoded;
-    const oldJti = (decoded as any).jti as string | undefined;
-    if (!oldJti) return res.status(401).json({ message: 'Missing refresh token' });
+    const jti = decoded.jti;
+    if (!jti) return res.status(401).json({ message: 'Missing refresh token' });
 
-    const valid = await isSessionValid(oldJti, sub);
+    const valid = await isSessionValid(jti);
     if (!valid) return res.status(401).json({ message: 'Invalid refresh token' });
 
-    await revokeSession(oldJti);
+    await revokeSession(jti);
 
     const u = await getUserById(sub);
 
@@ -250,10 +250,10 @@ async function revokeSession(jti: string) {
   await pool.query('UPDATE sessioni SET revocato = TRUE WHERE jti = $1', [jti]);
 }
 
-async function isSessionValid(jti: string, utente: number) {
+async function isSessionValid(jti: string) {
   const r = await pool.query(
-    'SELECT revocato, scadenza FROM sessioni WHERE jti = $1 AND utente = $2',
-    [jti, utente]
+    'SELECT revocato, scadenza FROM sessioni WHERE jti = $1',
+    [jti]
   );
   if (r.rowCount === 0) return false;
   const row = r.rows[0] as { revocato: boolean; scadenza: Date };
