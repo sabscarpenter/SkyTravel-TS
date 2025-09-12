@@ -19,7 +19,7 @@ export async function register(req: Request, res: Response) {
       nome: string;
       cognome: string;
       codiceFiscale: string;
-      dataNascita: string; // "YYYY-MM-DD"
+      dataNascita: string;
       sesso: 'M' | 'F';
     };
   };
@@ -36,24 +36,20 @@ export async function register(req: Request, res: Response) {
     await client.query('BEGIN');
 
     // Email unica (case-insensitive)
+    /*
     const exists = await client.query('SELECT 1 FROM utenti WHERE LOWER(email)=LOWER($1)', [email]);
     if (exists.rowCount) {
       await client.query('ROLLBACK');
       return res.status(409).json({ message: 'Email già registrata' });
     }
-
-    // (Opzionale) validazioni extra su CF/età lato server
-    if (!/^[A-Z0-9]{16}$/i.test(dati.codiceFiscale)) {
-      await client.query('ROLLBACK');
-      return res.status(400).json({ message: 'Codice fiscale non valido' });
-    }
+    */
 
     const hash = await bcrypt.hash(password, 12);
 
     // 1) utenti
     await client.query('SELECT pg_advisory_xact_lock($1)', [1002]);
     const insUser = await client.query(
-      `WITH prossimo AS ( SELECT GREATEST(100, COALESCE((SELECT MAX(u.id) FROM utenti u WHERE u.id >= 100), 99)) + 1 AS id )
+      `WITH prossimo AS (COALESCE((SELECT MAX(u.id) FROM utenti u WHERE u.id >= 100), 99) + 1 AS id )
        INSERT INTO utenti (id, email, password, foto)
        SELECT p.id, $1, $2, $3
        FROM prossimo p
@@ -83,7 +79,7 @@ export async function register(req: Request, res: Response) {
     res.cookie('rt', refreshToken, {
       httpOnly: true,
       sameSite: 'lax',
-      secure: false, // true in prod con https
+      secure: false,
       path: '/api/auth',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -177,12 +173,10 @@ export async function logout(req: Request, res: Response) {
   if (rt) {
     let jti: string | undefined;
 
-    // 1) prova verify con secret runtime
     try {
       const decoded = verifyRefreshToken(rt) as any;
       jti = decoded?.jti;
     } catch {
-      // 2) se verify fallisce (chiavi ruotate), prova decode best-effort
       const decoded = jwt.decode(rt) as any | null;
       jti = decoded?.jti;
     }
@@ -202,15 +196,14 @@ export async function logout(req: Request, res: Response) {
 
 // ------------------ LOGOUT ALL ------------------
 export async function logoutAll(req: Request, res: Response) {
-  const userId = (req as any).user?.sub as number | undefined;
-  if (userId === undefined || userId === null) return res.status(401).json({ message: 'Unauthorized' });
+  const id = req.user!.sub;
 
   try {
     await pool.query(
       'UPDATE sessioni SET revocato = TRUE WHERE utente = $1 AND revocato = FALSE',
-      [userId]
+      [id]
     );
-    // cancella anche il cookie su questo device
+
     res.clearCookie('rt', { path: '/api/auth' });
     return res.json({ ok: true });
   } catch (e) {

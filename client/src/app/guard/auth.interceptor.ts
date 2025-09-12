@@ -8,16 +8,7 @@ import { catchError, filter, switchMap, take } from 'rxjs/operators';
 let isRefreshing = false;
 const refreshDone$ = new Subject<boolean>();
 
-// Endpoint che NON devono avere Authorization
-const NO_AUTH_HEADER_PATHS = [
-  '/auth/register',
-  '/auth/login',
-  '/auth/refresh',
-  '/auth/logout',      // logout usa solo il cookie HttpOnly
-];
-
-// Endpoint su cui NON tentare il refresh se arriva 401
-const NO_REFRESH_PATHS = [
+const EXCLUDED = [
   '/auth/register',
   '/auth/login',
   '/auth/refresh',
@@ -35,11 +26,11 @@ function pathIn(url: string, list: string[]): boolean {
 }
 
 function needsAuthHeader(url: string) {
-  return !pathIn(url, NO_AUTH_HEADER_PATHS);
+  return !pathIn(url, EXCLUDED);
 }
 
 function shouldSkipRefresh(url: string) {
-  return pathIn(url, NO_REFRESH_PATHS);
+  return pathIn(url, EXCLUDED);
 }
 
 function attachToken(req: HttpRequest<any>, token: string | null) {

@@ -113,7 +113,7 @@ export class Navbar implements OnInit, OnDestroy {
   }
 
   onOpenDatiPasseggero() { this.switchToDatiPasseggero(); }
-  
+
   onDatiPasseggeroComplete() {
     this.checkAuthStatus();
     this.closeAuthPopup();
@@ -124,7 +124,6 @@ export class Navbar implements OnInit, OnDestroy {
       next: () => {
         this.isAuthenticated = false;
         this.user = null;
-        // niente reload: lo stato si aggiorna
         this.router.navigate(['/']);
       },
       error: (error) => console.error('Errore durante il logout:', error)
@@ -136,7 +135,6 @@ export class Navbar implements OnInit, OnDestroy {
       next: () => {
         this.isAuthenticated = false;
         this.user = null;
-        // niente reload: lo stato si aggiorna
         this.router.navigate(['/']);
       },
       error: (error) => console.error('Errore durante il logout da tutti i dispositivi:', error)

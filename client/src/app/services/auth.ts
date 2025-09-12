@@ -14,12 +14,6 @@ export interface User {
   role?: Role;
 }
 
-interface DecodedToken {
-  sub: number;
-  role: Role;
-  exp: number;
-}
-
 export interface DatiUtente {
   nome: string;
   cognome: string;
@@ -81,9 +75,9 @@ export class AuthService {
   logoutAll() {
     return this.http.post(`${this.apiUrl}/logout-all`, {}, { withCredentials: true }).pipe(
       finalize(() => {
+        localStorage.removeItem('accessToken');
         this.user$.next(null);
         this._me$ = undefined;
-        localStorage.removeItem('accessToken');
       })
     );
   }

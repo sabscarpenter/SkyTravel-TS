@@ -7,14 +7,13 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
     return res.status(401).json({ message: 'Missing or invalid Authorization header' });
   }
 
-  const token = auth.slice(7); // dopo "Bearer "
+  const token = auth.slice(7);
   try {
-    const payload = verifyAccessToken(token); // { sub, role }
+    const payload = verifyAccessToken(token);
     req.user = payload;
     return next();
   } catch (err) {
     if (err instanceof TokenExpiredError) {
-      // il client dovrà chiamare /auth/refresh e poi ritentare
       return res.status(401).json({ message: 'Access token expired', code: 'ACCESS_TOKEN_EXPIRED' });
     }
     return res.status(401).json({ message: 'Invalid access token' });

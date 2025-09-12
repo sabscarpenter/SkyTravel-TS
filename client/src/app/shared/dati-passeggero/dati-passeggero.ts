@@ -48,7 +48,6 @@ export class DatiPasseggero {
    * @param {Router} router - Angular router for navigation
    */
   constructor(
-    private router: Router,
     private authService: AuthService,
     private buffer: RegistrationBufferService
   ) {
