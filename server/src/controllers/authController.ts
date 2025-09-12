@@ -145,6 +145,8 @@ export async function refresh(req: Request, res: Response) {
     const jti = decoded.jti;
     if (!jti) return res.status(401).json({ message: 'Missing refresh token' });
 
+    console.error('refresh error:', jti);
+
     const valid = await isSessionValid(jti);
     if (!valid) return res.status(401).json({ message: 'Invalid refresh token' });
 
@@ -247,7 +249,10 @@ async function isSessionValid(jti: string) {
     'SELECT revocato, scadenza FROM sessioni WHERE jti = $1',
     [jti]
   );
-  if (r.rowCount === 0) return false;
+  if (r.rowCount === 0) console.log('righe non trovate');
   const row = r.rows[0] as { revocato: boolean; scadenza: Date };
+  if (row.revocato) console.log('revocato');
+  if (row.scadenza < new Date()) console.log('scaduto');
+  if (r.rowCount === 0) return false;
   return !row.revocato && row.scadenza > new Date();
 }

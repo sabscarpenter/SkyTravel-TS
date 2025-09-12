@@ -9,10 +9,10 @@ let isRefreshing = false;
 const refreshDone$ = new Subject<boolean>();
 
 const EXCLUDED = [
-  'api/auth/register',
-  'api/auth/login',
-  'api/auth/refresh',
-  'api/auth/logout',
+  '/api/auth/register',
+  '/api/auth/login',
+  '/api/auth/refresh',
+  '/api/auth/logout',
 ];
 
 function pathIn(url: string, list: string[]): boolean {
@@ -71,6 +71,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
           }),
           catchError((refreshErr) => {
             isRefreshing = false;
+            console.log('Refresh fallito', refreshErr);
             refreshDone$.next(false);
             auth.logout().subscribe();
             return throwError(() => refreshErr);
@@ -81,6 +82,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
           take(1),
           switchMap(ok => {
             if (!ok || alreadyRetried) {
+              console.log('Refresh già in corso o già ritentato, esco');
               auth.logout().subscribe();
               return throwError(() => err);
             }
