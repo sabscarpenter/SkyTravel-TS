@@ -18,7 +18,7 @@ export function generateRandomSecret(bytes = 64): string {
 }
 
 // Durate
-const ACCESS_EXPIRES: SignOptions['expiresIn']  = (process.env.ACCESS_EXPIRES_IN  || '1m') as any;
+const ACCESS_EXPIRES: SignOptions['expiresIn']  = (process.env.ACCESS_EXPIRES_IN  || '5m') as any;
 const REFRESH_EXPIRES: SignOptions['expiresIn'] = (process.env.REFRESH_EXPIRES_IN || '7d')  as any;
 
 const randId = () => crypto.randomUUID();
