@@ -208,10 +208,10 @@ export async function logoutAll(req: Request, res: Response) {
 
 // ------------------ ME (protetta) ------------------
 export async function me(req: Request, res: Response) {
-  const uid = (req as any).user?.sub as number | undefined;
-  if (uid === undefined || uid === null) return res.status(400).json({ message: 'Unauthorized' });
+  const id = req.user!.sub;
+  if (id === undefined || id === null) return res.status(400).json({ message: 'Unauthorized' });
   try {
-    const u = await getUserById(uid);
+    const u = await getUserById(id);
     return res.json({ id: u.id, email: u.email, role: u.role, foto: u.foto ?? '' });
   } catch {
     return res.status(404).json({ message: 'User not found' });

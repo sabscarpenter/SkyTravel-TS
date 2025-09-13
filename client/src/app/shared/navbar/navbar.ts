@@ -57,12 +57,12 @@ export class Navbar implements OnInit, OnDestroy {
 
   checkAuthStatus() {
     this.authService.me$().subscribe({
-      next: (user: User | null) => {
+      next: (user: User) => {
         this.isAuthenticated = !!user;
         this.user = user;
         this.imageLoaded = false;
+        console.log('utente:', this.user.id, this.user.email, this.user.role, this.user.foto);
         if (user?.role === 'COMPAGNIA') {
-          // tentativo di caricare profilo; se 404 allora mostra setup
           this.loadCompanyProfile();
         }
       },

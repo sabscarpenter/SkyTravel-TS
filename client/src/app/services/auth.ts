@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, map, shareReplay } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import { jwtDecode } from 'jwt-decode';
 import { environment } from '../../environments/environment';
 
 export type Role = 'ADMIN' | 'COMPAGNIA' | 'PASSEGGERO';
@@ -26,7 +25,7 @@ export interface DatiUtente {
 export class AuthService {
   private apiUrl = `${environment.apiBase}/auth`;
   private user$ = new BehaviorSubject<User | null>(null);
-  private _me$?: Observable<User | null>;
+  private _me$?: Observable<User>;
 
   constructor(private http: HttpClient) {
   }
@@ -84,7 +83,7 @@ export class AuthService {
   }
 
   /** Idempotente, cached. Ritorna null se non autenticato. */
-  me$(): Observable<User | null> {
+  me$(): Observable<User> {
     if (!this._me$) {
       this._me$ = this.http.get<User>(`${this.apiUrl}/me`, { withCredentials: false })
         .pipe(shareReplay(1));
