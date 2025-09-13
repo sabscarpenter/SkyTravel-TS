@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, map, shareReplay } from 'rxjs';
+import { BehaviorSubject, Observable, map, tap, shareReplay } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
@@ -48,19 +48,21 @@ export class AuthService {
     );
   }
 
-  /** Login: salva access token e user */
+  /** Login: salva access token e user e ritorna lo User */
   login(email: string, password: string) {
     this._me$ = undefined;
+
     return this.http.post<{ accessToken: string; user: User }>(
       `${this.apiUrl}/login`,
       { email, password },
       { withCredentials: true }
     ).pipe(
-      map(res => {
-        localStorage.setItem('accessToken', res.accessToken);
-        this.user$.next(res.user);
-        console.log('utente:', res.user.id, res.user.email, res.user.role, res.user.foto);
-      })
+      tap(({ accessToken, user }) => {
+        console.log('login:', user.id, user.email, user.role, user.foto);
+        localStorage.setItem('accessToken', accessToken);
+        this.user$.next(user);
+      }),
+      map(({ user }) => user)
     );
   }
 

@@ -10,7 +10,6 @@ import { AuthService } from '../../services/auth';
   styleUrl: './login.css'
 })
 export class Login {
-  @Input() disableReload: boolean = false;
   @Output() onLoginSuccess = new EventEmitter<any>();
   @Output() onSwitchToRegister = new EventEmitter<void>();
   @Output() onClose = new EventEmitter<void>();
@@ -33,13 +32,12 @@ export class Login {
       this.errorMessage = '';
       
       this.authService.login(this.email, this.password).subscribe({
-        next: () => {
+        next: (user) => {
+          console.log('SUBSCRIBE next user:', user);
+          console.log('LS accessToken:', localStorage.getItem('accessToken'));
           this.isLoading = false;
           this.onLoginSuccess.emit();
           this.close();
-          if (!this.disableReload) {
-            window.location.reload();
-          }
         },
         error: (error) => {
           this.isLoading = false;
