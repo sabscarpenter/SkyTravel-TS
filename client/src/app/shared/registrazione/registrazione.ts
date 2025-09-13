@@ -47,7 +47,6 @@ export class Registrazione {
   onSubmit() {
     if (!this.isFormValid) return;
     this.isLoading = true;
-    console.log('Registrazione in corso...', this.email);
     this.auth.email(this.email).subscribe({
       next: () => {
         this.buffer.setDraft(this.email, this.password);

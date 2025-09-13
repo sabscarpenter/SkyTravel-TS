@@ -3,7 +3,7 @@ import { email, register, login, logoutAll, refresh, logout, me } from '../contr
 import { requireAuth } from '../middleware/auth';
 
 const authRouter = Router();
-authRouter.post('/email', email);
+authRouter.get('/email', email);
 authRouter.post('/register', register);
 authRouter.post('/login', login);
 authRouter.post('/logout', logout);
