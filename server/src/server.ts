@@ -29,7 +29,7 @@ async function invalidateAllSessions() {
 }
 
 function pickSecrets(): { access: string | undefined; refresh: string | undefined; rotated: boolean } {
-  if (process.env.ROTATE_SECRETS_ON_START) {
+  if (process.env.ROTATE_SECRETS_ON_START === '1') {
     const access = generateRandomSecret();
     const refresh = generateRandomSecret();
     console.log('[jwt] rotate ON → uso secrets random ad ogni avvio');

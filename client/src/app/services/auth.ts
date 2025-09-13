@@ -60,6 +60,7 @@ export class AuthService {
       map(res => {
         localStorage.setItem('accessToken', res.accessToken);
         this.user$.next(res.user);
+        console.log('utente:', res.user.id, res.user.email, res.user.role, res.user.foto);
       })
     );
   }
