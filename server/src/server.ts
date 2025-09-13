@@ -29,20 +29,15 @@ async function invalidateAllSessions() {
 }
 
 function pickSecrets() {
-  const rotate = process.env.ROTATE_SECRETS_ON_START === '1';
-  if (rotate) {
+  if (process.env.ROTATE_SECRETS_ON_START) {
     const access = generateRandomSecret();
     const refresh = generateRandomSecret();
     console.log('[jwt] rotate ON → uso secrets random ad ogni avvio');
     return { access, refresh, rotated: true };
   }
-  const access = process.env.JWT_ACCESS_SECRET || generateRandomSecret();
-  const refresh = process.env.JWT_REFRESH_SECRET || generateRandomSecret();
-  if (!process.env.JWT_ACCESS_SECRET || !process.env.JWT_REFRESH_SECRET) {
-    console.warn('[jwt] env non complete → uso fallback random (i token verranno invalidati a ogni avvio)');
-  } else {
-    console.log('[jwt] uso secrets da .env');
-  }
+  const access = process.env.JWT_ACCESS_SECRET;
+  const refresh = process.env.JWT_REFRESH_SECRET;
+  console.log('[jwt] uso secrets da .env');
   return { access, refresh, rotated: false };
 }
 
