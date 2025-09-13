@@ -29,15 +29,15 @@ async function invalidateAllSessions() {
   }
 }
 
-function pickSecrets(): { access: Secret; refresh: Secret; rotated: boolean } {
+function pickSecrets(): { access: string | undefined; refresh: string | undefined; rotated: boolean } {
   if (process.env.ROTATE_SECRETS_ON_START) {
     const access = generateRandomSecret();
     const refresh = generateRandomSecret();
     console.log('[jwt] rotate ON → uso secrets random ad ogni avvio');
     return { access, refresh, rotated: true };
   }
-  const access = process.env.JWT_ACCESS_SECRET;
-  const refresh = process.env.JWT_REFRESH_SECRET;
+  const access: string | undefined = process.env.JWT_ACCESS_SECRET;
+  const refresh: string | undefined = process.env.JWT_REFRESH_SECRET;
   console.log('[jwt] uso secrets da .env');
   return { access, refresh, rotated: false };
 }

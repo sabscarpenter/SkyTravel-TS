@@ -6,12 +6,12 @@ export type Role = 'ADMIN' | 'COMPAGNIA' | 'PASSEGGERO';
 export interface JwtPayload { sub: number; role: Role; exp?: number | undefined; }
 
 // === Secrets mutabili, inizializzate a runtime ===
-let ACCESS_SECRET: Secret  = 'accesso_segreto';
-let REFRESH_SECRET: Secret = 'refresh_segreto';
+let ACCESS_SECRET: string = 'accesso_segreto';
+let REFRESH_SECRET: string = 'refresh_segreto';
 
-export function setJwtSecrets(access: Secret, refresh: Secret) {
-  ACCESS_SECRET = access;
-  REFRESH_SECRET = refresh;
+export function setJwtSecrets(access: string | undefined, refresh: string | undefined) {
+  ACCESS_SECRET = access || 'accesso_segreto';
+  REFRESH_SECRET = refresh || 'refresh_segreto';
 }
 export function generateRandomSecret(bytes = 64): string {
   return crypto.randomBytes(bytes).toString('hex');
