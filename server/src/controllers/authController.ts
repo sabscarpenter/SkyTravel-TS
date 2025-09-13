@@ -10,6 +10,18 @@ import {
   Role
 } from '../utils/jwt';
 
+// ------------------ CHECK EMAIL ------------------ 
+export async function email(req: Request, res: Response) {
+  const email = req.query.email;
+  const result = await pool.query(
+      'SELECT email FROM utenti WHERE LOWER(email)=LOWER($1)',
+      [email]
+    );
+    if (result.rowCount) return res.status(400).json({ message: 'Email già registrata' });
+
+  return res.status(200).json({ message: 'Email disponibile' });
+}
+
 // ------------------ REGISTER ------------------
 export async function register(req: Request, res: Response) {
   const { email, password, dati } = req.body as {
@@ -34,15 +46,6 @@ export async function register(req: Request, res: Response) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-
-    // Email unica (case-insensitive)
-    /*
-    const exists = await client.query('SELECT 1 FROM utenti WHERE LOWER(email)=LOWER($1)', [email]);
-    if (exists.rowCount) {
-      await client.query('ROLLBACK');
-      return res.status(409).json({ message: 'Email già registrata' });
-    }
-    */
 
     const hash = await bcrypt.hash(password, 12);
 

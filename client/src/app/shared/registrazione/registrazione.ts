@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../services/auth';
 import { RegistrationBufferService } from '../../services/registrazione-buffer';
 
 @Component({
@@ -24,7 +25,7 @@ export class Registrazione {
   acceptTerms: boolean = false;
   errorMessage: string = '';
 
-  constructor(private buffer: RegistrationBufferService) {}
+  constructor(private auth: AuthService, private buffer: RegistrationBufferService) {}
 
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
@@ -46,12 +47,20 @@ export class Registrazione {
   onSubmit() {
     if (!this.isFormValid) return;
     this.isLoading = true;
-    this.errorMessage = '';
-
-    this.buffer.setDraft(this.email, this.password);
-    this.isLoading = false;
-
-    this.onOpenDatiPasseggero.emit({ email: this.email });
+    console.log('Registrazione in corso...', this.email);
+    this.auth.email(this.email).subscribe({
+      next: () => {
+        this.buffer.setDraft(this.email, this.password);
+        this.isLoading = false;
+        this.onOpenDatiPasseggero.emit({ email: this.email });
+      },
+      error: (err) => {
+        this.isLoading = false;
+        if (err.status === 400) {
+          this.errorMessage = 'Email già registrata';
+        }
+      }
+    });
   }
 
   switchToLogin() {

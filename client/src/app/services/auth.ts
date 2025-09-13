@@ -35,6 +35,13 @@ export class AuthService {
   get user()  { return this.user$.value; }
   get userChanges$() { return this.user$.asObservable(); }
 
+  email(email: string) {
+    return this.http.get<{ exists: boolean }>(
+      `${this.apiUrl}/email`,
+      { params: { email } }
+    );
+  }
+
   register(email: string, password: string, dati: DatiUtente) {
     this._me$ = undefined;
 
