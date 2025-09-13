@@ -1,5 +1,6 @@
 // server/src/server.ts
 import express, { Application, Request, Response } from "express";
+import jwt, { Secret } from 'jsonwebtoken';
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
@@ -28,7 +29,7 @@ async function invalidateAllSessions() {
   }
 }
 
-function pickSecrets() {
+function pickSecrets(): { access: Secret; refresh: Secret; rotated: boolean } {
   if (process.env.ROTATE_SECRETS_ON_START) {
     const access = generateRandomSecret();
     const refresh = generateRandomSecret();
