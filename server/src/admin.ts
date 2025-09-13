@@ -26,8 +26,7 @@ export async function seedAdminIfMissing() {
     // inserisco forzando id=0. ON CONFLICT per sicurezza se qualcuno ha già riservato 0.
     await client.query(
       `INSERT INTO utenti (id, email, password, foto)
-       VALUES (0, $1, $2, NULL)
-       ON CONFLICT (id) DO NOTHING`,
+       VALUES (0, $1, $2, NULL)`,
       [ADMIN_EMAIL, hash]
     );
 
@@ -36,7 +35,5 @@ export async function seedAdminIfMissing() {
   } catch (e) {
     await client.query('ROLLBACK');
     console.error('[seed] errore seed admin:', e);
-  } finally {
-    client.release();
   }
 }

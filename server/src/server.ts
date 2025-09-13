@@ -1,6 +1,5 @@
 // server/src/server.ts
 import express, { Application, Request, Response } from "express";
-import jwt, { Secret } from 'jsonwebtoken';
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
