@@ -32,12 +32,11 @@ export class Login {
       this.errorMessage = '';
       
       this.authService.login(this.email, this.password).subscribe({
-        next: (user) => {
-          console.log('SUBSCRIBE next user:', user);
-          console.log('LS accessToken:', localStorage.getItem('accessToken'));
+        next: () => {
           this.isLoading = false;
           this.onLoginSuccess.emit();
           this.close();
+          window.location.reload();
         },
         error: (error) => {
           this.isLoading = false;

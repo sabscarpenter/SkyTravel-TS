@@ -49,7 +49,9 @@ export async function register(req: Request, res: Response) {
     // 1) utenti
     await client.query('SELECT pg_advisory_xact_lock($1)', [1002]);
     const insUser = await client.query(
-      `WITH prossimo AS (COALESCE((SELECT MAX(u.id) FROM utenti u WHERE u.id >= 100), 99) + 1 AS id )
+      `WITH prossimo AS (
+         SELECT COALESCE((SELECT MAX(u.id) FROM utenti u WHERE u.id >= 100), 99) + 1 AS id
+       )
        INSERT INTO utenti (id, email, password, foto)
        SELECT p.id, $1, $2, $3
        FROM prossimo p

@@ -19,7 +19,6 @@ function pathIn(url: string, list: string[]): boolean {
   try {
     const u = new URL(url, window.location.origin);
     const p = u.pathname;
-    console.log(p);
     return list.some(item => p === item);
   } catch {
     return list.some(item => url === item || url.endsWith(item));
@@ -59,7 +58,6 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
 
         return auth.refresh().pipe(
           switchMap(() => {
-            console.log('Refresh ok');
             isRefreshing = false;
             refreshDone$.next(true);
             const newToken = auth.token;
@@ -71,7 +69,6 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
           }),
           catchError((refreshErr) => {
             isRefreshing = false;
-            console.log('Refresh fallito', refreshErr);
             refreshDone$.next(false);
             auth.logout().subscribe();
             return throwError(() => refreshErr);
@@ -82,7 +79,6 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
           take(1),
           switchMap(ok => {
             if (!ok || alreadyRetried) {
-              console.log('Refresh già in corso o già ritentato, esco');
               auth.logout().subscribe();
               return throwError(() => err);
             }

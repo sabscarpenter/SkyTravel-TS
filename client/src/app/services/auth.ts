@@ -36,15 +36,18 @@ export class AuthService {
   get userChanges$() { return this.user$.asObservable(); }
 
   register(email: string, password: string, dati: DatiUtente) {
+    this._me$ = undefined;
+
     return this.http.post<{ accessToken: string; user: User }>(
       `${this.apiUrl}/register`,
       { email, password, dati },
       { withCredentials: true }
     ).pipe(
-      map(res => {
-        localStorage.setItem('accessToken', res.accessToken);
-        this.user$.next(res.user);
-      })
+      tap(({ accessToken, user }) => {
+        localStorage.setItem('accessToken', accessToken);
+        this.user$.next(user);
+      }),
+      map(({ user }) => user)
     );
   }
 
@@ -58,7 +61,6 @@ export class AuthService {
       { withCredentials: true }
     ).pipe(
       tap(({ accessToken, user }) => {
-        console.log('login:', user.id, user.email, user.role, user.foto);
         localStorage.setItem('accessToken', accessToken);
         this.user$.next(user);
       }),
@@ -88,7 +90,9 @@ export class AuthService {
   me$(): Observable<User> {
     if (!this._me$) {
       this._me$ = this.http.get<User>(`${this.apiUrl}/me`, { withCredentials: false })
-        .pipe(shareReplay(1));
+        .pipe(
+          tap(u => this.user$.next(u)),
+          shareReplay(1));
     }
     return this._me$;
   }
