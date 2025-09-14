@@ -1,0 +1,1 @@
+INSERT INTO "public"."passeggeri" ("utente", "nome", "cognome", "codice_fiscale", "data_nascita", "sesso", "stripe") VALUES ('134', 'Sabrina', 'Carpenter', 'CRPSRN99E51L407P', '1999-05-11', 'F', 'cus_T2Dr3R5xBu1Tmh'), ('135', 'Null', 'Ptr', 'NLLPTR05L44L408W', '2002-07-27', 'M', 'cus_T1YkKebYNafIW6'), ('137', 'Riccardo', 'Zanetti', 'RCCZNT02L27L408W', '2003-10-11', 'M', null);

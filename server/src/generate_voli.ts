@@ -2,9 +2,9 @@
 import crypto from "crypto";
 
 // ======= PARAMETRI =======
-const START_DATE = new Date(2025, 8, 6); // 6 settembre 2025 (mese 0-based → 8 = settembre)
+const START_DATE = new Date(2025, 8, 6); // 6 settembre 2025 (mese 0-based -> 8 = settembre)
 const DAYS = 7;                          // 7 giorni
-const START_SUFFIX = 8;                  // 1 => 000001..000007
+const START_SUFFIX = 1;                  // 1 => 000001..000007
 
 const BASE_SLOTS: [number, number][] = [
   [6, 15], [8, 45], [11, 15], [13, 45],

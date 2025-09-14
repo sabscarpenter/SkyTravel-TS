@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { pool } from '../db';
 import bcrypt from 'bcrypt';
-import { stripe } from './checkoutController';
+import { getStripe, isStripeConfigured } from '../utils/stripe';
 
 // user è già tipizzato tramite augmentation (JwtPayload) in src/types/express.d.ts
 
@@ -153,7 +153,7 @@ export async function updatePassword(req: Request, res: Response) {
  * Usa la tabella passeggeri (colonna stripe) + email da utenti.
  */
 async function getOrCreateStripeCustomerByUserId(userId: number): Promise<string> {
-    if (!stripe) throw new Error('Stripe non inizializzato');
+  if (!isStripeConfigured()) throw new Error('Stripe non inizializzato');
     // Legge stripe id + dati necessari
     const q = `SELECT p.stripe, p.nome, p.cognome, u.email
               FROM passeggeri p JOIN utenti u ON u.id = p.utente
@@ -162,7 +162,7 @@ async function getOrCreateStripeCustomerByUserId(userId: number): Promise<string
     if (!rows.length) throw new Error('Passeggero non trovato');
     const r = rows[0];
     if (r.stripe) return r.stripe;
-    const customer = await stripe.customers.create({
+  const customer = await getStripe().customers.create({
         email: r.email,
         name: `${r.nome} ${r.cognome}`,
         metadata: { app_user_id: userId.toString() }
@@ -183,8 +183,9 @@ export async function createSetupIntent(req: Request, res: Response) {
     try {
         const userId = req.user?.sub;
         if (!userId) return res.status(401).json({ error: 'Non autorizzato' });
+    if (!isStripeConfigured()) return res.status(503).json({ error: 'Pagamento non configurato' });
         const customerId = await getOrCreateStripeCustomerByUserId(userId);
-        const setupIntent = await stripe.setupIntents.create({
+    const setupIntent = await getStripe().setupIntents.create({
             customer: customerId,
             payment_method_types: ['card'],
             usage: 'off_session'
@@ -200,8 +201,9 @@ export async function listPaymentMethods(req: Request, res: Response) {
     try {
         const userId = req.user?.sub;
         if (!userId) return res.status(401).json({ error: 'Non autorizzato' });
+    if (!isStripeConfigured()) return res.status(503).json({ error: 'Pagamento non configurato' });
         const customerId = await getOrCreateStripeCustomerByUserId(userId);
-        const pms = await stripe.paymentMethods.list({ customer: customerId, type: 'card' });
+    const pms = await getStripe().paymentMethods.list({ customer: customerId, type: 'card' });
         // Normalizza output
         const list = pms.data.map(pm => ({
             id: pm.id,
@@ -223,14 +225,15 @@ export async function deletePaymentMethod(req: Request, res: Response) {
     try {
         const userId = req.user?.sub;
         if (!userId) return res.status(401).json({ error: 'Non autorizzato' });
+    if (!isStripeConfigured()) return res.status(503).json({ error: 'Pagamento non configurato' });
         const { pmId } = req.params as { pmId?: string };
         if (!pmId) return res.status(400).json({ error: 'pmId mancante' });
         const customerId = await getOrCreateStripeCustomerByUserId(userId);
         // Recupera il payment method e verifica appartenenza
-        const pm = await stripe.paymentMethods.retrieve(pmId);
+    const pm = await getStripe().paymentMethods.retrieve(pmId);
         if (pm.customer !== customerId) return res.status(403).json({ error: 'Metodo non appartiene al cliente' });
         // Detach
-        await stripe.paymentMethods.detach(pmId);
+    await getStripe().paymentMethods.detach(pmId);
         return res.status(200).json({ message: 'Metodo rimosso', id: pmId });
     } catch (err: any) {
         console.error('[stripe] delete payment method error:', err);

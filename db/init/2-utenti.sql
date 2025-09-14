@@ -1,1 +1,0 @@
-INSERT INTO public.utenti (id, email, password_hash) VALUES (100, 'ginevra@esempio.it', crypt('hellokitty', gen_salt('bf')));

@@ -1,10 +1,7 @@
 import { Request, Response } from "express";
 import { pool } from "../db";
 import Stripe from "stripe";
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: "2025-08-27.basil", 
-});
+import { getStripe, isStripeConfigured } from "../utils/stripe";
 
 export async function insertTickets(req: Request, res: Response) {
     try {
@@ -68,6 +65,9 @@ export async function insertTickets(req: Request, res: Response) {
 
 export async function createPaymentIntent(req: Request, res: Response) {
     try {
+        if (!isStripeConfigured()) {
+            return res.status(503).json({ error: "Pagamento non configurato" });
+        }
         const { amount, currency = "eur", orderId, customerEmail } = req.body;
 
         // Validazione dell'importo
@@ -75,7 +75,7 @@ export async function createPaymentIntent(req: Request, res: Response) {
             return res.status(400).json({ error: "amount deve essere un numero > 0 (in centesimi)" });
         
         // Creazione del PaymentIntent
-        const intent = await stripe.paymentIntents.create({
+        const intent = await getStripe().paymentIntents.create({
             amount,
             currency,
             automatic_payment_methods: { enabled: true },
@@ -98,8 +98,11 @@ export async function createPaymentIntent(req: Request, res: Response) {
 
 export async function getPaymentIntent(req: Request, res: Response) {
     try {
+        if (!isStripeConfigured()) {
+            return res.status(503).json({ error: "Pagamento non configurato" });
+        }
         const { pi_id } = req.params;
-        const intent = await stripe.paymentIntents.retrieve(pi_id);
+        const intent = await getStripe().paymentIntents.retrieve(pi_id);
 
         return res.status(200).json({ status: intent.status });
     } catch (err: any) {
@@ -122,7 +125,8 @@ export async function stripeWebhook(req: Request, res: Response) {
     let event: Stripe.Event;
 
     try {
-        event = stripe.webhooks.constructEvent(payload, sigHeader, webhookSecret);
+        // Costruisci evento usando la classe Stripe (non serve istanza per la verifica)
+        event = Stripe.webhooks.constructEvent(payload, sigHeader, webhookSecret);
     } catch (err: any) {
         if (err.type === "StripeSignatureVerificationError") {
             console.error("❌ Signature verification failed:", err.message);

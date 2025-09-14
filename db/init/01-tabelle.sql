@@ -1,18 +1,15 @@
 create extension if not exists pgcrypto;
 
 create table public.utenti (
-  id serial not null,
+  id integer not null,
   email character varying(255) not null,
-  password text not null,
+  password character varying(255) not null,
   foto character varying(255) null,
   constraint utenti_pkey primary key (id),
   constraint utenti_email_key unique (email)
 ) TABLESPACE pg_default;
 
 create unique INDEX IF not exists uq_email_ci on public.utenti using btree (lower((email)::text)) TABLESPACE pg_default;
-
---create trigger trg_set_id_passeggero BEFORE INSERT on utenti for EACH row
---execute FUNCTION set_id_passeggero ();
 
 
 create table public.compagnie (
@@ -59,7 +56,16 @@ create table public.passeggeri (
   )
 ) TABLESPACE pg_default;
 
-create index IF not exists ix_accountpasseggeri_stripe on public.passeggeri using btree (stripe) TABLESPACE pg_default;
+
+create table public.sessioni (
+  jti text not null,
+  utente integer not null,
+  scadenza timestamp with time zone not null,
+  revocato boolean null default false,
+  data_creazione timestamp with time zone null default now(),
+  constraint sessioni_pkey primary key (jti),
+  constraint sessioni_utente_fkey foreign KEY (utente) references utenti (id) on update CASCADE on delete CASCADE
+) TABLESPACE pg_default;
 
 
 create table public.modelli (
@@ -69,6 +75,7 @@ create table public.modelli (
   posti_first integer not null,
   massima_distanza integer not null,
   layout character varying(100) not null,
+  sigla character varying not null,
   constraint modelliaerei_pkey primary key (nome),
   constraint chk_distanza check ((massima_distanza > 0)),
   constraint chk_posti check (
