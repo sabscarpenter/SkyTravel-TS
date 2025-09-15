@@ -8,8 +8,7 @@ import { Popup } from '../../../shared/popup/popup';
   selector: 'app-nuova-compagnia',
   standalone: true,
   imports: [CommonModule, Popup],
-  templateUrl: './nuova-compagnia.html',
-  styleUrl: './nuova-compagnia.css'
+  templateUrl: './nuova-compagnia.html'
 })
 export class NuovaCompagnia {
   @ViewChild(Popup) popup!: Popup;

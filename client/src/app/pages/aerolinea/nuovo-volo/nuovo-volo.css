@@ -1,6 +1,5 @@
 /* Forza le checkbox a un azzurro tenue (blue-200) con buona leggibilità */
 input.checkbox.checkbox-azzurro {
-	/* bordo azzurro tenue quando non selezionata */
 	border-color: #bfdbfe !important; /* blue-200 */
 }
 
@@ -13,7 +12,6 @@ input.checkbox.checkbox-azzurro:checked,
 input.checkbox.checkbox-azzurro[aria-checked="true"] {
 	background-color: #bfdbfe !important; /* blue-200 */
 	border-color: #bfdbfe !important; /* blue-200 */
-	/* variabili DaisyUI per garantire resa coerente */
 	--chkbg: #bfdbfe; /* bg chiaro */
 	--chkfg: #1e3a8a; /* blue-900, check scuro per contrasto */
 }

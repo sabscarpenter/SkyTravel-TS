@@ -11,7 +11,6 @@ import { PasseggeroService } from '../../services/passeggero';
   selector: 'app-admin',
   imports: [NuovaCompagnia, Popup],
   templateUrl: './admin.html',
-  styleUrl: './admin.css'
 })
 export class Admin {
   @ViewChild(Popup) popup!: Popup;
