@@ -39,9 +39,7 @@ export class Navbar implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    // Aggiorna subito lo stato da server
     this.checkAuthStatus();
-    // Reagisci a login/logout eseguiti altrove (es. modale in Dettagli)
     this.authService.userChanges$
       .pipe(takeUntil(this.destroy$))
       .subscribe(u => {
@@ -60,7 +58,7 @@ export class Navbar implements OnInit, OnDestroy {
       next: (user: User) => {
         this.isAuthenticated = !!user;
         this.user = user;
-        this.imageLoaded = false;
+        this.imageLoaded = true;
         if (user?.role === 'COMPAGNIA') {
           this.loadCompanyProfile();
         }

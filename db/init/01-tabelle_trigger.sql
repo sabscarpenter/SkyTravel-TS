@@ -1,5 +1,3 @@
-create extension if not exists pgcrypto;
-
 create table public.utenti (
   id integer not null,
   email character varying(255) not null,
