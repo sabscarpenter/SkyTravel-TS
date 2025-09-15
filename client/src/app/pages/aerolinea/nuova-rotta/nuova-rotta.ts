@@ -8,8 +8,7 @@ import { Popup } from '../../../shared/popup/popup';
   selector: 'app-nuova-rotta',
   standalone: true,
   imports: [CommonModule, Popup],
-  templateUrl: './nuova-rotta.html',
-  styleUrl: './nuova-rotta.css'
+  templateUrl: './nuova-rotta.html'
 })
 export class NuovaRotta {
   @Output() created = new EventEmitter<void>();
