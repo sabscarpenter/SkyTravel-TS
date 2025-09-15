@@ -17,6 +17,8 @@ services:
       context: ./server
     container_name: skytravel-server
     restart: always
+    env_file:
+      - ./server/.env
     environment:
       NODE_ENV: production
       PORT: 3000
@@ -40,6 +42,22 @@ services:
       - /app/node_modules
     ports:
       - "4200:4200"
+
+  stripe:
+    image: stripe/stripe-cli:latest
+    container_name: skytravel-stripe
+    depends_on:
+      - server
+    environment:
+      - STRIPE_DEVICE_NAME=skytravel-docker
+    env_file:
+      - ./server/.env
+    command: [
+      "listen",
+      "--api-key", "${STRIPE_SECRET_KEY}",
+      "--forward-to", "http://server:3000/api/checkout/stripe-webhook"
+    ]
+    profiles: ["dev"]
 
 volumes:
   postgres-data:

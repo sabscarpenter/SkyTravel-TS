@@ -183,5 +183,34 @@ create table public.biglietti (
 
 create index IF not exists ix_bigs_volo on public.biglietti using btree (volo) TABLESPACE pg_default;
 
---create trigger trigger_ticket_cleanup BEFORE INSERT on biglietti for EACH row
---execute FUNCTION ticket_cleanup ();
+-- TRIGGER PER PULIZIA BIGLIETTI
+CREATE OR REPLACE FUNCTION ticket_cleanup()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  _already_sold int;
+BEGIN
+  SELECT 1 INTO _already_sold
+  FROM biglietti
+  WHERE numero = NEW.numero
+  AND scadenza IS NULL
+  LIMIT 1;
+
+ IF FOUND THEN
+ RAISE EXCEPTION 'Biglietto % gi definitivo (venduto)', NEW.numero
+ USING ERRCODE = '23505';
+ END IF;
+
+ DELETE FROM biglietti
+ WHERE numero = NEW.numero
+ AND scadenza IS NOT NULL;
+ RETURN NEW;
+END
+ $$;
+
+DROP TRIGGER IF EXISTS trigger_ticket_cleanup ON biglietti;
+CREATE TRIGGER trigger_ticket_cleanup
+BEFORE INSERT ON biglietti
+FOR EACH ROW
+EXECUTE FUNCTION ticket_cleanup();

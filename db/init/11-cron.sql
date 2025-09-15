@@ -9,14 +9,11 @@ SELECT cron.schedule(
   $$
 );
 
-SELECT cron.unschedule('cleanup_sessioni');
-
-SELECT
-  jobid,
-  jobname,
-  schedule,
-  command,
-  database,
-  username,
-  active
-FROM cron.job;
+select cron.schedule(
+  'cleanup_postiscaduti',
+  '*/5 * * * *',
+ $$ 
+  delete from biglietti
+  where scadenza < now(); 
+ $$
+);
