@@ -542,13 +542,13 @@ export async function addAircraft(req: Request, res: Response) {
 
         // Calcola la prossima sequenza per la combinazione IATA-sigla
         const seqRes = await pool.query(
-            `SELECT COALESCE(MAX(CAST(SPLIT_PART(numero, '-', 3) AS INT)), 0) AS max_seq
+            `SELECT TO_CHAR(COALESCE(MAX(CAST(SPLIT_PART(numero, '-', 3) AS INT)), 0) + 1, 'FM000') AS next_seq
              FROM aerei
              WHERE compagnia = $1 AND numero LIKE $2`,
             [compagniaId, `${prefix}%`]
         );
-        let nextSeq = (seqRes.rows[0]?.max_seq ?? 0) + 1;
-        let numero = `${prefix}${nextSeq}`;
+        const nextSeqPadded: string = seqRes.rows[0]?.next_seq || '001';
+        const numero = `${prefix}${nextSeqPadded}`;
 
         await pool.query(
             'INSERT INTO aerei (numero, modello, compagnia) VALUES ($1, $2, $3)',
