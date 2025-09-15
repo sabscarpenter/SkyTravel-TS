@@ -198,7 +198,7 @@ BEGIN
   LIMIT 1;
 
  IF FOUND THEN
- RAISE EXCEPTION 'Biglietto % gi definitivo (venduto)', NEW.numero
+ RAISE EXCEPTION 'Biglietto % gia definitivo (venduto)', NEW.numero
  USING ERRCODE = '23505';
  END IF;
 
