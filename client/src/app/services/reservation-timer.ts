@@ -9,11 +9,9 @@ export class ReservationTimerService {
   private remainingSecondsSubject = new BehaviorSubject<number>(0);
   private expiredSubject = new BehaviorSubject<boolean>(false);
 
-  // Public streams
   remainingSeconds$ = this.remainingSecondsSubject.asObservable();
   expired$ = this.expiredSubject.asObservable();
 
-  /** Ensure the timer is running. If a valid deadline exists, it will be reused. */
   ensureStarted(durationSeconds = 15 * 60) {
     const now = Date.now();
     let deadline = this.getDeadline();
@@ -26,7 +24,6 @@ export class ReservationTimerService {
     this.startTicking(deadline);
   }
 
-  /** Reset and stop the timer, clearing the stored deadline. */
   reset() {
     localStorage.removeItem(this.deadlineKey);
     this.stop();
@@ -34,7 +31,6 @@ export class ReservationTimerService {
     this.expiredSubject.next(false);
   }
 
-  /** Read deadline from storage. */
   getDeadline(): number | null {
     const v = localStorage.getItem(this.deadlineKey);
     if (!v) return null;
@@ -44,7 +40,6 @@ export class ReservationTimerService {
 
   private startTicking(deadline: number) {
     this.stop();
-    // Emit immediately, then every second
     this.tick(deadline);
     this.sub = interval(1000).subscribe(() => this.tick(deadline));
   }

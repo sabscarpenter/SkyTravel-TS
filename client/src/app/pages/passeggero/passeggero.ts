@@ -38,7 +38,6 @@ export class Passeggero {
   passengerInfo: PassengerInfo | null = null;
   user: any = null;
 
-  // Lista prenotazioni e biglietto selezionato per il modal
   reservations: TicketData[] = [];
   isTicketModalOpen: boolean = false;
   reservationGroups: ReservationGroup[] = [];
@@ -47,7 +46,6 @@ export class Passeggero {
 
   passengerStatistics: PassengerStats | null = null;
 
-  // Photo update popup properties
   isPhotoUpdatePopupOpen: boolean = false;
   selectedFile: File | null = null;
   photoPreview: string | null = null;
@@ -55,32 +53,26 @@ export class Passeggero {
   imageLoaded: boolean = false;
   previewLoaded: boolean = false;
 
-  // Distanze per i vari livelli del programma fedeltà
   private kmForBronze: number = 1000;
   private kmForSilver: number = 5000;
   private kmForGold: number = 10000;
   private kmForPlatinum: number = 20000;
   currentLevel: 'Bronze' | 'Silver' | 'Gold' | 'Platinum' | null = null;
 
-  // Email e password
   email: string = '';
   emailPassword: string = '';
   passwordAttuale: string = '';
   nuovaPassword: string = '';
 
-  
-  // stato per il popup
   isOpenPopup = false;
   criticita = false;
   popupMessage = '';
   popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
 
-  // Stripe
   private stripe!: Stripe;
   private elements!: StripeElements;
   private paymentElement?: any;
 
-  // UI saved methods
   stripeMethods: StripeSavedMethod[] = [];
   addMethodModalOpen = false;
   addingMethod = false;
@@ -114,7 +106,6 @@ export class Passeggero {
     const map = new Map<string, ReservationGroup>();
 
     for (const r of list) {
-      // NB: raggruppi per solo flightNumber (come da tuo codice)
       const key = `${r.flightNumber}`;
 
       if (!map.has(key)) {
@@ -145,7 +136,6 @@ export class Passeggero {
         h = parseInt(hh ?? '0', 10);
         m = parseInt(mm ?? '0', 10);
       }
-      // Costruzione in locale: evita ambiguità di parsing di Date()
       return new Date(Y, M - 1, D, h, m).getTime();
     };
 
@@ -159,18 +149,14 @@ export class Passeggero {
       const aPast = ta !== null && ta < nowMs;
       const bPast = tb !== null && tb < nowMs;
 
-      // Prima i futuri, poi i passati
       if (aPast !== bPast) return aPast ? 1 : -1;
 
-      // Stesso “bucket” (entrambi futuri o entrambi passati):
-      // ordina per timestamp crescente (null alla fine)
       if (ta !== tb) {
         if (ta === null) return 1;
         if (tb === null) return -1;
         return ta - tb;
       }
 
-      // Fallback su flightNumber
       return (a.flightNumber || '').localeCompare(b.flightNumber || '');
     });
 
@@ -200,7 +186,7 @@ export class Passeggero {
     this.popupMessage = message;
     this.popupType = type;
     this.criticita = criticita;
-    this.isOpenPopup = true; // il figlio verrà creato con *ngIf e vedrà subito gli @Input
+    this.isOpenPopup = true;
   }
 
   closePopup() {
@@ -242,12 +228,10 @@ export class Passeggero {
   getProgressPercentage(): number {
     const km = this.passengerStatistics?.kilometersFlown || 0;
 
-    // Platinum is maxed out
     if (km >= this.kmForPlatinum) {
       return 100;
     }
 
-    // Determine the current tier interval [base, target)
     let base = 0;
     let target = this.kmForBronze;
 
@@ -268,7 +252,6 @@ export class Passeggero {
     const denom = Math.max(1, target - base);
     const raw = ((km - base) / denom) * 100;
 
-    // Return an integer percentage between 0 and 100
     return Math.max(0, Math.min(100, Math.round(raw)));
   }
 
@@ -345,7 +328,7 @@ export class Passeggero {
       return;
       }
       
-      if (file.size > 5 * 1024 * 1024) { // 5MB
+      if (file.size > 5 * 1024 * 1024) {
         this.openPopup('Il file deve essere inferiore a 5MB', 'warning');
         return;
       }
@@ -448,7 +431,6 @@ export class Passeggero {
       }
 
       this.elements = this.stripe.elements({ clientSecret });
-      // layout 'tabs' ok, altrimenti usa default
       this.paymentElement = this.elements.create('payment', { layout: 'tabs' as any });
       this.paymentElement.mount('#payment-element');
     } catch (err: any) {
@@ -509,17 +491,14 @@ export class Passeggero {
   private lockBodyScroll() {
     try {
       const body = document.body as HTMLBodyElement;
-      // Save current scroll position
       this.bodyScrollY = window.scrollY || window.pageYOffset || 0;
       const sbw = this.getScrollbarWidth();
 
-      // Apply styles to prevent scroll and keep layout width stable
       body.style.overflow = 'hidden';
       body.style.position = 'fixed';
       body.style.top = `-${this.bodyScrollY}px`;
       body.style.width = '100%';
       if (sbw > 0) {
-        // Compensate for scrollbar removal
         body.style.paddingRight = `${sbw}px`;
       }
     } catch {}
@@ -529,13 +508,11 @@ export class Passeggero {
     try {
       const body = document.body as HTMLBodyElement;
       const y = this.bodyScrollY;
-      // Clear styles
       body.style.overflow = '';
       body.style.position = '';
       body.style.top = '';
       body.style.width = '';
       body.style.paddingRight = '';
-      // Restore scroll position
       window.scrollTo(0, y || 0);
       this.bodyScrollY = 0;
     } catch {}
@@ -551,7 +528,7 @@ export class Passeggero {
       h = parseInt(hh ?? '0', 10);
       m = parseInt(mm ?? '0', 10);
     }
-    return new Date(Y, M - 1, D, h, m).getTime(); // locale
+    return new Date(Y, M - 1, D, h, m).getTime();
   }
 
   isGroupPast(g: ReservationGroup): boolean {

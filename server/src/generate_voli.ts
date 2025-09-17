@@ -1,4 +1,3 @@
-// generateVoli.ts
 import crypto from "crypto";
 
 // ======= PARAMETRI =======
@@ -187,7 +186,7 @@ for (const [num, dep, arr, durata, _km] of TRATTE) {
   if (!planeForPair.has(pairKey)) {
     const fleet = fleetByComp.get(comp)!;
     const plane = fleet.shift()!;
-    fleet.push(plane); // round robin
+    fleet.push(plane);
     planeForPair.set(pairKey, plane);
   }
   const aereo = planeForPair.get(pairKey)!;

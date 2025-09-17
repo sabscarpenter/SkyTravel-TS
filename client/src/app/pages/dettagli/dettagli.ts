@@ -22,13 +22,11 @@ export class Dettagli implements OnInit {
   isAuthenticated = false;
   user: User | null = null;
 
-  // Popup (toast) per errori/avvisi
   isOpenPopup = false;
   popupMessage = '';
   popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
   criticita: boolean = false;
 
-  // Login inline/modal
   showLoginForm = false;
 
   constructor(private booking: BookingService, private authService: AuthService, private router: Router) {}
@@ -54,7 +52,6 @@ export class Dettagli implements OnInit {
   proceed() {
     if (!this.isValid()) return;
 
-    // Feedback immediato: se non abbiamo utente o token salvato, salva passeggeri e apri subito il login
     if (!this.authService.user && !this.authService.token) {
       this.booking.setPassengers(this.passengers);
       this.showLoginForm = true;
@@ -66,21 +63,18 @@ export class Dettagli implements OnInit {
         this.isAuthenticated = !!user;
         this.user = user;
         
-        // Utente non autenticato: salva passeggeri, apri form di login inline e interrompi
         if (!user) {
           this.booking.setPassengers(this.passengers);
           this.showLoginForm = true;
           return;
         }
 
-        // Utenti ammessi alla prenotazione
         if (user.role === 'PASSEGGERO' || user.role === 'ADMIN') {
           this.booking.setPassengers(this.passengers);
           this.router.navigate(['/posti']);
           return;
         }
 
-        // Utenti non ammessi
         if (user.role === 'COMPAGNIA') {
           this.openPopup('Gli utenti con ruolo COMPAGNIA non possono effettuare prenotazioni.', 'warning', true);
         }
@@ -98,7 +92,6 @@ export class Dettagli implements OnInit {
     this.router.navigate(['/']);
   }
 
-  // Popup helpers
   openPopup(message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info', criticita: boolean = false) {
     this.popupMessage = message;
     this.popupType = type;
@@ -113,13 +106,10 @@ export class Dettagli implements OnInit {
     }
   }
 
-  // Gestione login 
   onLoginSuccess() {
-    // Chiudi popup informativo se aperto e nascondi form login
     this.isOpenPopup = false;
     this.showLoginForm = false;
 
-    // Recupera utente e prosegui con la stessa logica di proceed
     this.authService.me$().subscribe({
       next: (user: User | null) => {
         this.isAuthenticated = !!user;

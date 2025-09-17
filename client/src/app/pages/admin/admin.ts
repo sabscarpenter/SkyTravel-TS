@@ -22,25 +22,20 @@ export class Admin {
   isLoadingPasseggeri = false;
   isLoadingCompagnieInAttesa = false;
 
-  // Search UI state
   searchQuery = '';
   passeggeriFiltrati: Passeggero[] = [];
 
-  // Modal state
   isNuovaCompagniaOpen = false;
 
-  // stato per il popup
   isOpenPopup = false;
   criticita = false;
   popupMessage = '';
   popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
 
   constructor(private router: Router, private adminService: AdminService, private passeggeroService: PasseggeroService) {
-    // initialize filtered list
   }
 
   ngOnInit() {
-    // Load initial data here if needed
     this.loadCompagnie();
     this.loadPasseggeri();
     this.loadCompagnieInAttesa();
@@ -98,7 +93,6 @@ export class Admin {
   refreshPasseggeri() { this.loadPasseggeri(); }
   refreshCompagnieInAttesa() { this.loadCompagnieInAttesa(); }
 
-  // Minimal UX: open create-company flow (to be wired by you)
   openNuovaCompagnia() {
     this.isNuovaCompagniaOpen = true;
   }
@@ -129,7 +123,6 @@ export class Admin {
       return;
     }
 
-    // match by exact/partial id or email (case-insensitive)
     this.passeggeriFiltrati = this.passeggeri.filter(u => {
       const emailMatch = (u.email || '').toLowerCase().includes(q);
       const idMatch = String(u.utente).includes(q);
@@ -177,7 +170,7 @@ export class Admin {
     this.popupMessage = message;
     this.popupType = type;
     this.criticita = criticita;
-    this.isOpenPopup = true; // il figlio verrà creato con *ngIf e vedrà subito gli @Input
+    this.isOpenPopup = true;
   }
 
   closePopup() {

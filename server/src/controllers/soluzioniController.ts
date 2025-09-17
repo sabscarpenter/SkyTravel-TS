@@ -15,29 +15,17 @@ export interface Volo {
   compagnia: string;
 }
 
-/**
- * Formatta una durata (in minuti) come stringa tipo "9h 05m"
- */
 function fmtDurata(minuti: number): string {
   const h = Math.floor(minuti / 60);
   const m = minuti % 60;
   return `${h}h ${m.toString().padStart(2, "0")}m`;
 }
 
-/**
- * Restituisce un formato datetime senza timezone finale (no 'Z'),
- * compatibile col parser lato client (voli.ts -> toDate) che supporta
- * sia "YYYY-MM-DDTHH:mm:ss" che con spazio tra data e ora.
- */
 function formatDateTimeLocal(d: Date): string {
   const pad = (n: number) => n.toString().padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
-/**
- * Calcola il numero di ore tra due date (formato: YYYY-MM-DDTHH:MM:SS),
- * con un minimo di 24 ore e un massimo di 72 ore.
- */
 function calcolaOre(dataAndata: string, dataRitorno: string): number {
   const dtAndata = parseISO(dataAndata);
   const dtRitorno = parseISO(dataRitorno);
@@ -47,7 +35,6 @@ function calcolaOre(dataAndata: string, dataRitorno: string): number {
   return Math.round(diffOre);
 }
 
-// Cerca itinerari tra due aeroporti.
 async function cercaItinerari(
   partenza: string,
   arrivo: string,
@@ -62,7 +49,6 @@ async function cercaItinerari(
     const itinerari: Volo[][] = [];
     const finestraRicerca = addHours(dataOraPartenza, searchWindowHours);
 
-    // 1) Carica voli con le informazioni necessarie
     const result = await pool.query(
       `
       SELECT v.numero,
@@ -99,7 +85,6 @@ async function cercaItinerari(
       compagnia: r.compagnia,
     }));
 
-    // 2) Indicizza per aeroporto di partenza
     const voliPerPartenza: Record<string, Volo[]> = {};
     for (const volo of tuttiVoli) {
       const ap = volo.tratta_partenza;
@@ -125,12 +110,10 @@ async function cercaItinerari(
       return durata <= maxTotal;
     };
     
-    // 3) Diretti
     for (const v of voliPerPartenza[partenza] || []) {
       if (v.tratta_arrivo === arrivo && okTotale([v])) itinerari.push([v]);
     }
 
-    // 4) Uno scalo
     for (const v1 of voliPerPartenza[partenza] || []) {
       if (v1.tratta_arrivo === arrivo) continue;
       const intermedio = v1.tratta_arrivo;
@@ -142,7 +125,6 @@ async function cercaItinerari(
       }
     }
 
-    // 5) Due scali
     if (maxScali >= 2) {
       for (const v1 of voliPerPartenza[partenza] || []) {
         if (v1.tratta_arrivo === arrivo) continue;
@@ -161,7 +143,6 @@ async function cercaItinerari(
       }
     }
 
-    // 6) Ordina e deduplica
     itinerari.sort((a, b) => {
       const da = a[0].data_ora_partenza.getTime();
       const db = b[0].data_ora_partenza.getTime();
@@ -188,7 +169,6 @@ async function cercaItinerari(
   }
 }
 
-// Ricerca soluzioni
 export async function getSolutions (req: Request, res: Response) {
   try {
     const { partenza, arrivo, data_andata, data_ritorno } = req.query;
@@ -198,7 +178,6 @@ export async function getSolutions (req: Request, res: Response) {
 
     const dtAndata = parseISO(String(data_andata));
 
-    // Converte un itinerario in formato JSON-friendly
     const toDict = (itin: Volo[]) => {
       const oraP = itin[0].data_ora_partenza;
       const oraA = addMinutes(itin[itin.length - 1].data_ora_partenza, itin[itin.length - 1].durata_minuti);
@@ -211,7 +190,6 @@ export async function getSolutions (req: Request, res: Response) {
           arrivo: v.tratta_arrivo,
           citta_partenza: v.citta_partenza ?? "",
           citta_arrivo: v.citta_arrivo ?? "",
-          // Invio formati locali senza 'Z' per evitare shift orario lato client
           ora_partenza: formatDateTimeLocal(v.data_ora_partenza),
           ora_arrivo: formatDateTimeLocal(addMinutes(v.data_ora_partenza, v.durata_minuti)),
           modello: v.modello,
@@ -220,7 +198,6 @@ export async function getSolutions (req: Request, res: Response) {
       };
     };
 
-    // Ricerca andata e ritorno o solo andata
     if (!data_ritorno) {
       const andataItinerari = await cercaItinerari(
         String(partenza),

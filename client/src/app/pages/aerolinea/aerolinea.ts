@@ -26,7 +26,6 @@ export class Aerolinea implements OnInit{
     if (!this.aerolineaInfo?.codice_iata || !this.newAircraft.modello) return '';
     const modelSigla = this.availableModels.find(m => m.nome === this.newAircraft.modello)?.sigla;
     if (!modelSigla) return '';
-    // La sequenza reale è generata dal server; qui mostriamo il prefisso come anteprima
     return `${this.aerolineaInfo.codice_iata}-${modelSigla}-[auto]`;
   }
   availableModels: AircraftModel[] = [];
@@ -41,12 +40,10 @@ export class Aerolinea implements OnInit{
   @ViewChild('routeModal') routeModal?: NuovaRotta;
   @ViewChild('flightModal') flightModal?: NuovoVolo;
 
-  // Popup (toast) state for errors/info like in passeggero
   isOpenPopup = false;
   popupMessage = '';
   popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
 
-  // Simple confirm overlay state for destructive actions
   isConfirmOpen = false;
   confirmMessage = '';
   private onConfirm?: () => void;
@@ -65,7 +62,7 @@ export class Aerolinea implements OnInit{
   }
 
   loadCompanyData(): void {
-    this.imageLoaded = false; // Reset del flag quando si caricano nuovi dati
+    this.imageLoaded = false;
     this.airlineService.getAirlineProfile().subscribe({
       next: (profile) => {
         console.log('Profilo ricevuto:', profile);
@@ -101,7 +98,6 @@ export class Aerolinea implements OnInit{
   }
 
   loadRoutes(): void {
-    // Carica le tratte della compagnia
     console.log('Caricamento tratte per compagnia:', this.aerolineaInfo?.nome);
     this.airlineService.getAirlineRoutes().subscribe({
       next: (routes) => {
@@ -137,8 +133,8 @@ export class Aerolinea implements OnInit{
       next: (flights) => {
         console.log('Voli ricevuti:', flights);
         this.companyFlights = flights;
-        this.filteredFlights = flights; // Inizializza con tutti i voli
-        this.selectedRouteFilter = 'all'; // Reset del filtro
+        this.filteredFlights = flights;
+        this.selectedRouteFilter = 'all';
       },
       error: (error) => {
         console.error('Errore nel caricamento dei voli:', error);
@@ -188,7 +184,6 @@ export class Aerolinea implements OnInit{
     this.flightModal?.open();
   }
 
-  // Aircraft deletion
   isAircraftDeleting(numero: string): boolean {
     return this.deletingAircrafts.has(numero);
   }
@@ -205,7 +200,6 @@ export class Aerolinea implements OnInit{
     this.airlineService.deleteAirlineAircraft(numero).subscribe({
       next: () => {
         this.deletingAircrafts.delete(numero);
-        // Aggiorna lista e statistiche
         this.loadAircrafts();
         this.loadCompanyStatistics();
         this.openPopup('Aereo eliminato', 'success');
@@ -218,16 +212,13 @@ export class Aerolinea implements OnInit{
     });
   }
 
-  // Filtro voli per tratta
   onRouteFilterChange(event: Event): void {
     const target = event.target as HTMLSelectElement;
     this.selectedRouteFilter = target.value;
     
     if (this.selectedRouteFilter === 'all' || this.selectedRouteFilter === '') {
-      // Mostra tutti i voli
       this.filteredFlights = this.companyFlights;
     } else {
-      // Filtra i voli per la tratta selezionata
       this.filteredFlights = this.companyFlights.filter(flight => 
         flight.tratta_id === this.selectedRouteFilter
       );
@@ -235,19 +226,15 @@ export class Aerolinea implements OnInit{
     console.log('Filtro applicato:', this.selectedRouteFilter, 'Voli filtrati:', this.filteredFlights.length);
   }
 
-  // Ottiene il nome formattato della tratta (es: "FCO → MXP")
   getRouteDisplayName(route: Route): string {
     return `${route.partenza} → ${route.arrivo}`;
   }
 
-  // Ottiene il nome formattato della tratta tramite ID
   getRouteDisplayByTrattaId(trattaId: string): string {
     const route = this.companyRoutes.find(r => r.numero === trattaId);
     return route ? this.getRouteDisplayName(route) : 'Tratta sconosciuta';
   }
 
-
-  // Gestione caricamento immagine logo
   onImageLoad(): void {
     this.imageLoaded = true;
   }
@@ -257,14 +244,11 @@ export class Aerolinea implements OnInit{
     console.warn('Errore nel caricamento del logo della compagnia');
   }
 
-  /**
-   * Ottiene l'URL completo per la foto profilo
-   */
   getPhotoUrl(): string {
     if (this.aerolineaInfo?.foto) {
       return this.airlineService.getPhotoUrl(this.aerolineaInfo?.foto);
     }
-    return ''; // fallback
+    return '';
   }
 
   isRouteDeleting(routeNumber: string): boolean {
@@ -284,7 +268,6 @@ export class Aerolinea implements OnInit{
     this.airlineService.deleteAirlineRoute(code).subscribe({
       next: () => {
         this.deletingRoutes.delete(code);
-        // Reset filtro se necessario
         if (this.selectedRouteFilter === code) {
           this.selectedRouteFilter = 'all';
         }
@@ -298,7 +281,6 @@ export class Aerolinea implements OnInit{
     });
   }
 
-  // Popup helpers
   openPopup(message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info') {
     this.popupMessage = message;
     this.popupType = type;
@@ -306,7 +288,6 @@ export class Aerolinea implements OnInit{
   }
   closePopup() { this.isOpenPopup = false; }
 
-  // Confirm helpers
   openConfirm(message: string, onConfirm: () => void) {
     this.confirmMessage = message;
     this.onConfirm = onConfirm;

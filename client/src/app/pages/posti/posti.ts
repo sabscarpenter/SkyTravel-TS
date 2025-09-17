@@ -49,7 +49,6 @@ export class Posti implements OnInit {
     totalPrice: 0,
   };
 
-  // Dati del volo selezionato e parametri di ricerca
   selectedItinerary: Itinerario | null = null;
   numeroPasseggeri: number = 1;
   requiredSeats: number = 1;
@@ -60,12 +59,10 @@ export class Posti implements OnInit {
   segmentPosition: { index: number; total: number } = { index: 0, total: 0 };
   hasBothDirections = false;
 
-  // Popup (toast) state using shared component
   isOpenPopup = false;
   popupMessage = '';
   popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
 
-  // Timer
   timerAlreadyStarted = false;
   remainingSeconds = 0;
   get remainingMinutesText() {
@@ -77,7 +74,6 @@ export class Posti implements OnInit {
   constructor(private router: Router, private bookingService: BookingService, private timer: ReservationTimerService) {}
 
   ngOnInit() {
-    // Carica dallo stato condiviso
     const st = this.bookingService.getState();
     if (!st || (st.segments.length === 0)) {
       this.router.navigate(['/']);
@@ -92,7 +88,6 @@ export class Posti implements OnInit {
     this.segmentPosition = this.bookingService.getCurrentSegmentPosition();
     this.bookingStep = this.currentSegment?.direction || '';
 
-    // Indica se nella prenotazione sono presenti sia andata che ritorno
     const dirs = new Set(st.segments.map(s => s.direction));
     this.hasBothDirections = dirs.has('andata') && dirs.has('ritorno');
 
@@ -247,7 +242,6 @@ export class Posti implements OnInit {
 
     let row = 1;
 
-    // Generate First Class seats
     if (this.modelloConfigurazione.posti_first > 0) {
       const firstLayout = this.getClassLayout('first');
       const firstLetters = this.getSeatLetters(firstLayout);
@@ -273,7 +267,6 @@ export class Posti implements OnInit {
       }
     }
 
-    // Generate Business Class seats
     if (this.modelloConfigurazione.posti_business > 0) {
       const businessLayout = this.getClassLayout('business');
       const businessLetters = this.getSeatLetters(businessLayout);
@@ -297,7 +290,6 @@ export class Posti implements OnInit {
       }
     }
 
-    // Generate Economy Class seats
     const economyLayout = this.getClassLayout('economy');
     const economyLetters = this.getSeatLetters(economyLayout);
     const economySeatsPerRow = economyLetters.length;
@@ -333,12 +325,10 @@ export class Posti implements OnInit {
       const letter = letters[i];
       const seat = rowSeats.find(s => s.letter === letter);
       
-      // Add seat
       result.push(seat || null);
       
-      // Add aisle space after specific positions
       if (aislePositions.includes(i + 1)) {
-        result.push(null); // null represents aisle space
+        result.push(null);
       }
     }
     
@@ -389,7 +379,6 @@ export class Posti implements OnInit {
   }
 
   isBookingValid(): boolean {
-    // Deve avere esattamente N posti e ognuno assegnato a un passeggero distinto
     if (this.selectedSeats.length !== this.requiredSeats) return false;
     const idxs = this.selectedSeats.map(s => s.passengerIndex).filter((v): v is number => v !== undefined);
     if (idxs.length !== this.requiredSeats) return false;
@@ -446,7 +435,6 @@ export class Posti implements OnInit {
         });
         }
 
-        // Avanza: se ci sono altri segmenti (es. scali o ritorno), vai al prossimo, altrimenti checkout
         if (this.bookingService.nextSegment()) {
           this.currentSegment = this.bookingService.getCurrentSegment();
           this.segmentPosition = this.bookingService.getCurrentSegmentPosition();
@@ -490,9 +478,7 @@ export class Posti implements OnInit {
     let total = 0;
     
     for (const seat of this.selectedSeats) {
-      // Prezzo base del posto per classe e posizione
       total += this.getSeatPrice(seat);
-      // bagagli presi dai dati passeggero globale
       if (seat.passengerIndex !== undefined) {
         const p = this.passengers[seat.passengerIndex];
         if (p?.extraBags) total += p.extraBags * 25;
@@ -540,7 +526,6 @@ export class Posti implements OnInit {
     const letter = seatNumber.slice(-1);
     if (!this.modelloConfigurazione) return 'N/A';
 
-    // Trova la classe del posto
     const seat = this.seats.find(s => s.number === seatNumber);
     if (!seat) return 'N/A';
 
@@ -598,7 +583,6 @@ export class Posti implements OnInit {
     
     if (letterIndex === -1) return false;
 
-    // Il primo e l'ultimo posto di ogni riga sono finestrini
     return letterIndex === 0 || letterIndex === letters.length - 1;
   }
 
@@ -614,7 +598,6 @@ export class Posti implements OnInit {
     
     if (letterIndex === -1) return false;
 
-    // Controlla se il posto è adiacente a un corridoio
     for (const aislePos of aislePositions) {
       if (letterIndex === aislePos - 1 || letterIndex === aislePos) {
         return true;
@@ -625,16 +608,14 @@ export class Posti implements OnInit {
   }
 
   getBookingProgress(): number {
-    // progress within this segment
     if (this.requiredSeats === 0) return 100;
     const percent = Math.round((this.selectedSeats.length / this.requiredSeats) * 100);
     return Math.min(100, percent);
   }
 
-  // Progress of the entire seat selection step across all segments
   getSeatFlowProgress(): number {
     const totalSegments = Math.max(1, this.segmentPosition.total || 1);
-    const completedBefore = Math.max(0, this.segmentPosition.index || 0); // segments already completed
+    const completedBefore = Math.max(0, this.segmentPosition.index || 0);
     const currentFraction = this.requiredSeats > 0 ? Math.min(1, this.selectedSeats.length / this.requiredSeats) : 1;
     const overall = ((completedBefore + currentFraction) / totalSegments) * 100;
     return Math.round(Math.min(100, Math.max(0, overall)));
@@ -643,11 +624,9 @@ export class Posti implements OnInit {
   setSeatPassenger(seat: Seat, idx: number) {
     if (seat.status !== 'selected') return;
     if (idx < 0 || idx >= this.numeroPasseggeri) return;
-    // ensure unique mapping per seat
     seat.passengerIndex = idx;
   }
 
-  // Popup helpers
   showPopup(message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info') {
     this.popupMessage = message;
     this.popupType = type;

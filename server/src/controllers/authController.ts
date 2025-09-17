@@ -1,6 +1,5 @@
-// server/src/controllers/authController.ts
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken'; // usato solo per decode fallback
+import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { pool } from '../db';
 import {
@@ -49,7 +48,6 @@ export async function register(req: Request, res: Response) {
 
     const hash = await bcrypt.hash(password, 12);
 
-    // 1) utenti
     await client.query('SELECT pg_advisory_xact_lock($1)', [1002]);
     const insUser = await client.query(
       `WITH prossimo AS (
@@ -66,7 +64,6 @@ export async function register(req: Request, res: Response) {
 
     await client.query('COMMIT');
 
-    // Costruisci user + token
     const role = deriveRoleFromId(userRow.id);
     const payload = { sub: userRow.id, role };
 
@@ -88,7 +85,6 @@ export async function register(req: Request, res: Response) {
     });
   } catch (e: any) {
     await client.query('ROLLBACK');
-    // Viola chk/unique? Es. codice_fiscale unique
     if (e?.code === '23505') {
       return res.status(409).json({ message: 'Dati già esistenti (email o codice fiscale)' });
     }

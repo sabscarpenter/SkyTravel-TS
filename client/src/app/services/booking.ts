@@ -5,68 +5,40 @@ import { Itinerario, Volo } from './soluzioni';
 import { TicketTemporaneo } from '../pages/posti/posti';
 import { environment } from '../../environments/environment';
 
-/**
- * Type of trip for the booking flow.
- * - 'soloAndata' => one-way (single direction)
- * - 'andataRitorno' => round-trip (outbound + return)
- */
 export type TripType = 'soloAndata' | 'andataRitorno';
 
-/**
- * Personal details for a single passenger, entered once and reused
- * across all segments in the booking.
- */
 export interface PassengerInfo {
 	firstName: string;
 	lastName: string;
-	dateOfBirth: string; // ISO yyyy-MM-dd
+	dateOfBirth: string;
 	extraBags: number;
 }
 
-/**
- * A seat chosen for a passenger on a specific flight segment.
- * Includes class and optional computed price used at checkout.
- */
 export interface SeatAssignment {
 	seatNumber: string;
 	seatClass: 'economy' | 'business' | 'first';
-	passengerIndex: number; // index into passengers array
-	seatPrice?: number; // computed price for checkout summary
+	passengerIndex: number;
+	seatPrice?: number;
 }
 
-/**
- * One logical leg for which seats must be selected.
- * It corresponds to a single Volo (a direct flight) within the selected
- * itinerary (andata/ritorno or solo). For multi-leg itineraries, there will
- * be multiple segments.
- */
 export interface BookingSegment {
-	id: string; // unique per segment, e.g. numero + index
+	id: string;
 	volo: Volo;
 	direction: 'andata' | 'ritorno' | 'solo';
-	segmentIndex: number; // 0..N-1 per itinerario
-	seats: SeatAssignment[]; // length should match passengers length
+	segmentIndex: number;
+	seats: SeatAssignment[];
 }
 
-/**
- * Client-side booking state kept during the multi-step flow.
- * Holds selected itineraries, passengers, the generated list of segments
- * (legs) and the current segment position for seat selection.
- */
 export interface BookingState {
 	tripType: TripType;
 	numeroPasseggeri: number;
-	passengers: PassengerInfo[]; // inseriti una volta sola
+	passengers: PassengerInfo[];
 	itinerarioAndata?: Itinerario;
 	itinerarioRitorno?: Itinerario;
-	segments: BookingSegment[]; // generati a partire dagli itinerari
-	currentSegmentPos: number; // indice del segmento su cui scegliere i posti
+	segments: BookingSegment[];
+	currentSegmentPos: number;
 }
 
-/**
- * Aircraft seating model returned by the backend to build the seat map.
- * Defines seat counts per class and the seat layout pattern (e.g. 3-3, 3-4-3).
- */
 export interface ModelloConfigurazione {
 	nome: string;
 	totale_posti: number;
@@ -83,7 +55,6 @@ export class BookingService {
 
 	constructor(private http: HttpClient) {}
 
-	/** Avvia una nuova prenotazione a partire dai parametri di ricerca */
 	start(tripType: TripType, numeroPasseggeri: number) {
 		this.state = {
 			tripType,
@@ -99,11 +70,10 @@ export class BookingService {
 		};
 	}
 
-	/** Imposta l'itinerario selezionato per andata/ritorno/solo e rigenera i segmenti */
 	setItinerary(direction: 'andata' | 'ritorno' | 'solo', it: Itinerario) {
 		if (!this.state) return;
 		if (direction === 'solo') {
-			this.state.tripType = 'soloAndata'; // tecnicamente è solo, ma trattiamo come flusso singolo
+			this.state.tripType = 'soloAndata';
 			this.state.itinerarioAndata = it;
 			this.state.itinerarioRitorno = undefined;
 		} else if (direction === 'andata') {
@@ -114,7 +84,6 @@ export class BookingService {
 		this.recomputeSegments();
 	}
 
-	/** Inserisce/aggiorna la lista dei passeggeri (una volta sola) */
 	setPassengers(list: PassengerInfo[]) {
 		if (!this.state) return;
 		this.state.passengers = list.map(p => ({
@@ -125,9 +94,6 @@ export class BookingService {
 		}));
 	}
 
-	/**
-	 * Rimuove l'itinerario selezionato per la direzione indicata e rigenera i segmenti
-	 */
 	clearItinerary(direction: 'andata' | 'ritorno' | 'solo') {
 		if (!this.state) return;
 		if (direction === 'solo') {
@@ -141,7 +107,6 @@ export class BookingService {
 		this.recomputeSegments();
 	}
 
-	/** Salva le assegnazioni posti per il segmento corrente */
 	setSeatsForCurrentSegment(assignments: SeatAssignment[]) {
 		if (!this.state) return;
 		const seg = this.getCurrentSegment();
@@ -149,7 +114,6 @@ export class BookingService {
 		seg.seats = assignments;
 	}
 
-	/** Passa al prossimo segmento; ritorna true se ci sono altri segmenti */
 	nextSegment(): boolean {
 		if (!this.state) return false;
 		if (this.state.currentSegmentPos < this.state.segments.length - 1) {
@@ -159,7 +123,6 @@ export class BookingService {
 		return false;
 	}
 
-	/** Ritorna al segmento precedente */
 	prevSegment(): boolean {
 		if (!this.state) return false;
 		if (this.state.currentSegmentPos > 0) {
@@ -169,7 +132,6 @@ export class BookingService {
 		return false;
 	}
 
-	/** Stato readonly per i componenti */
 	getState(): BookingState | null {
 		return this.state;
 	}

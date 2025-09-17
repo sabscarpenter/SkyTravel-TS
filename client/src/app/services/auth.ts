@@ -31,7 +31,6 @@ export class AuthService {
   constructor(private http: HttpClient) {
   }
 
-  // --- getters ---
   get token() { return localStorage.getItem('accessToken'); }
   get user()  { return this.user$.value; }
   get userChanges$() { return this.user$.asObservable(); }
@@ -59,7 +58,6 @@ export class AuthService {
     );
   }
 
-  /** Login: salva access token e user e ritorna lo User */
   login(email: string, password: string) {
     this._me$ = undefined;
 
@@ -76,7 +74,6 @@ export class AuthService {
     );
   }
 
-  /** Logout: cancella token locale e cookie refresh lato server */
   logout() {
     this.user$.next(null);
     this._me$ = undefined;
@@ -94,7 +91,6 @@ export class AuthService {
     );
   }
 
-  /** Idempotente, cached. Ritorna null se non autenticato. */
   me$(): Observable<User> {
     if (!this._me$) {
       this._me$ = this.http.get<User>(`${this.apiUrl}/me`, { withCredentials: false })
@@ -105,7 +101,6 @@ export class AuthService {
     return this._me$;
   }
 
-  /** Chiede un nuovo access token usando il refresh token nel cookie */
   refresh() {
     return this.http.post<{ accessToken?: string; user?: User }>(
       `${this.apiUrl}/refresh`, {}, { withCredentials: true }

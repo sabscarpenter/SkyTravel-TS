@@ -77,7 +77,6 @@ export class PasseggeroService {
     return this.http.put<any>(`${this.apiUrl}/aggiorna-password`, { passwordAttuale, nuovaPassword });
   }
 
-   // --- Stripe saved methods ---
   createStripeSetupIntent(): Observable<{ clientSecret: string }> {
     return this.http.post<{ clientSecret: string }>(
       `${this.apiUrl}/stripe/setup-intent`, {}

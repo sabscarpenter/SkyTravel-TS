@@ -28,40 +28,28 @@ export class Home {
     this.loadDatiAeroporti();
   }
 
-  // =======================
-  // Stato UI dropdown
-  // =======================
   nazioniAeroporti: NazioniAeroporti[] = [];
 
   dropdownPartenzaAperto = false;
   dropdownArrivoAperto   = false;
 
-  // Scelte correnti di NAZIONE (inizializzate dopo il load)
   partenzaNazione: string = '';
   arrivoNazione:   string = '';
 
-  // Scelte correnti di AEROPORTO (salviamo IATA)
   partenzaIata: string = '';
   arrivoIata:   string = '';
 
-  // Tipo di viaggio
   tipoViaggio: TripType = 'andataRitorno';
 
-  // Date (ISO per API + display per UI)
   dataAndataISO = '';
   dataRitornoISO = '';
   dataAndataDisplay = '';
   dataRitornoDisplay = '';
 
-  // Oggi in formato locale YYYY-MM-DD per i min dei datepicker
   todayISO: string = this.toLocalISO(new Date());
 
-  // Passeggeri
   numeroPasseggeri = 1;
 
-  // =======================
-  // Getter liste aeroporti filtrati per nazione
-  // =======================
   get aeroportiPartenza() {
     return this.nazioniAeroporti.find(n => n.nazione === this.partenzaNazione)?.aeroporti ?? [];
   }
@@ -73,7 +61,6 @@ export class Home {
     this.aeroportiService.getAeroporti().subscribe({
       next: (data) => {
         this.nazioniAeroporti = data;
-        // Imposta default alla prima e seconda nazione (se esistono)
         if (this.nazioniAeroporti.length > 0) {
           this.partenzaNazione = this.nazioniAeroporti[0].nazione;
         }
@@ -89,9 +76,6 @@ export class Home {
     });
   }
 
-  // =======================
-  // Selezioni
-  // =======================
   scegliAeroportoPartenza(a: Aeroporto) {
     this.partenzaIata = a.iata;
     this.dropdownPartenzaAperto = false;
@@ -114,18 +98,14 @@ export class Home {
     [this.partenzaIata, this.arrivoIata] = [this.arrivoIata, this.partenzaIata];
   }
 
-  // =======================
-  // Date dal calendario
-  // =======================
   selezionaData(event: any, tipo: 'andata' | 'ritorno') {
-    const iso = event?.target?.value; // tipicamente "2025-08-20"
+    const iso = event?.target?.value;
     if (!iso) return;
 
     const display = this.formattaData(iso);
     if (tipo === 'andata') {
       this.dataAndataISO = iso;
       this.dataAndataDisplay = display;
-      // Se la data di ritorno è precedente alla nuova andata, azzera il ritorno
       if (this.dataRitornoISO && this.dataRitornoISO < this.dataAndataISO) {
         this.dataRitornoISO = '';
         this.dataRitornoDisplay = '';
@@ -135,7 +115,6 @@ export class Home {
       this.dataRitornoDisplay = display;
     }
 
-    // Chiudi eventuali popover custom
     const id = tipo === 'andata' ? 'cally-popover1' : 'cally-popover2';
     (document.getElementById(id) as any)?.hidePopover?.();
   }
@@ -156,9 +135,6 @@ export class Home {
   aumentaPasseggeri() { if (this.numeroPasseggeri < 9) this.numeroPasseggeri++; }
   diminuisciPasseggeri() { if (this.numeroPasseggeri > 1) this.numeroPasseggeri--; }
 
-  // =======================
-  // Cerca: invia IATA + date ISO nello state
-  // =======================
   cerca() {
     if (!this.partenzaIata || !this.arrivoIata) return;
     if (this.partenzaIata === this.arrivoIata) return;
@@ -168,11 +144,11 @@ export class Home {
 
     const payload = {
       tipoViaggio: this.tipoViaggio,
-      partenza: this.partenzaIata,     // <<--- IATA
-      arrivo: this.arrivoIata,         // <<--- IATA
+      partenza: this.partenzaIata,
+      arrivo: this.arrivoIata,
       partenzaCitta: partenzaCitta,
       arrivoCitta: arrivoCitta,
-      dataAndata: this.dataAndataISO,  // <<--- ISO (facile per backend)
+      dataAndata: this.dataAndataISO,
       dataRitorno: this.tipoViaggio === 'andataRitorno' ? this.dataRitornoISO : '',
       passeggeri: this.numeroPasseggeri,
     };
@@ -180,13 +156,11 @@ export class Home {
     this.router.navigate(['/voli'], { state: payload });
   }
 
-  // chiudi entrambi i dropdown (usato quando apri il datepicker)
   chiudiDropdownCitta() {
     this.dropdownPartenzaAperto = false;
     this.dropdownArrivoAperto = false;
   }
 
-  // label visuale per l'input (da IATA a "Città (IATA) — Nome")
   getAirportLabel(iata: string): string {
     for (const n of this.nazioniAeroporti) {
       const a = n.aeroporti.find(x => x.iata === iata);
@@ -195,7 +169,6 @@ export class Home {
     return iata || '';
   }
 
-  // City name by IATA (for UI-only payload)
   private getAirportCity(iata: string): string {
     for (const n of this.nazioniAeroporti) {
       const a = n.aeroporti.find(x => x.iata === iata);

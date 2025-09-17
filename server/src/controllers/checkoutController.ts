@@ -11,7 +11,6 @@ export async function insertTickets(req: Request, res: Response) {
         const id = req.user?.sub;
         if (!tickets || tickets.length === 0) return res.status(400).json({ error: "Nessun biglietto fornito" });
         
-        // 1) Verifica: ogni posto deve essere ancora trattenuto dall'utente (non scaduto)
         for (const t of tickets) {
             const check = await pool.query(
                 `
@@ -32,7 +31,6 @@ export async function insertTickets(req: Request, res: Response) {
             }
         }
 
-        // 2) Inserisci i definitivi (scadenza = NULL)
         for (const t of tickets) {
             const ticketId = `${t.flightNumber}-${t.seatNumber}`;
             let ticketClass: "e" | "b" | "f" = "e";
@@ -70,11 +68,9 @@ export async function createPaymentIntent(req: Request, res: Response) {
         }
         const { amount, currency = "eur", orderId, customerEmail } = req.body;
 
-        // Validazione dell'importo
         if (!amount || typeof amount !== "number" || amount <= 0) 
             return res.status(400).json({ error: "amount deve essere un numero > 0 (in centesimi)" });
         
-        // Creazione del PaymentIntent
         const intent = await getStripe().paymentIntents.create({
             amount,
             currency,
@@ -118,14 +114,12 @@ export async function stripeWebhook(req: Request, res: Response) {
         console.error('Webhook secret non configurato');
         return res.status(503).send('Webhook non configurato');
     }
-    // express.raw for this route provides Buffer in req.body
     const payload = req.body as Buffer;
     if (!Buffer.isBuffer(payload)) return res.status(400).send('Payload non valido');
 
     let event: Stripe.Event;
 
     try {
-        // Costruisci evento usando la classe Stripe (non serve istanza per la verifica)
         event = Stripe.webhooks.constructEvent(payload, sigHeader, webhookSecret);
     } catch (err: any) {
         if (err.type === "StripeSignatureVerificationError") {

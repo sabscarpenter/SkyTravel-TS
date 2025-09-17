@@ -10,7 +10,6 @@ import { randomUUID } from 'crypto';
 // METODI PER IL CARICAMENTO DELLE IMMAGINI
 const uploadsDir = path.join(process.cwd(), 'uploads', 'compagnie');
 fs.mkdirSync(uploadsDir, { recursive: true });
-// Configurazione multer: storage, limits, fileFilter
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
   filename: (_req, file, cb) => {
@@ -18,10 +17,10 @@ const storage = multer.diskStorage({
     cb(null, `${randomUUID()}${ext}`);
   },
 });
-// Limite di 5MB e solo immagini
+
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype && file.mimetype.startsWith('image/')) return cb(null, true);
     cb(new Error('Invalid file type'));
@@ -29,6 +28,7 @@ const upload = multer({
 });
 
 const adminRouter = Router();
+
 adminRouter.get('/compagnie', requireAuth, requireRole('ADMIN'), compagnie);
 adminRouter.get('/passeggeri', requireAuth, requireRole('ADMIN'), passeggeri);
 adminRouter.delete('/compagnie/:id', requireAuth, requireRole('ADMIN'), removeCompagnia);

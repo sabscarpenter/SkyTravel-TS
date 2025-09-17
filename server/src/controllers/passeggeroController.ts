@@ -3,14 +3,11 @@ import { pool } from '../db';
 import bcrypt from 'bcrypt';
 import { getStripe, isStripeConfigured } from '../utils/stripe';
 
-// user è già tipizzato tramite augmentation (JwtPayload) in src/types/express.d.ts
-
 export async function getProfile(req: Request, res: Response) {
   try {
     const sub  = req.user!.sub;
     if (!sub) return res.status(400).json({ message: 'id Mancante' });
 
-    // Adatta i nomi colonne/tabelle al tuo schema reale
     const q = `SELECT u.id, u.email, p.nome, p.cognome, p.codice_fiscale, p.data_nascita, p.sesso, u.foto
                 FROM utenti u
                 JOIN passeggeri p ON p.utente = u.id
@@ -148,13 +145,8 @@ export async function updatePassword(req: Request, res: Response) {
     }
 }
 
-/**
- * Recupera o crea (e persiste) l'id customer Stripe per l'utente loggato.
- * Usa la tabella passeggeri (colonna stripe) + email da utenti.
- */
 async function getOrCreateStripeCustomerByUserId(userId: number): Promise<string> {
   if (!isStripeConfigured()) throw new Error('Stripe non inizializzato');
-    // Legge stripe id + dati necessari
     const q = `SELECT p.stripe, p.nome, p.cognome, u.email
               FROM passeggeri p JOIN utenti u ON u.id = p.utente
               WHERE p.utente = $1`;
@@ -175,10 +167,6 @@ async function getOrCreateStripeCustomerByUserId(userId: number): Promise<string
     return customer.id;
 }
 
-/**
- * POST /stripe/setup-intent
- * Crea un SetupIntent per salvare un metodo di pagamento
- */
 export async function createSetupIntent(req: Request, res: Response) {
     try {
         const userId = req.user?.sub;
@@ -204,7 +192,6 @@ export async function listPaymentMethods(req: Request, res: Response) {
     if (!isStripeConfigured()) return res.status(503).json({ error: 'Pagamento non configurato' });
         const customerId = await getOrCreateStripeCustomerByUserId(userId);
     const pms = await getStripe().paymentMethods.list({ customer: customerId, type: 'card' });
-        // Normalizza output
         const list = pms.data.map(pm => ({
             id: pm.id,
             brand: pm.card?.brand,
@@ -229,10 +216,8 @@ export async function deletePaymentMethod(req: Request, res: Response) {
         const { pmId } = req.params as { pmId?: string };
         if (!pmId) return res.status(400).json({ error: 'pmId mancante' });
         const customerId = await getOrCreateStripeCustomerByUserId(userId);
-        // Recupera il payment method e verifica appartenenza
     const pm = await getStripe().paymentMethods.retrieve(pmId);
         if (pm.customer !== customerId) return res.status(403).json({ error: 'Metodo non appartiene al cliente' });
-        // Detach
     await getStripe().paymentMethods.detach(pmId);
         return res.status(200).json({ message: 'Metodo rimosso', id: pmId });
     } catch (err: any) {

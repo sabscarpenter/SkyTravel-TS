@@ -1,10 +1,8 @@
-/* Assicura che la navbar sia sempre sopra tutti gli altri elementi */
 .navbar {
   z-index: 9999;
   width: 100%;
 }
 
-/* Smooth scrolling per migliorare l'esperienza utente */
 html {
   scroll-behavior: smooth;
 }

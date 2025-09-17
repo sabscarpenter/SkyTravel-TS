@@ -38,7 +38,6 @@ const client = await pool.connect();
         if (!volo) return res.status(400).json({ error: "Parametro volo obbligatorio" });
         if (!id) return res.status(401).json({ error: "Non autorizzato" });
 
-        // Query per i posti già occupati
         const result = await client.query(
             `
             SELECT posto 
@@ -48,7 +47,6 @@ const client = await pool.connect();
             `, [volo, id]
         );
 
-        // Converte in array ordinato
         const occupied = result.rows.map(r => r.posto).sort();
 
         return res.status(200).json({ occupied });
@@ -58,7 +56,6 @@ const client = await pool.connect();
     }
 }
 
-// TODO: implementare logica di prenotazione con transazione
 export async function reserveSeats(req: Request, res: Response) {
     try {
         await pool.query("BEGIN");
@@ -80,7 +77,6 @@ export async function reserveSeats(req: Request, res: Response) {
         return res.status(400).json({ error: "Nessun posto specificato" });
         }
 
-        // 1) Pulisci trattenimenti scaduti per quel volo
         await pool.query(
             `
             DELETE FROM biglietti
@@ -90,7 +86,6 @@ export async function reserveSeats(req: Request, res: Response) {
             `, [volo]
         );
 
-        // 2) Rilascia trattenimenti (anche non scaduti) dell'utente su quel volo
         await pool.query(
             `
             DELETE FROM biglietti
@@ -100,7 +95,6 @@ export async function reserveSeats(req: Request, res: Response) {
             `, [volo, userId]
         );
 
-        // 3) Controlla se i posti richiesti sono già occupati
         const occupatiRes = await pool.query(
             `
             SELECT posto
@@ -119,7 +113,6 @@ export async function reserveSeats(req: Request, res: Response) {
             });
         }
 
-        // 4) Inserisci i nuovi trattenimenti (scadenza 15 minuti)
         const mappaClasse: Record<string, string> = {
             economy: "e",
             business: "b",

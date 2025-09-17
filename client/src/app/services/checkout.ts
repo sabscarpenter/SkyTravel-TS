@@ -1,4 +1,3 @@
-// client/src/app/services/checkout.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -7,8 +6,8 @@ import { environment } from '../../environments/environment';
 
 interface CreateIntentRequest {
   orderId: string;
-  amount: number;          // centesimi
-  currency?: string;       // 'eur' default lato server
+  amount: number;
+  currency?: string;
   customerEmail?: string;
 }
 

@@ -1,11 +1,9 @@
-// server/src/utils/jwt.ts
-import jwt, { Secret, SignOptions, TokenExpiredError } from 'jsonwebtoken';
+import jwt, { SignOptions, TokenExpiredError } from 'jsonwebtoken';
 import crypto from 'crypto';
 
 export type Role = 'ADMIN' | 'COMPAGNIA' | 'PASSEGGERO';
 export interface JwtPayload { sub: number; role: Role; exp?: number | undefined; }
 
-// === Secrets mutabili, inizializzate a runtime ===
 let ACCESS_SECRET: string = 'accesso_segreto';
 let REFRESH_SECRET: string = 'refresh_segreto';
 
@@ -17,7 +15,6 @@ export function generateRandomSecret(bytes = 64): string {
   return crypto.randomBytes(bytes).toString('hex');
 }
 
-// Durate
 const ACCESS_EXPIRES: SignOptions['expiresIn']  = (process.env.ACCESS_EXPIRES_IN  || '5m') as any;
 const REFRESH_EXPIRES: SignOptions['expiresIn'] = (process.env.REFRESH_EXPIRES_IN || '7d')  as any;
 

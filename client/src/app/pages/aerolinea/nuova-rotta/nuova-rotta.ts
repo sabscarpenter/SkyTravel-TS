@@ -16,7 +16,6 @@ export class NuovaRotta {
   @Input() companyIata: string = '';
   isOpen = false;
 
-  // Selected values from the dropdowns
   selectedDepartIata: string = '';
   selectedArriveIata: string = '';
   distance_km: number = 0;
@@ -24,14 +23,12 @@ export class NuovaRotta {
   duration_minutes: number = 0;
   submitting = false;
   errorMsg = '';
-  // Popup (shared component) state
   isOpenPopup = false;
   popupMessage = '';
   popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
   criticita = false;
   completa = false;
 
-  // Flattened list for easy rendering
   get airportsFlat(): Aeroporto[] {
     const out: Aeroporto[] = [];
     for (const group of this.airports || []) {
@@ -40,7 +37,6 @@ export class NuovaRotta {
     return out;
   }
 
-  // Auto-generated route code: IATAcompagnia-IATAandata-IATAritorno
   get routeCode(): string {
     const comp = (this.companyIata).toUpperCase();
     const dep = (this.selectedDepartIata).toUpperCase();
@@ -86,7 +82,6 @@ export class NuovaRotta {
       arrivo_nome: ''
     };
 
-    // Basic validation
     if (!(payload.numero && payload.partenza && payload.arrivo && payload.durata_min > 0 && payload.lunghezza_km > 0)) {
       this.openPopup('Compila tutti i campi obbligatori.', 'error');
       return;
@@ -105,7 +100,6 @@ export class NuovaRotta {
       error: (err: any) => {
         this.submitting = false;
         const msg: string = err?.error?.error || 'Errore durante la creazione della tratta.';
-        // Mostra sempre il popup sopra il modal, con messaggio dedicato se è un errore di chiave duplicata
         const m = msg.toLowerCase();
         const isDuplicate = m.includes('violates unique constraint') || m.includes('duplicate key')
         if (isDuplicate) {
@@ -118,26 +112,22 @@ export class NuovaRotta {
     });
   }
 
-  // Gestisce l'input della distanza
   onDistanceInput(val: string): void {
     const n = parseInt(val, 10);
     this.distance_km = isNaN(n) || n < 0 ? 0 : n;
   }
 
-  // Gestisce l'input delle ore di durata
   onDurationHoursInput(val: string): void {
     const n = parseInt(val, 10);
     this.duration_hours = Math.max(0, isNaN(n) ? 0 : n);
   }
 
-  // Gestisce l'input dei minuti di durata
   onDurationMinutesInput(val: string): void {
     const n = parseInt(val, 10);
     const mins = Math.max(0, isNaN(n) ? 0 : n);
     this.duration_minutes = Math.min(59, mins);
   }
 
-  // Popup helpers (shared)
   openPopup(message: string, type: 'info' | 'warning' | 'error' | 'success', criticita = false, completa = false): void {
     this.popupMessage = message;
     this.popupType = type;

@@ -1,4 +1,3 @@
-// client/src/app/pages/checkout/checkout.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -25,10 +24,8 @@ export class Checkout implements OnInit, OnDestroy {
   segments: BookingSegment[] = [];
   selectedSeatsCount = 0;
   totalAmount = 0;
-  // UI: sezione biglietti passeggeri collassabile
   showPassengerTickets = true;
   
-  // Timer
   remainingSeconds = 0;
   get remainingMinutesText() {
     const m = Math.floor(this.remainingSeconds / 60);
@@ -36,17 +33,14 @@ export class Checkout implements OnInit, OnDestroy {
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
-  // Termini
   acceptTerms = false;
   acceptPrivacy = false;
   acceptMarketing = false;
 
-  // Stato booking
   selectedItinerary: any = null;
   bookingData: any = null;
   numeroPasseggeri = 1;
 
-  // Stripe
   private stripe!: Stripe;
   private elements!: StripeElements;
   clientSecret = '';
@@ -54,10 +48,8 @@ export class Checkout implements OnInit, OnDestroy {
   orderId = '';
   loading = false;
   message = '';
-  // Modal successo
   showSuccessModal = false;
 
-  // Popup (shared) state - come passeggero
   isOpenPopup = false;
   popupMessage = '';
   popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
@@ -71,7 +63,6 @@ export class Checkout implements OnInit, OnDestroy {
   ) {}
 
   async ngOnInit() {
-    // 1) Carica stato prenotazione
     const st = this.booking.getState();
     if (!st || !this.booking.isSeatSelectionComplete()) {
       this.router.navigate(['/']);
@@ -81,7 +72,6 @@ export class Checkout implements OnInit, OnDestroy {
     this.numeroPasseggeri = st.numeroPasseggeri;
     this.segments = st.segments;
 
-    // 2) Costruisci lista passeggeri dai posti scelti
     const pax = this.booking.getPassengers();
     const allSeats = st.segments.flatMap(seg => seg.seats.map(s => ({ seg, s })));
     this.tickets = allSeats.map(({ seg, s }) => ({
@@ -102,7 +92,6 @@ export class Checkout implements OnInit, OnDestroy {
     this.selectedSeatsCount = this.tickets.length;
     this.calculateTotal();
 
-    // 3) Timer: avvia/subscrivi PRIMA di preparare Stripe per evitare flash a 0
     this.timer.ensureStarted(15 * 60);
     const dl = this.timer.getDeadline();
     if (dl) {
@@ -111,15 +100,11 @@ export class Checkout implements OnInit, OnDestroy {
     }
     this.timer.remainingSeconds$.subscribe((v: number) => (this.remainingSeconds = v));
 
-    // 4) Prepara Stripe
     await this.preparePayment();
   }
 
   ngOnDestroy(): void {
-    // Stripe Elements si pulisce quando il componente viene distrutto
   }
-
-  // === Helpers UI ===
 
   getSegmentLabel(seg: BookingSegment): string {
     const v = seg.volo;
@@ -147,23 +132,19 @@ export class Checkout implements OnInit, OnDestroy {
         this.openSuccessModal();
       },
       error: (error) => {
-      const msg = error?.error?.error || 'Errore durante la conferma del pagamento. Prenotazione scaduta o non valida.';
-      this.fatalError = true;
-  this.openPopup(msg, 'error', true);
-      this.loading = false;
+        const msg = error?.error?.error || 'Errore durante la conferma del pagamento. Prenotazione scaduta o non valida.';
+        this.fatalError = true;
+        this.openPopup(msg, 'error', true);
+        this.loading = false;
       }
     });
   }
 
   isPaymentReady(): boolean {
-    // Basta avere gli Elements montati e termini accettati
   return !!this.clientSecret && !!this.elements && this.acceptTerms && this.acceptPrivacy && !this.loading;
   }
 
-  // === Stripe ===
-
   private generateOrderId(): string {
-    // In reale dovrebbe arrivare dal backend; qui basta un id temporaneo
     return `ORD-${Date.now()}`;
   }
 
@@ -171,12 +152,10 @@ export class Checkout implements OnInit, OnDestroy {
     this.loading = true;
     this.message = '';
     try {
-      // 1) Carica Stripe.js con la tua publishable key
       const stripe = await loadStripe(environment.stripePublishableKey);
       if (!stripe) throw new Error('Stripe non inizializzato');
       this.stripe = stripe;
 
-      // 2) Crea PaymentIntent sul backend
       this.orderId = this.generateOrderId();
       const amountCents = Math.round(this.totalAmount * 100);
 
@@ -185,14 +164,13 @@ export class Checkout implements OnInit, OnDestroy {
           orderId: this.orderId,
           amount: amountCents,
           currency: 'eur',
-          customerEmail: 'test@example.com' // sostituisci con email reale se disponibile
+          customerEmail: 'test@example.com'
         })
       );
 
       this.clientSecret = res.clientSecret;
       this.paymentIntentId = res.paymentIntentId;
 
-      // 3) Monta Payment Element
       this.elements = this.stripe.elements({ clientSecret: this.clientSecret });
       const paymentElement = this.elements.create('payment');
       paymentElement.mount('#payment-element');
@@ -222,7 +200,6 @@ export class Checkout implements OnInit, OnDestroy {
       return;
     }
 
-    // Poll leggero sullo stato (la verità è il webhook)
     try {
       const tries = 8;
       for (let i = 0; i < tries; i++) {
@@ -254,15 +231,12 @@ export class Checkout implements OnInit, OnDestroy {
     this.router.navigate(['/posti']);
   }
 
-  // Toggle sezione Biglietti Passeggeri
   togglePassengerTickets() {
     this.showPassengerTickets = !this.showPassengerTickets;
   }
 
-  // === Modal di successo ===
   openSuccessModal() {
     this.showSuccessModal = true;
-  // Timer non più necessario dopo il successo
   this.timer.reset();
   }
 
@@ -271,7 +245,6 @@ export class Checkout implements OnInit, OnDestroy {
     this.router.navigate(['/']);
   }
 
-  // Popup helpers (stessa API di Passeggero/NuovaCompagnia)
   openPopup(message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info', fatal = false) {
     this.popupMessage = message;
     this.popupType = type;

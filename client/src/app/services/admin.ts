@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, map, shareReplay, switchMap } from 'rxjs';
-import { finalize } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface Compagnia {
@@ -30,7 +29,6 @@ export class AdminService {
 
   constructor(private http: HttpClient) {}
 
-  // Metodi per interagire con l'API
   getCompagnie(): Observable<Compagnia[]> {
     return this.http.get<Compagnia[]>(`${this.apiUrl}/compagnie`);
   }
@@ -55,12 +53,10 @@ export class AdminService {
     return this.http.post<void>(`${this.apiUrl}/aggiungi`, form);
   }
 
-  // Elenco compagnie in attesa di approvazione (endpoint presunto)
   getCompagnieInAttesa(): Observable<CompagniaInAttesa[]> {
     return this.http.get<CompagniaInAttesa[]>(`${this.apiUrl}/compagnie/attesa`);
   }
 
-  // Rimuove una compagnia in attesa (endpoint presunto)
   removeCompagniaInAttesa(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/compagnie/attesa/${id}`);
   }

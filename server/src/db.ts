@@ -1,8 +1,9 @@
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 
-// istanza di connessione al database PostgreSQL 
 const url = process.env.DATABASE_URL;
+
+// Per connessione a PostgreSQL locale o su Docker
 
 /*
 export const pool = url

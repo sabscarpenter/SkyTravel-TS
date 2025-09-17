@@ -1,4 +1,3 @@
-// server/src/controllers/authController.ts
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { pool } from '../db';
@@ -61,7 +60,6 @@ export async function aggiungi(req: Request, res: Response) {
   try {
     await client.query('BEGIN');
 
-    // Email unica (case-insensitive)
     const exists = await client.query(
       'SELECT 1 FROM utenti WHERE LOWER(email)=LOWER($1)',
       [email]
@@ -95,7 +93,6 @@ export async function aggiungi(req: Request, res: Response) {
       [email, hashedPassword, file.filename]
     );
 
-    // Se non c'è RETURNING, hai esaurito 10..99
     if (insCompany.rowCount === 0) {
       await client.query('ROLLBACK');
       return res.status(409).json({ message: 'Range ID compagnie esaurito' });

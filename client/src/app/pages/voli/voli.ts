@@ -25,7 +25,6 @@ export class Voli implements OnInit {
     private booking: BookingService
   ) {}
 
-  // Parametri ricerca
   tipoViaggio: TripType = 'soloAndata';
   partenzaIata = '';
   arrivoIata = '';
@@ -35,29 +34,23 @@ export class Voli implements OnInit {
   dataRitorno = '';
   numeroPasseggeri = 1;
 
-  // Stato UI
   loading = false;
   error = '';
 
-  // Popup (toast) per errori/avvisi
   isOpenPopup = false;
   popupMessage = '';
   popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
 
-  // Dati
   itinerariAndata: Itinerario[] = [];
   itinerariRitorno: Itinerario[] = [];
-  // Copie per ripristinare l'ordine originale quando sort = 'none'
   private originalAndata: Itinerario[] = [];
   private originalRitorno: Itinerario[] = [];
 
-  // Ordinamento (solo su richiesta utente)
   sortByAndata: 'none' | 'prezzo' | 'durata' | 'scali' = 'none';
   sortOrderAndata: 'asc' | 'desc' = 'asc';
   sortByRitorno: 'none' | 'prezzo' | 'durata' | 'scali' = 'none';
   sortOrderRitorno: 'asc' | 'desc' = 'asc';
 
-  // Selezioni correnti (per evidenziare le card)
   selectedAndata: Itinerario | null = null;
   selectedRitorno: Itinerario | null = null;
 
@@ -71,7 +64,6 @@ export class Voli implements OnInit {
     const st = history.state;
 
     if (!st?.partenza || !st?.arrivo) {
-      // se arrivo senza state => torno alla home
       this.router.navigate(['/']);
       return;
     }
@@ -86,7 +78,6 @@ export class Voli implements OnInit {
     this.numeroPasseggeri = +st.passeggeri; 
     console.log('Stato ricevuto:', st);
 
-    // inizializza stato booking
     this.booking.start(this.tipoViaggio, this.numeroPasseggeri);
     this.cerca();
   }
@@ -98,8 +89,6 @@ export class Voli implements OnInit {
     this.itinerariRitorno = [];
     this.selectedAndata = null;
     this.selectedRitorno = null;
-
-    // reset ordinamento alla nuova ricerca
     this.sortByAndata = 'none';
     this.sortOrderAndata = 'asc';
     this.sortByRitorno = 'none';
@@ -188,12 +177,10 @@ export class Voli implements OnInit {
     this.location.back();
   }
 
-  /** Parser tollerante: HH:mm oppure ISO/SQL "YYYY-MM-DD HH:mm:ss"/"YYYY-MM-DDTHH:mm:ss" */
   private toDate(val?: string | Date): Date | null {
     if (!val) return null;
     if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
 
-    // Solo orario HH:mm
     if (/^\d{2}:\d{2}$/.test(val)) {
       const [h, m] = val.split(':').map(Number);
       const d = new Date();
@@ -201,27 +188,23 @@ export class Voli implements OnInit {
       return d;
     }
 
-    // Normalizza "YYYY-MM-DD HH:mm:ss" -> ISO
     const norm = val.includes('T') ? val : val.replace(' ', 'T');
     const d = new Date(norm);
     return isNaN(d.getTime()) ? null : d;
   }
 
-  /** HH:mm in locale it-IT */
   formatOra(v?: string | Date): string {
     const d = this.toDate(v as any);
     if (!d) return '--:--';
     return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', hour12: false });
   }
 
-  /** dd/MM/yyyy in locale it-IT */
   formatData(v?: string | Date): string {
     const d = this.toDate(v as any);
     if (!d) return '--/--/----';
     return d.toLocaleDateString('it-IT');
   }
 
-  /** Durata tra partenza e arrivo (supporta passaggio a giorno successivo) */
   calcolaDurataVolo(partenza?: string, arrivo?: string): string {
     const dp = this.toDate(partenza as any);
     const da = this.toDate(arrivo as any);
@@ -235,7 +218,6 @@ export class Voli implements OnInit {
     return `${h}h ${m.toString().padStart(2, '0')}m`;
   }
 
-  /** Tempo di scalo tra voli consecutivi */
   calcolaScalo(prevArrivo?: string, nextPartenza?: string): string {
     const a = this.toDate(prevArrivo as any);
     const p = this.toDate(nextPartenza as any);
@@ -263,7 +245,7 @@ export class Voli implements OnInit {
     const end = this.toDate(it.voli[it.voli.length - 1].ora_arrivo as any);
     if (!start || !end) return 0;
     let diffMin = Math.round((end.getTime() - start.getTime()) / 60000);
-    while (diffMin < 0) diffMin += 24 * 60; // gestisci eventuale passaggio giorno
+    while (diffMin < 0) diffMin += 24 * 60;
     return diffMin;
   }
 
@@ -325,7 +307,6 @@ export class Voli implements OnInit {
     if (this.sortByRitorno !== 'none') this.applySortRitorno();
   }
 
-  // Popup helpers
   openPopup(message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info') {
     this.popupMessage = message;
     this.popupType = type;

@@ -1,4 +1,3 @@
-// app.routes.ts
 import { Routes } from '@angular/router';
 import { Home } from './pages/home/home';
 import { Voli } from './pages/voli/voli';

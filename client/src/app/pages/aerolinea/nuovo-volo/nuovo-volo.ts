@@ -7,8 +7,8 @@ export interface NewFlightFormData {
   routeNumber: string;
   aircraftNumber: string;
   frequency: 'giornaliero' | 'settimanale';
-  departureTime: string; // HH:MM
-  days: string[] | null;       // required if settimanale
+  departureTime: string;
+  days: string[] | null;
   startDate: string;
   weeksCount: number;
 }
@@ -35,7 +35,6 @@ export class NuovoVolo {
   isOpen = false;
   submitting = false;
   private lastCreatedPayload: NewFlightFormData | null = null;
-  // Popup (shared component) state
   isOpenPopup = false;
   popupMessage = '';
   popupType: 'info' | 'warning' | 'error' | 'success' = 'info';
@@ -63,7 +62,6 @@ export class NuovoVolo {
   }
 
   onCreateClick(): void {
-    // Basic validation of required fields
     if (!this.selectedRoute || !this.selectedAircraft || !this.selectedFrequency || !this.departureTime || !this.startDate) {
   this.openPopup('Compila tutti i campi obbligatori.', 'error');
       return;
@@ -73,7 +71,6 @@ export class NuovoVolo {
       return;
     }
 
-    // Crea il payload per la richiesta
     const payload: NewFlightFormData = {
       routeNumber: this.selectedRoute,
       aircraftNumber: this.selectedAircraft,
@@ -86,7 +83,6 @@ export class NuovoVolo {
 
     console.log('Payload per la creazione del volo:', payload);
 
-    // Invia la richiesta per creare il volo
     this.submitting = true;
     this.airlineService.addAirlineFlights(payload).subscribe({
       next: () => {
@@ -106,7 +102,6 @@ export class NuovoVolo {
     });
   }
 
-  // Gestisce il cambiamento dello stato dei giorni selezionati
   onToggleDay(dayCode: string, checked: boolean): void {
     if (checked) {
       this.selectedDays.add(dayCode);
@@ -115,13 +110,11 @@ export class NuovoVolo {
     }
   }
 
-  // Gestisce il cambiamento del numero di settimane
   onWeeksChange(value: string): void {
     const n = Number.parseInt(value || '1', 10);
     this.weeksCount = Number.isFinite(n) && n > 0 ? n : 1;
   }
 
-  // Popup helpers
   openPopup(message: string, type: 'info' | 'warning' | 'error' | 'success', criticita = false, completa = false) {
     this.popupMessage = message;
     this.popupType = type;

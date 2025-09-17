@@ -1,7 +1,7 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth';
-import { catchError, map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 export const authRoleGuard: CanActivateFn = (route) => {
   const auth = inject(AuthService);
@@ -13,7 +13,6 @@ export const authRoleGuard: CanActivateFn = (route) => {
     if (requiredRole && user.role !== requiredRole) return router.createUrlTree(['/']);
     return true;
   }
-  // Se non c'è user ma esiste un access token, prova a caricare /me prima di bloccare
   if (auth.token) {
     return auth.me$().pipe(
       map(u => {

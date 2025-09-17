@@ -1,4 +1,3 @@
-// server/src/server.ts
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -15,7 +14,7 @@ import bookingRouter from "./routes/bookingRoutes";
 import adminRouter from "./routes/adminRoutes";
 import checkoutRouter from "./routes/checkoutRoutes";
 import { stripeWebhook } from './controllers/checkoutController';
-import { seedAdminIfMissing } from './admin';
+import { caricaAdmin } from './admin';
 
 dotenv.config();
 
@@ -53,14 +52,12 @@ async function bootstrap() {
     origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:4200'],
     credentials: true,
   }));
-  // Stripe webhook: registrare raw body prima del json parser generale
   app.post('/api/checkout/stripe-webhook', express.raw({ type: 'application/json' }), stripeWebhook);
-  // Parser JSON per il resto delle route
   app.use(express.json());
   app.use(cookieParser());
 
   app.use('/api/passeggero/uploads/passeggeri',
-    express.static(path.join(process.cwd(), 'uploads', 'passeggeri')));
+  express.static(path.join(process.cwd(), 'uploads', 'passeggeri')));
 
   app.use('/api/admin/uploads/compagnie',
   express.static(path.join(process.cwd(), 'uploads', 'compagnie')));
@@ -76,7 +73,7 @@ async function bootstrap() {
 
   app.get("/", (_req: Request, res: Response) => res.send("Backend funzionante!"));
 
-  await seedAdminIfMissing();
+  await caricaAdmin();
 
   app.listen(PORT, () => {
     console.log(`Server avviato su http://localhost:${PORT}`);

@@ -20,13 +20,11 @@ export class NuovaCompagnia {
   isOpen = false;
   submitting = false;
 
-  // Form state
   email = '';
   password = '';
   logoFile: File | null = null;
   logoPreview: string | null = null;
 
-  // stato per il popup
   isOpenPopup = false;
   criticita = false;
   completa = false;
@@ -41,7 +39,7 @@ export class NuovaCompagnia {
 
   open(): void {
     this.isOpen = true;
-    // reset form
+
     this.email = '';
     this.password = '';
     this.logoFile = null;
@@ -73,7 +71,6 @@ export class NuovaCompagnia {
     }
   }
 
-  // File input handler
   onLogoSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files && input.files[0] ? input.files[0] : null;

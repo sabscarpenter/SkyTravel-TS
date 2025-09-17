@@ -65,7 +65,6 @@ export async function getProfile(req: Request, res: Response) {
 }
 
 const uploadsDir = path.join(process.cwd(), 'uploads', 'compagnie');
-// DA VERIFICARE
 export async function getLogoImage(req: Request, res: Response) { 
     try {
         const { filename } = req.params;
@@ -84,7 +83,6 @@ export async function getStatistics(req: Request, res: Response) {
     try {
         const id = req.user!.sub; 
 
-        // numero destinazioni uniche
         const numDestResult = await pool.query(
             `
             SELECT COUNT(DISTINCT t.arrivo) AS num_dest
@@ -94,13 +92,11 @@ export async function getStatistics(req: Request, res: Response) {
         );
         const numDest = parseInt(numDestResult.rows[0].num_dest, 10) || 0;
 
-        // numero aerei
         const numAereiResult = await pool.query(
             `SELECT COUNT(*) AS num_aerei FROM aerei WHERE compagnia = $1`, [id]
         );
         const numAerei = parseInt(numAereiResult.rows[0].num_aerei, 10) || 0;
 
-        // numero voli di oggi
         const numVoliOggiResult = await pool.query(
             `
             SELECT COUNT(*) AS num_voli
@@ -113,7 +109,6 @@ export async function getStatistics(req: Request, res: Response) {
         );
         const numVoliOggi = parseInt(numVoliOggiResult.rows[0].num_voli, 10) || 0;
 
-        // numero passeggeri (biglietti emessi)
         const numPasseggeriResult = await pool.query(
             `
             SELECT COUNT(*) AS num_passeggeri
@@ -125,7 +120,6 @@ export async function getStatistics(req: Request, res: Response) {
         );
         const numPasseggeri = parseInt(numPasseggeriResult.rows[0].num_passeggeri, 10) || 0;
 
-        // ricavi mese corrente
         const ricaviMeseResult = await pool.query(
             `
             SELECT COALESCE(SUM(b.prezzo), 0) AS ricavi_mese
@@ -139,7 +133,6 @@ export async function getStatistics(req: Request, res: Response) {
         );
         const ricaviMese = parseFloat(ricaviMeseResult.rows[0].ricavi_mese) || 0;
 
-        // ricavi totali
         const ricaviTotResult = await pool.query(
             `
             SELECT COALESCE(SUM(b.prezzo), 0) AS ricavi_tot
@@ -187,7 +180,6 @@ export async function getRoutes(req: Request, res: Response) {
     try {
         const id = req.user!.sub;
 
-        // Query alle tratte della compagnia
         const result = await pool.query(
             `
             SELECT t.numero, t.partenza, t.arrivo, t.durata_minuti, t.distanza,
@@ -224,7 +216,6 @@ export async function getBestRoutes(req: Request, res: Response) {
     try {
         const id = req.user!.sub;
  
-        // Query alle tratte della compagnia con più biglietti venduti
         const result = await pool.query(
             `
             WITH flights AS (
@@ -285,7 +276,6 @@ export async function getFlights(req: Request, res: Response) {
         const id = req.user!.sub;
         if (!id) return res.status(400).json({ message: "Non autorizzato" });
 
-        // 1) Biglietti venduti per volo (solo voli della compagnia)
         const soldRows = await pool.query(
             `
             SELECT b.volo, COUNT(b.numero) AS cnt
@@ -302,7 +292,6 @@ export async function getFlights(req: Request, res: Response) {
             soldMap[row.volo] = parseInt(row.cnt, 10);
         }
 
-        // 2) Carica i voli con tratta + modello aereo
         const result = await pool.query(
             `
             SELECT v.numero, v.tratta, v.data_ora_partenza,
@@ -317,7 +306,6 @@ export async function getFlights(req: Request, res: Response) {
         `, [id]
         );
 
-        // 3) Costruzione risposta
         const flights = result.rows.map(row => {
             const postiTotali = row.posti_economy + row.posti_business + row.posti_first;
             const postiOccupati = soldMap[row.numero] || 0;
@@ -413,7 +401,6 @@ export async function addFlights(req: Request, res: Response) {
             return res.status(400).json({ message: "Parametri mancanti" });
         }
 
-        // Parsing delle date
         let startDt: Date;
         let depHour: number, depMin: number;
         const [y, m, d] = startDate.split("-").map((x: string) => parseInt(x, 10));
@@ -422,7 +409,6 @@ export async function addFlights(req: Request, res: Response) {
         depHour = hh;
         depMin = mm;
 
-        // Costruzione delle date
         const createDates: Date[] = [];
         if (frequency === "giornaliero") {
             const totalDays = weeksCount * 7;
@@ -431,7 +417,7 @@ export async function addFlights(req: Request, res: Response) {
                 dte.setDate(startDt.getDate() + offset);
                 createDates.push(dte);
             }
-        } else { // settimanale
+        } else {
             const dayMap: Record<string, number> = {
                 Lun: 0, Mar: 1, Mer: 2, Gio: 3, Ven: 4, Sab: 5, Dom: 6,
             };
@@ -444,7 +430,7 @@ export async function addFlights(req: Request, res: Response) {
                 return res.status(400).json({ error: "Giorni settimanali non validi." });
             }
 
-            const startWd = startDt.getDay(); // 0=Dom, 1=Lun, ..., 6=Sab
+            const startWd = startDt.getDay();
             for (let w = 0; w < weeksCount; w++) {
                 const base = new Date(startDt);
                 base.setDate(startDt.getDate() + w * 7);
@@ -466,7 +452,6 @@ export async function addFlights(req: Request, res: Response) {
 
         const prefix = `${routeNumber}-`;
 
-        // Recupera ultimo suffisso numerico
         const maxRes = await pool.query(
             `
             SELECT COALESCE(MAX(CAST(SUBSTRING(numero FROM '([0-9]{6})$') AS INT)), 0) AS max_seq
@@ -477,7 +462,6 @@ export async function addFlights(req: Request, res: Response) {
 
         let nextSeq = (maxRes.rows[0]?.max_seq || 0) + 1;
 
-        // Inserimento voli
         const created: string[] = [];
         for (const dte of createDates) {
             const dt = new Date(dte);
@@ -528,19 +512,16 @@ export async function addAircraft(req: Request, res: Response) {
         const { modello } = req.body as { modello?: string };
         if (!modello) return res.status(400).json({ message: 'modello è obbligatorio' });
 
-        // Recupera codice IATA della compagnia
         const compRes = await pool.query('SELECT "codice_IATA" AS iata FROM compagnie WHERE utente = $1', [compagniaId]);
         if (compRes.rowCount === 0) return res.status(400).json({ message: 'Profilo compagnia non configurato' });
         const iata: string = compRes.rows[0].iata;
 
-        // Recupera sigla del modello
         const modRes = await pool.query('SELECT sigla FROM modelli WHERE nome = $1', [modello]);
         if (modRes.rowCount === 0) return res.status(400).json({ message: 'Modello inesistente' });
         const sigla: string = modRes.rows[0].sigla;
 
         const prefix = `${iata}-${sigla}-`;
 
-        // Calcola la prossima sequenza per la combinazione IATA-sigla
         const seqRes = await pool.query(
             `SELECT TO_CHAR(COALESCE(MAX(CAST(SPLIT_PART(numero, '-', 3) AS INT)), 0) + 1, 'FM000') AS next_seq
              FROM aerei
@@ -568,7 +549,6 @@ export async function deleteAircraft(req: Request, res: Response) {
         const { numero } = req.params as { numero: string };
         if (!numero) return res.status(400).json({ message: 'Numero aereo mancante' });
 
-        // Verifica appartenenza aereo alla compagnia
         const ownRes = await pool.query(
             'SELECT 1 FROM aerei WHERE numero = $1 AND compagnia = $2',
             [numero, compagniaId]
@@ -577,7 +557,6 @@ export async function deleteAircraft(req: Request, res: Response) {
             return res.status(404).json({ message: 'Aereo non trovato' });
         }
         
-        // Elimina l'aereo
         await pool.query(
             'DELETE FROM aerei WHERE numero = $1 AND compagnia = $2',
             [numero, compagniaId]

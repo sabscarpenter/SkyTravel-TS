@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { requireRole } from '../middleware/role';
 import { getProfile, updateProfilePhoto, getReservations, 
@@ -14,7 +14,7 @@ import { randomUUID } from 'crypto';
 // METODI PER IL CARICAMENTO DELLE IMMAGINI
 const uploadsDir = path.join(process.cwd(), 'uploads', 'passeggeri');
 fs.mkdirSync(uploadsDir, { recursive: true });
-// Configurazione multer: storage, limits, fileFilter
+
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, uploadsDir),
   filename: (_req, file, cb) => {
@@ -22,17 +22,16 @@ const storage = multer.diskStorage({
     cb(null, `${randomUUID()}${ext}`);
   },
 });
-// Limite di 5MB e solo immagini
+
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (file.mimetype && file.mimetype.startsWith('image/')) return cb(null, true);
     cb(new Error('Invalid file type'));
   },
 });
 
-// ----------------------------------------------------
 const passeggeroRouter = Router();
 
 passeggeroRouter.get('/profile', requireAuth, requireRole('PASSEGGERO'), getProfile);
@@ -41,7 +40,6 @@ passeggeroRouter.get('/reservations', requireAuth, requireRole('PASSEGGERO'), ge
 passeggeroRouter.get('/statistics', requireAuth, requireRole('PASSEGGERO'), getStatistics);
 passeggeroRouter.put('/aggiorna-email', requireAuth, requireRole('PASSEGGERO'), updateEmail);
 passeggeroRouter.put('/aggiorna-password', requireAuth, requireRole('PASSEGGERO'), updatePassword);
-
 passeggeroRouter.post('/stripe/setup-intent', requireAuth, requireRole('PASSEGGERO'), createSetupIntent);
 passeggeroRouter.get('/stripe/payment-methods', requireAuth, requireRole('PASSEGGERO'), listPaymentMethods);
 passeggeroRouter.delete('/stripe/payment-methods/:pmId', requireAuth, requireRole('PASSEGGERO'), deletePaymentMethod);
