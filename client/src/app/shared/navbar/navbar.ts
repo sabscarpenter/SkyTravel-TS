@@ -24,10 +24,9 @@ export class Navbar implements OnInit, OnDestroy {
 
   isAuthPopupOpen = false;
   authMode: 'login' | 'register' | 'datiPasseggero' = 'login';
-
-  // Stato caricamento immagine profilo (placeholder fino al load)
+ 
   imageLoaded = false;
-  // Mostra form setup compagnia se COMPAGNIA e profilo non ancora settato
+ 
   showCompanySetup = false;
   private destroy$ = new Subject<void>();
 
@@ -157,7 +156,6 @@ export class Navbar implements OnInit, OnDestroy {
     return '';
   }
 
-  // Gestori load/error dell'immagine profilo
   onImageLoad() { this.imageLoaded = true; }
   onImageError() { this.imageLoaded = false; }
 }

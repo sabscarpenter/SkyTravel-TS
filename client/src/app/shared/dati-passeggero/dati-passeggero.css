@@ -2,13 +2,11 @@
   margin-bottom: 0.5rem;
 }
 
-/* Custom styling for readonly email field */
 .form-control input[readonly] {
   opacity: 0.75;
   cursor: not-allowed;
 }
 
-/* Alert styling */
 .alert {
   margin-bottom: 1rem;
   padding: 1rem;
