@@ -64,16 +64,6 @@ export async function register(req: Request, res: Response) {
 
     const userRow = insUser.rows[0] as { id: number; email: string; foto: string | null };
 
-    // 2) passeggeri (FK su utenti.id)
-    const insPasseggero = await client.query(
-      `INSERT INTO passeggeri (utente, nome, cognome, codice_fiscale, data_nascita, sesso)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING nome`,
-      [userRow.id, dati.nome, dati.cognome, dati.codiceFiscale.toUpperCase(), dati.dataNascita, dati.sesso]
-    );
-
-    const passeggeroRow = insPasseggero.rows[0] as { nome: string };
-
     await client.query('COMMIT');
 
     // Costruisci user + token
@@ -94,7 +84,7 @@ export async function register(req: Request, res: Response) {
 
     return res.status(201).json({
       accessToken,
-      user: { id: userRow.id, nome: passeggeroRow.nome, email: userRow.email, role, foto: userRow.foto ?? '' }
+      user: { id: userRow.id, nome: '', email: userRow.email, role, foto: userRow.foto ?? '' }
     });
   } catch (e: any) {
     await client.query('ROLLBACK');
@@ -135,14 +125,15 @@ export async function login(req: Request, res: Response) {
       path: '/api/auth', maxAge: 7*24*60*60*1000
     });
 
+    let nome = '';
     if (u.role === 'COMPAGNIA') {
-      const result = await pool.query(
-      'SELECT nome FROM compagnie WHERE utente = $1',
-      [u.id]);
-      return res.json({ accessToken, user: { id: u.id, nome: result.rows[0].nome, email: u.email, role: u.role, foto: u.foto ?? '' } });
-    } else {
-      return res.json({ accessToken, user: { id: u.id, nome: '', email: u.email, role: u.role, foto: u.foto ?? '' } });
+      const r = await pool.query(
+        'SELECT nome FROM compagnie WHERE utente = $1',
+        [u.id]
+      );
+      nome = r.rows[0]?.nome ?? '';
     }
+    return res.json({ accessToken, user: { id: u.id, nome, email: u.email, role: u.role, foto: u.foto ?? '' } });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Internal server error' });
@@ -227,7 +218,15 @@ export async function me(req: Request, res: Response) {
   if (id === undefined || id === null) return res.status(400).json({ message: 'Unauthorized' });
   try {
     const u = await getUserById(id);
-    return res.json({ id: u.id, email: u.email, role: u.role, foto: u.foto ?? '' });
+    let nome = '';
+    if (u.role === 'COMPAGNIA') {
+      const r = await pool.query(
+        'SELECT nome FROM compagnie WHERE utente = $1',
+        [u.id]
+      );
+      nome = r.rows[0]?.nome ?? '';
+    }
+    return res.json({ id: u.id, nome, email: u.email, role: u.role, foto: u.foto ?? '' });
   } catch {
     return res.status(404).json({ message: 'User not found' });
   }

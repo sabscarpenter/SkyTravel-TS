@@ -63,9 +63,9 @@
             <div
               tabindex="0"
               role="button"
-              class="inline-flex select-none items-center gap-1.5 mr-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-300 to-green-400 text-green-900 font-semibold border border-green-300/80 shadow-sm hover:shadow-md hover:from-green-400 hover:to-green-500 transition-all duration-200 ring-1 ring-green-200/60 hover:ring-green-300/80"
+              class="inline-flex select-none items-center gap-1.5 mr-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-300 to-yellow-400 text-amber-900 font-semibold border border-amber-300/80 shadow-sm hover:shadow-md hover:from-amber-400 hover:to-yellow-500 transition-all duration-200 ring-1 ring-amber-200/60 hover:ring-amber-300/80"
               title="Compagnia Aerea">
-              Compagnia
+              {{ user?.nome }}
             </div>
           } @else if (user?.role === 'PASSEGGERO') {
             <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar hover:bg-blue-100 ring-2 ring-blue-200">
