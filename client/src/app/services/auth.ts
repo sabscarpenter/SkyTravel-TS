@@ -115,7 +115,6 @@ export class AuthService {
           throw new Error('Errore nel refresh token');
         }
         localStorage.setItem('accessToken', res.accessToken);
-        this.user$.next(res.user);
         return true;
       })
     );
