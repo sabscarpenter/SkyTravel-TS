@@ -59,7 +59,15 @@
               title="Amministratore">
               Admin
             </div>
-          } @else {
+          } @else if (user?.role === 'COMPAGNIA') {
+            <div
+              tabindex="0"
+              role="button"
+              class="inline-flex select-none items-center gap-1.5 mr-2 px-3 py-1 rounded-full bg-gradient-to-r from-green-300 to-green-400 text-green-900 font-semibold border border-green-300/80 shadow-sm hover:shadow-md hover:from-green-400 hover:to-green-500 transition-all duration-200 ring-1 ring-green-200/60 hover:ring-green-300/80"
+              title="Compagnia Aerea">
+              Compagnia
+            </div>
+          } @else if (user?.role === 'PASSEGGERO') {
             <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar hover:bg-blue-100 ring-2 ring-blue-200">
             <div class="w-10 h-10 rounded-full overflow-hidden relative">
               @if (!imageLoaded) {

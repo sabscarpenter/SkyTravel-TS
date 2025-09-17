@@ -8,6 +8,7 @@ export type Role = 'ADMIN' | 'COMPAGNIA' | 'PASSEGGERO';
 
 export interface User {
   id: number;
+  nome?: string;
   email: string;
   foto?: string;
   role?: Role;

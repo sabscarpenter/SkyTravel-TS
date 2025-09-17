@@ -1,8 +1,10 @@
 import { Pool } from 'pg';
+import dotenv from 'dotenv';
 
 // istanza di connessione al database PostgreSQL 
 const url = process.env.DATABASE_URL;
 
+/*
 export const pool = url
   ? new Pool({ connectionString: url })
   : new Pool({
@@ -14,10 +16,10 @@ export const pool = url
       max: 10,
       idleTimeoutMillis: 30000,
     });
-
+*/
 
 // Per connessione a Supabase
-/*
+
 dotenv.config();
 export const pool = new Pool({
   connectionString: process.env.SUPABASE_DB_URL,
@@ -25,4 +27,3 @@ export const pool = new Pool({
     rejectUnauthorized: false,
   },
 });
-*/
