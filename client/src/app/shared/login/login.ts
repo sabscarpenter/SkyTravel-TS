@@ -36,7 +36,6 @@ export class Login {
           this.isLoading = false;
           this.onLoginSuccess.emit();
           this.close();
-          window.location.reload();
         },
         error: (error) => {
           this.isLoading = false;

@@ -1,0 +1,205 @@
+% SkyTravel-TS Project Report
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{xcolor}
+\geometry{margin=2.5cm}
+
+\definecolor{lightgray}{gray}{0.95}
+\lstdefinelanguage{JSON}{
+  morestring=[b]",
+  morecomment=[l]{//},
+  literate={\{ }{{{}}}{1}{\} }{{}}{1}{{[ }{{[}}{1}{{ ]}}{{]}}{1},
+}
+\lstset{basicstyle=\ttfamily\small,backgroundcolor=\color{lightgray},frame=single}
+
+\title{SkyTravel-TS — Relazione di Progetto}
+\author{Team SkyTravel}
+\date{Settembre 2025}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Architettura del sistema}
+SkyTravel-TS è un'applicazione web full–stack composta da:
+\begin{itemize}
+  \item \textbf{Frontend Angular} (cartella \texttt{client/}): SPA con componenti/pages, servizi per l'accesso ai dati, routing protetto da guard.
+  \item \textbf{Backend Node.js/Express} (cartella \texttt{server/}): API REST in TypeScript con middleware di autenticazione/autorizzazione, controller per domini (auth, passeggero, compagnia, prenotazioni, checkout, amministrazione, aeroporti, soluzioni).
+  \item \textbf{Database PostgreSQL} (cartella \texttt{db/}): schema relazionale con vincoli e trigger per la consistenza dei dati.
+  \item \textbf{Integrazione Stripe}: per i pagamenti (intent e metodi salvati).
+  \item \textbf{Storage locale} per immagini profilo e loghi (cartella \texttt{server/uploads/}).
+\end{itemize}
+
+Relazioni fra componenti:
+\begin{itemize}
+  \item Angular comunica via HTTP con Express (base path \texttt{/api}). L'\emph{auth interceptor} allega il Bearer token agli endpoint non esclusi e gestisce il refresh automatico.
+  \item Express valida l'accesso con \texttt{requireAuth} e limita ruoli con \texttt{requireRole}. I controller interagiscono con Postgres tramite \texttt{pg}.
+  \item Stripe è utilizzato dal backend per creare PaymentIntent e gestire PaymentMethod; il client riceve i client secret per completare i flow di pagamento.
+\end{itemize}
+ 
+\section{Modello dei dati ed ER}
+L'app usa PostgreSQL con le principali entità e vincoli riportati in \texttt{db/init/01-tabelle\_trigger.sql}. Tabelle chiave:
+\begin{itemize}
+  \item \textbf{utenti(id, email, password, foto)}: utenti globali. \emph{Unique} su email (case-insensitive via indice). ID determina il ruolo (0=ADMIN, 1..99=COMPAGNIA, >=100=PASSEGGERO).
+  \item \textbf{compagnie(utente, nome, codice\_IATA, contatto, nazione)}: profilo compagnia, PK=utente, unique su codice IATA.
+  \item \textbf{passeggeri(utente, nome, cognome, codice\_fiscale, ...)}: profilo passeggero, PK=utente, unique su codice fiscale, vincoli età/sesso.
+  \item \textbf{sessioni(jti, utente, scadenza, revocato)}: gestione refresh token.
+  \item \textbf{modelli(nome, posti\_economy, posti\_business, posti\_first, massima\_distanza, layout, sigla)}: configurazioni aeromobili.
+  \item \textbf{aerei(numero, modello, compagnia)}: flotta compagnie; FK su modelli e compagnie. Numero generato come \texttt{IATA-SIGLA-XYZ}.
+  \item \textbf{aeroporti(codice\_IATA, nome, citta, nazione)}.
+  \item \textbf{tratte(numero, partenza, arrivo, durata\_minuti, distanza, compagnia)}: unique su (compagnia, partenza, arrivo); vincoli di coerenza.
+  \item \textbf{voli(numero, aereo, tratta, data\_ora\_partenza)}.
+  \item \textbf{biglietti(numero, volo, utente, prezzo, classe, posto, nome, cognome, bagagli, scadenza)}: unique su (volo, posto); trigger \texttt{ticket\_cleanup} per ripulire prenotazioni scadute ed evitare conflitti.
+\end{itemize}
+
+Schema ER (descrittivo):
+\begin{itemize}
+  \item \texttt{utenti} 1--1 \texttt{compagnie} (PK=FK) e 1--1 \texttt{passeggeri} (PK=FK).
+  \item \texttt{compagnie} 1--N \texttt{aerei}; \texttt{modelli} 1--N \texttt{aerei}.
+  \item \texttt{compagnie} 1--N \texttt{tratte}; \texttt{aeroporti} N--N via \texttt{tratte} (partenza/arrivo).
+  \item \texttt{tratte} 1--N \texttt{voli}; \texttt{aerei} 1--N \texttt{voli}.
+  \item \texttt{voli} 1--N \texttt{biglietti}; \texttt{passeggeri} 1--N \texttt{biglietti} (nullable, per ospiti/assegnazione successiva).
+  \item \texttt{utenti} 1--N \texttt{sessioni}.
+\end{itemize}
+
+\section{API REST}
+Di seguito l'elenco sintetico degli endpoint principali (prefisso \texttt{/api}). Parametri e payload sono dedotti dal codice.
+
+\subsection{Auth (\texttt{/api/auth})}
+\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
+GET /email & Query: \texttt{email}. Risponde 200 se disponibile; 400 se già registrata. \\
+POST /register & Body: \texttt{"email","password","dati"\{nome,cognome,codiceFiscale,dataNascita,sesso\}}. Ritorna \texttt{"accessToken","user"}. \\
+POST /login & Body: \texttt{"email","password"}. Ritorna \texttt{"accessToken","user"}. \\
+POST /logout & Invalida cookie refresh e sessione associata. \\
+POST /logout-all & Protetto. Revoca tutte le sessioni dell'utente. \\
+POST /refresh & Usa cookie \texttt{rt} per emettere nuovo \texttt{accessToken} e user. \\
+GET /me & Protetto. Ritorna dati utente corrente. \\
+\end{longtable}
+
+Esempio risposta login:
+\begin{lstlisting}[language=JSON]
+{
+  "accessToken": "<jwt>",
+  "user": { "id": 123, "email": "john@doe.it", "role": "PASSEGGERO", "foto": "" }
+}
+\end{lstlisting}
+
+\subsection{Aeroporti (\texttt{/api/aeroporti})}
+\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
+GET /list & Ritorna lista raggruppata per nazione con aeroporti. \\
+\end{longtable}
+
+\subsection{Soluzioni (\texttt{/api/soluzioni})}
+\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
+GET /ricerca & Query: \texttt{partenza, arrivo, data\_andata, [data\_ritorno]}. Ritorna itinerari (andata/ritorno). \\
+\end{longtable}
+
+\subsection{Booking (\texttt{/api/booking})}
+Protetti per PASSEGGERO/ADMIN.
+\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
+GET /configuration & Query: \texttt{nome} modello. Ritorna configurazione sedili. \\
+GET /seats & Query: \texttt{volo}. Ritorna posti occupati. \\
+POST /seats/reserve & Body: lista ticket temporanei con volo/posto/classe/prezzo. \\
+\end{longtable}
+
+\subsection{Checkout (\texttt{/api/checkout})}
+Protetti per PASSEGGERO/ADMIN.
+\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
+POST /insert-tickets & Inserisce biglietti (blocco + conferma). \\
+POST /create-payment-intent & Crea PaymentIntent Stripe. \\
+GET /payment-intent/:pi\_id & Recupera stato PaymentIntent. \\
+\end{longtable}
+
+\subsection{Passeggero (\texttt{/api/passeggero})}
+Protetti per PASSEGGERO.
+\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
+GET /profile & Profilo passeggero. \\
+POST /update/foto & Upload immagine profilo (multipart \texttt{file}). \\
+GET /reservations & Prenotazioni dell'utente. \\
+GET /statistics & Statistiche personali. \\
+PUT /aggiorna-email & Body: \texttt{"email"}. \\
+PUT /aggiorna-password & Body: \texttt{"passwordAttuale","nuovaPassword"}. \\
+POST /stripe/setup-intent & Crea SetupIntent, ritorna clientSecret. \\
+GET /stripe/payment-methods & Lista metodi salvati. \\
+DELETE /stripe/payment-methods/:pmId & Rimuove metodo salvato. \\
+\end{longtable}
+
+\subsection{Compagnia (\texttt{/api/compagnia})}
+Protetti per COMPAGNIA.
+\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
+GET /profile & Profilo compagnia (nome, IATA, contatto, nazione, foto). \\
+POST /setup & Configura profilo compagnia e imposta password. \\
+GET /uploads/compagnie/:filename & Restituisce immagine logo. \\
+GET /statistics & Statistiche (destinazioni, aerei, voli odierni, passeggeri, ricavi). \\
+GET /aircrafts & Lista aerei della compagnia. \\
+POST /aircrafts & Body: \texttt{"modello"}. Crea aereo con numero \texttt{IATA-SIGLA-XYZ}. \\
+DELETE /aircrafts/:numero & Elimina aereo se appartiene alla compagnia. \\
+GET /models & Lista modelli aeromobili (nome, sigla). \\
+GET /routes & Elenco tratte (con nomi aeroporti). \\
+GET /routes/best & Top tratte per passeggeri/riempimento. \\
+GET /flights & Elenco voli con disponibilità posti. \\
+POST /flights & Body: {routeNumber, aircraftNumber, frequency, departureTime, days?, startDate, weeksCount?}. \\
+POST /routes & Body: {numero, partenza, arrivo, durata\_min, lunghezza\_km}. \\
+DELETE /routes/:numero & Cancella tratta della compagnia. \\
+\end{longtable}
+
+Esempio creazione aereo:
+\begin{lstlisting}[language=JSON]
+POST /api/compagnia/aircrafts
+{
+  "modello": "Boeing 737-800"
+}
+// -> { "numero": "AZ-B738-001", "modello": "Boeing 737-800" }
+\end{lstlisting}
+
+\section{Autenticazione e autorizzazione}
+\subsection{Token e sessioni}
+\begin{itemize}
+  \item Login/Register emettono un \textbf{access token JWT} (Breve durata, es. 5 min) e un \textbf{refresh token} in cookie HttpOnly (durata più lunga, es. 7 giorni). Le sessioni refresh sono tracciate in tabella \texttt{sessioni} tramite JTI.
+  \item L'header \texttt{Authorization: Bearer <token>} è richiesto su endpoint protetti; \texttt{requireAuth} valida e decodifica il token caricando \texttt{req.user}.
+  \item \texttt{requireRole(...)} verifica che il ruolo dell'utente appartenga ai ruoli ammessi.
+  \item Il flusso di \emph{refresh} controlla la sessione (non revocata e non scaduta) e rilascia un nuovo access token.
+\end{itemize}
+
+\subsection{Workflow}
+\begin{enumerate}
+  \item L'utente invia credenziali a \texttt{/api/auth/login}.
+  \item Backend valida, determina il ruolo (ID->ruolo) e risponde con JWT + set cookie \texttt{rt}.
+  \item Angular salva \texttt{accessToken} in \texttt{localStorage}. L'interceptor lo allega a tutte le richieste non escluse.
+  \item In caso di 401, l'interceptor prova \texttt{/api/auth/refresh}. Se ok, ritenta la richiesta originale; altrimenti esegue logout.
+  \item Logout e logout-all eliminano cookie e revocano sessioni.
+\end{enumerate}
+
+\section{Frontend Angular}
+\subsection{Routing}
+Le rotte principali (vedi \texttt{client/src/app/app.routes.ts}): \texttt{/}, \texttt{/voli}, \texttt{/passeggero} (PASSEGGERO), \texttt{/aerolinea} (COMPAGNIA), \texttt{/admin} (ADMIN), \texttt{/dettagli}, \texttt{/posti}, \texttt{/checkout}. Protette da \texttt{authRoleGuard} con verifica ruolo e caricamento pigro di \texttt{/me} se presente un token.
+
+\subsection{Servizi}
+\begin{itemize}
+  \item \textbf{AuthService}: login, register, logout, refresh, me.
+  \item \textbf{SoluzioniService}: ricerca voli/itinerari (solo andata o A/R).
+  \item \textbf{BookingService}: stato client della prenotazione, configurazioni posti, occupazione e prenotazione temporanea.
+  \item \textbf{CheckoutService} (via endpoint \texttt{/checkout} nei componenti): gestione PaymentIntent.
+  \item \textbf{PasseggeroService}: profilo, foto, prenotazioni, statistiche, email/password, Stripe saved methods.
+  \item \textbf{AerolineaService}: profilo compagnia, statistiche, tratte, voli, aerei, modelli, setup compagnia.
+  \item \textbf{AeroportiService}: elenco aeroporti per nazione.
+\end{itemize}
+
+\subsection{Componenti / Pagine}
+Principali pagine in \texttt{client/src/app/pages}: \texttt{home}, \texttt{voli}, \texttt{dettagli}, \texttt{posti}, \texttt{checkout}, \texttt{passeggero}, \texttt{aerolinea}, \texttt{admin}. Componenti condivisi in \texttt{shared/}: navbar, login, registrazione, dati-passeggero, dati-compagnia, ticket, popup, footer.
+
+\section{Note implementative}
+\begin{itemize}
+  \item Numerazione aerei: formato \texttt{IATA-SIGLA-XYZ} con calcolo sequenziale per compagnia+modello; validato lato server.
+  \item Trigger biglietti: la funzione \texttt{ticket\_cleanup} evita conflitti tra prenotazioni temporanee e biglietti definitivi.
+  \item Sicurezza: refresh token in cookie HttpOnly; access token nel client con scadenza breve e retry controllato.
+\end{itemize}
+
+\end{document}

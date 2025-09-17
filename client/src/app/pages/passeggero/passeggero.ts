@@ -31,7 +31,6 @@ type ReservationGroup = {
   templateUrl: './passeggero.html',
   styleUrls: ['./passeggero.css']
 })
-
 export class Passeggero {
   @ViewChild(Popup) popup!: Popup;
   @ViewChild(Ticket) ticket!: Ticket;
