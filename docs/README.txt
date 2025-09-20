@@ -7,8 +7,8 @@ Questa guida spiega come avviare l’app completa (backend Node.js/Express.js + 
 Breve spiegazione della token rotation (server/.env)
 
 Imposta in server/.env:
-- ROTATE_SECRETS_ON_START=1 → ad ogni riavvio i segreti JWT vengono ruotati e tutte le sessioni esistenti vengono invalidate.
-- ROTATE_SECRETS_ON_START=0 → nessuna rotazione automatica.
+- ROTATE_SECRETS_ON_START=1 → ad ogni riavvio le chiavi segrete con cui si firmano i JWT vengono cambiate e tutte le sessioni esistenti vengono invalidate.
+- ROTATE_SECRETS_ON_START=0 → nessun cambio automatico.
 
 ---
 

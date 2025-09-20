@@ -1,10 +1,7 @@
-/* Airline Profile Enhanced Styling */
-
 input.input:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Enhanced table styling */
 .table th {
   font-weight: 600;
   letter-spacing: 0.025em;
@@ -18,7 +15,6 @@ input.input:focus {
   background-color: rgba(59, 130, 246, 0.05);
 }
 
-/* Enhanced select styling */
 .select {
   transition: all 0.3s ease;
 }
@@ -27,14 +23,12 @@ input.input:focus {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Modal enhancements */
 .modal-box {
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(59, 130, 246, 0.1);
 }
 
-/* Responsive improvements */
 @media (max-width: 768px) {
   .hero .hero-content {
     padding: 2rem 1rem;

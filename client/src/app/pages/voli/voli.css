@@ -9,7 +9,6 @@
   box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
 }
 
-/* Selected state highlight */
 .flight-card.selected {
   border-color: #1d4ed8; /* blue-700 */
   box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15), 0 10px 24px rgba(29, 78, 216, 0.25);
