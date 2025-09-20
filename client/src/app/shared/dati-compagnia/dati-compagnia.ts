@@ -3,9 +3,7 @@ import { AerolineaService } from '../../services/aerolinea';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-/**
- * Form per completare i dati della compagnia dopo il primo login (ruolo COMPAGNIA).
- */
+
 @Component({
   selector: 'app-dati-compagnia',
   standalone: true,
@@ -22,7 +20,7 @@ export class DatiCompagnia {
   contatto: string = '';
   nazione: string = '';
   email: string = '';
-  // Sezione cambio password (opzionale)
+ 
   newPassword: string = '';
   confirmPassword: string = '';
 
@@ -43,14 +41,12 @@ export class DatiCompagnia {
   get isPhoneValid(): boolean {
     const raw = this.contatto.trim();
     if (!raw) return false;
-    // Consenti + opzionale, cifre e spazi, almeno 7 cifre reali
     if (!/^[+]?([0-9 ]+)$/.test(raw)) return false;
     const digits = raw.replace(/\s+/g, '');
-    return digits.length >= 7 && digits.length <= 15; // limiti tipici
+    return digits.length >= 7 && digits.length <= 15;
   }
 
   get isPasswordSectionValid(): boolean {
-    // Obbligatoria: entrambe compilate, min 8, devono coincidere
     return !!(
       this.newPassword &&
       this.confirmPassword &&

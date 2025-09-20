@@ -33,11 +33,8 @@ export interface TicketData {
 })
 export class Ticket {
   @Input() item?: TicketData;
-
-  /** Lista di biglietti per navigare con frecce/pallini */
   @Input() items: TicketData[] = [];
 
-  /** Variante colori/ombre */
   @Input() elevated = true;
 
   current = 0;
@@ -50,7 +47,6 @@ export class Ticket {
     }
   }
 
-  /** true se c'è un array navigabile */
   get hasMultiple(): boolean {
     return Array.isArray(this.items) && this.items.length > 1;
   }
@@ -99,7 +95,6 @@ export class Ticket {
     this.item = this.items[this.current];
   }
 
-  // Tastiera: ← / →
   @HostListener('document:keydown', ['$event'])
   onKeydown(e: KeyboardEvent) {
     if (!this.items?.length) return;
@@ -107,7 +102,6 @@ export class Ticket {
     if (e.key === 'ArrowRight') this.next();
   }
 
-  // Swipe touch essenziale
   private touchStartX = 0;
   private touchStartY = 0;
 
@@ -122,7 +116,7 @@ export class Ticket {
     const dx = t.clientX - this.touchStartX;
     const dy = t.clientY - this.touchStartY;
 
-    if (Math.abs(dy) > Math.abs(dx)) return; // ignora scroll verticale
+    if (Math.abs(dy) > Math.abs(dx)) return; 
 
     const TH = 40; // px
     if (dx > TH) this.prev();
@@ -199,7 +193,7 @@ export class Ticket {
     let mins = parseInt(m[2], 10);
 
     let total = h * 60 + mins + deltaMin;
-    // wrap su 24h (gestisce anche sotto zero)
+
     total = (total % 1440 + 1440) % 1440;
 
     const hh = Math.floor(total / 60).toString().padStart(2, '0');

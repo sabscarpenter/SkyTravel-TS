@@ -7,18 +7,6 @@ import { AuthService, DatiUtente } from '../../services/auth';
 import { RegistrationBufferService } from '../../services/registrazione-buffer';
 
 
-/**
- * Component for collecting additional user information after registration.
- * This form allows users to complete their profile with personal details
- * required for flight booking and travel documentation.
- * 
- * @component InfoFormComponent
- * @description Displays a form for user to input personal information including
- * name, surname, fiscal code, birth date, and gender. Email is pre-filled from registration.
- * 
- * @author Generated for Flight Booking Application
- * @version 1.0.0
- */
 @Component({
   selector: 'app-dati-passeggero',
   standalone: true,
@@ -43,10 +31,6 @@ export class DatiPasseggero {
   successMessage: string = '';
   isLoading: boolean = false;
 
-  /**
-   * Constructor for InfoFormComponent
-   * @param {Router} router - Angular router for navigation
-   */
   constructor(
     private authService: AuthService,
     private buffer: RegistrationBufferService
@@ -54,10 +38,6 @@ export class DatiPasseggero {
     this.loadUserEmail();
   }
 
-  /**
-   * Validates if the form is complete and valid
-   * @returns {boolean} True if all required fields are filled and valid
-   */
   get isFormValid(): boolean {
     return !!(
       this.nome.trim() &&
@@ -69,32 +49,16 @@ export class DatiPasseggero {
     );
   }
 
-  /**
-   * Validates Italian fiscal code format
-   * @param {string} cf - The fiscal code to validate
-   * @returns {boolean} True if fiscal code format is valid
-   * @private
-   */
   private validateFiscalCode(cf: string): boolean {
     const fiscalCodeRegex = /^[A-Z]{6}[0-9]{2}[A-Z][0-9]{2}[A-Z][0-9]{3}[A-Z]$/;
     return fiscalCodeRegex.test(cf.toUpperCase());
   }
 
-  /**
-   * Formats fiscal code input to uppercase as user types
-   * @param {Event} event - Input event
-   */
   onFiscalCodeInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.codiceFiscale = target.value.toUpperCase();
   }
 
-  /**
-   * Validates birth date to ensure user is at least 18 years old
-   * @param {string} birthDate - Birth date in YYYY-MM-DD format
-   * @returns {boolean} True if user is at least 18 years old
-   * @private
-   */
   private validateAge(birthDate: string): boolean {
     const today = new Date();
     const birth = new Date(birthDate);
@@ -112,11 +76,6 @@ export class DatiPasseggero {
     this.email = draft?.email ?? '';
   }
 
-  /**
-   * Handles form submission
-   * Validates all fields and saves user information
-   * @returns {Promise<void>}
-   */
   async onSubmit(): Promise<void> {
     if (!this.isFormValid) { this.errorMessage = 'Per favore, compila tutti i campi obbligatori.'; return; }
     if (!this.validateFiscalCode(this.codiceFiscale)) { this.errorMessage = 'Il formato del codice fiscale non è valido.'; return; }
@@ -152,9 +111,6 @@ export class DatiPasseggero {
     });
   }
 
-  /**
-   * Handles form close
-   */
   close(): void {
     this.onClose.emit();
   }
