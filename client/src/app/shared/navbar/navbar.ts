@@ -60,7 +60,7 @@ export class Navbar implements OnInit, OnDestroy {
         this.imageLoaded = true;
         if (user?.role === 'COMPAGNIA') {
           this.loadCompanyProfile();
-          this.loadCompanyName();
+          window.location.reload();
         }
       },
       error: () => {
@@ -88,19 +88,6 @@ export class Navbar implements OnInit, OnDestroy {
   onCompanyComplete() {
     this.showCompanySetup = false;
     this.checkAuthStatus();
-  }
-
-  loadCompanyName() {
-    this.airlineService.companyName().subscribe({
-      next: (data) => {
-        if (this.user) {
-          this.user.nome = data.nome;
-        }
-      },
-      error: (error) => {
-        console.error('Errore durante il caricamento del nome della compagnia:', error);
-      }
-    });
   }
 
   toggleAuthPopup() {

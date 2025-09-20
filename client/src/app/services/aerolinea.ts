@@ -121,8 +121,4 @@ export class AerolineaService {
   setupCompany(data: { nome:string; codiceIATA:string; contatto:string; nazione:string; password:string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/setup`, data);
   }
-  
-  companyName(): Observable<{ nome: string }> {
-    return this.http.get<{ nome: string }>(`${this.apiUrl}/nome`);
-  }
 }
