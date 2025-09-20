@@ -5,8 +5,8 @@ import { getModelConfiguration, getOccupiedSeats, reserveSeats } from '../contro
 
 const bookingRouter = Router();
 
-bookingRouter.get('/configuration', requireAuth, requireRole('PASSEGGERO', 'ADMIN'), getModelConfiguration);
-bookingRouter.get('/seats', requireAuth, requireRole('PASSEGGERO', 'ADMIN'), getOccupiedSeats);
-bookingRouter.post('/seats/reserve', requireAuth, requireRole('PASSEGGERO', 'ADMIN'), reserveSeats);
+bookingRouter.get('/configuration', requireAuth, requireRole('PASSEGGERO'), getModelConfiguration);
+bookingRouter.get('/seats', requireAuth, requireRole('PASSEGGERO'), getOccupiedSeats);
+bookingRouter.post('/seats/reserve', requireAuth, requireRole('PASSEGGERO'), reserveSeats);
 
 export default bookingRouter;

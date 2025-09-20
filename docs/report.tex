@@ -1,205 +1,427 @@
-% SkyTravel-TS Project Report
-\documentclass[11pt,a4paper]{article}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
+\documentclass[12pt,a4paper]{article}
 \usepackage[italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
 \usepackage{hyperref}
+\usepackage{enumitem}
 \usepackage{geometry}
-\usepackage{longtable}
-\usepackage{listings}
+\usepackage{graphicx}
 \usepackage{xcolor}
 \geometry{margin=2.5cm}
+\usepackage{amsmath,amssymb}
+\usepackage{svg}
+\usepackage{adjustbox}
+\usepackage{needspace}
+\usepackage{subcaption}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{minted}
 
-\definecolor{lightgray}{gray}{0.95}
-\lstdefinelanguage{JSON}{
-  morestring=[b]",
-  morecomment=[l]{//},
-  literate={\{ }{{{}}}{1}{\} }{{}}{1}{{[ }{{[}}{1}{{ ]}}{{]}}{1},
+\lstdefinelanguage{TypeScript}{
+  keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, let, const, if, while, do, else, case, break, async, await},
+  keywordstyle=\color{blue}\bfseries,
+  ndkeywords={class, export, boolean, throw, implements, import, this},
+  ndkeywordstyle=\color{teal}\bfseries,
+  identifierstyle=\color{black},
+  sensitive=true,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{gray}\ttfamily,
+  stringstyle=\color{red}\ttfamily,
+  morestring=[b]',
+  morestring=[b]"
 }
-\lstset{basicstyle=\ttfamily\small,backgroundcolor=\color{lightgray},frame=single}
 
-\title{SkyTravel-TS — Relazione di Progetto}
-\author{Team SkyTravel}
-\date{Settembre 2025}
+\lstset{
+  language=TypeScript,
+  basicstyle=\ttfamily\small,
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  numbersep=6pt,
+  tabsize=2,
+  showspaces=false,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single
+}
+
+\captionsetup{skip=6pt}
+\svgpath{{svg/}}
+\setsvg{inkscapelatex=true, inkscapearea=page, clean=true}
+
+\hypersetup{
+	colorlinks=true,
+	linkcolor=blue,
+	urlcolor=blue,
+	citecolor=blue
+}
+
+\title{SkyTravel TS\\Report Architettura, Dati, API e Frontend}
+\author{Studente: \textit{Francesco Giovanni Pasqual}}
+\date{\today \\[1ex] \small Questo documento è stato scritto con \LaTeX}
 
 \begin{document}
 \maketitle
 \tableofcontents
 \newpage
 
-\section{Architettura del sistema}
-SkyTravel-TS è un'applicazione web full–stack composta da:
-\begin{itemize}
-  \item \textbf{Frontend Angular} (cartella \texttt{client/}): SPA con componenti/pages, servizi per l'accesso ai dati, routing protetto da guard.
-  \item \textbf{Backend Node.js/Express} (cartella \texttt{server/}): API REST in TypeScript con middleware di autenticazione/autorizzazione, controller per domini (auth, passeggero, compagnia, prenotazioni, checkout, amministrazione, aeroporti, soluzioni).
-  \item \textbf{Database PostgreSQL} (cartella \texttt{db/}): schema relazionale con vincoli e trigger per la consistenza dei dati.
-  \item \textbf{Integrazione Stripe}: per i pagamenti (intent e metodi salvati).
-  \item \textbf{Storage locale} per immagini profilo e loghi (cartella \texttt{server/uploads/}).
+\section{Descrizione generale del sistema}
+SkyTravel TS è un'applicazione web per la ricerca di voli, la gestione delle compagnie aeree e l'acquisto di biglietti. Il sistema è composto da:
+\begin{itemize}[noitemsep]
+	\item Front end Angular (client) che gestisce la web app come una SPA (Single Page Application): interfaccia costruita con componenti composti da file HTML (struttura), CSS (stile) e TypeScript (comportamento). Alcuni sono inclusi direttamente nei template (\emph{component nesting}), altri sono caricati dal Router dentro \texttt{<router-outlet>} in base al \textbf{path} dell'URL (definito in \texttt{app.routes.ts} con relative guardie). Styling con Tailwind CSS (framework CSS utility-first) e daisyUI (plugin/libreria di componenti per Tailwind) per usare componenti predefiniti e ridurre al minimo il CSS scritto a mano. Include \textbf{routing}, \textbf{guardie}, \textbf{HttpInterceptor} per allegare il token e gestire il refresh, e servizi per interagire con le API dichiarate nel server.
+	\item Back end Node.js/Express (server) che si collega al database ed \textbf{espone le rotte REST} che gestiscono tutto lo scambio di dati tra client e server rendendo la web app dinamica. Comprende \textbf{autenticazione e autorizzazione}, \textbf{API} che leggono/scrivono dati dal DB, \textbf{upload e salvataggio di immagini} e l'\textbf{integrazione con Stripe} per la creazione e gestione dei pagamenti.
+	\item Database relazionale (PostgreSQL) con script di inizializzazione in \texttt{db/init/}: \textbf{memorizza e gestisce} gli utenti e le sessioni; garantisce \textbf{integrità referenziale}, supporta \textbf{query e join} efficienti, \textbf{transazioni} per operazioni atomiche e vincoli per dati coerenti.
+	\item Integrazione Docker che avvia \textbf{client, server e database in container separati} collegati su una rete interna: ogni componente è isolato ma comunica con gli altri per scambiarsi dati. Favorisce \textbf{portabilità} e \textbf{coerenza dell'ambiente} tra computer, facilita la \textbf{riproducibilità} delle build, l'\textbf{isolamento delle dipendenze}, il \textbf{versioning} dei servizi e un semplice \textbf{scaling} o sostituzione dei componenti.
 \end{itemize}
+L'architettura segue un pattern client--server con API REST stateless per la maggior parte delle operazioni. L'autenticazione usa JWT (access token nel client, refresh token HttpOnly in cookie) con gestione sessioni lato DB per revoca/validazione dei refresh token.
 
-Relazioni fra componenti:
-\begin{itemize}
-  \item Angular comunica via HTTP con Express (base path \texttt{/api}). L'\emph{auth interceptor} allega il Bearer token agli endpoint non esclusi e gestisce il refresh automatico.
-  \item Express valida l'accesso con \texttt{requireAuth} e limita ruoli con \texttt{requireRole}. I controller interagiscono con Postgres tramite \texttt{pg}.
-  \item Stripe è utilizzato dal backend per creare PaymentIntent e gestire PaymentMethod; il client riceve i client secret per completare i flow di pagamento.
-\end{itemize}
- 
-\section{Modello dei dati ed ER}
-L'app usa PostgreSQL con le principali entità e vincoli riportati in \texttt{db/init/01-tabelle\_trigger.sql}. Tabelle chiave:
-\begin{itemize}
-  \item \textbf{utenti(id, email, password, foto)}: utenti globali. \emph{Unique} su email (case-insensitive via indice). ID determina il ruolo (0=ADMIN, 1..99=COMPAGNIA, >=100=PASSEGGERO).
-  \item \textbf{compagnie(utente, nome, codice\_IATA, contatto, nazione)}: profilo compagnia, PK=utente, unique su codice IATA.
-  \item \textbf{passeggeri(utente, nome, cognome, codice\_fiscale, ...)}: profilo passeggero, PK=utente, unique su codice fiscale, vincoli età/sesso.
-  \item \textbf{sessioni(jti, utente, scadenza, revocato)}: gestione refresh token.
-  \item \textbf{modelli(nome, posti\_economy, posti\_business, posti\_first, massima\_distanza, layout, sigla)}: configurazioni aeromobili.
-  \item \textbf{aerei(numero, modello, compagnia)}: flotta compagnie; FK su modelli e compagnie. Numero generato come \texttt{IATA-SIGLA-XYZ}.
-  \item \textbf{aeroporti(codice\_IATA, nome, citta, nazione)}.
-  \item \textbf{tratte(numero, partenza, arrivo, durata\_minuti, distanza, compagnia)}: unique su (compagnia, partenza, arrivo); vincoli di coerenza.
-  \item \textbf{voli(numero, aereo, tratta, data\_ora\_partenza)}.
-  \item \textbf{biglietti(numero, volo, utente, prezzo, classe, posto, nome, cognome, bagagli, scadenza)}: unique su (volo, posto); trigger \texttt{ticket\_cleanup} per ripulire prenotazioni scadute ed evitare conflitti.
-\end{itemize}
+\subsection{Flusso di alto livello}
+\begin{enumerate}[noitemsep]
+	\item L'utente visita il front end Angular e, se necessario, effettua il login o registrazione per ottenere i ruoli: PASSEGGERO, COMPAGNIA o ADMIN (in base all'intervallo di ID utente).
+	\item Il client usa i servizi per chiamare le API REST. L'\texttt{HttpInterceptor} allega il bearer token e gestisce il refresh automatico quando l'access token scade. In questo modo è possibile gestire le richieste e le interazioni dal lato client.
+	\item Le rotte protette richiedono \texttt{requireAuth} e, ove necessario, \texttt{requireRole} per garantire l'accesso in base al ruolo.
+	\item Per quanto riguarda l'utente di tipo passeggero, le operazioni principali che può svolgere sono la prenotazione, la visualizzazione dei voli e del profilo, nonché la gestione dei biglietti. In particolare, ciò prevede: la ricerca degli itinerari, la selezione dei posti con trattenuta temporanea e la conferma dei biglietti dopo il pagamento al checkout. L'utente di tipo compagnia aerea, invece, può accedere al proprio profilo per consultare statistiche rilevanti e utilizzare gli appositi visualizzatori di aerei, tratte e voli, ciascuno dei quali offre funzionalità dedicate alla loro gestione. Per quanto riguarda l'utente di tipo admin, questo può gestire gli utenti di tipo compagnia aerea o passeggero, eliminandoli oppure, nel caso delle compagnie aeree, aggiungendole sotto forma di invito. Le compagnie invitate vengono visualizzate nel pannello delle compagnie aeree in attesa, da cui è possibile cancellare l'invito. Sono inoltre presenti visualizzatori con refresh manuale per i passeggeri e per le compagnie aeree.
+\end{enumerate}
 
-Schema ER (descrittivo):
-\begin{itemize}
-  \item \texttt{utenti} 1--1 \texttt{compagnie} (PK=FK) e 1--1 \texttt{passeggeri} (PK=FK).
-  \item \texttt{compagnie} 1--N \texttt{aerei}; \texttt{modelli} 1--N \texttt{aerei}.
-  \item \texttt{compagnie} 1--N \texttt{tratte}; \texttt{aeroporti} N--N via \texttt{tratte} (partenza/arrivo).
-  \item \texttt{tratte} 1--N \texttt{voli}; \texttt{aerei} 1--N \texttt{voli}.
-  \item \texttt{voli} 1--N \texttt{biglietti}; \texttt{passeggeri} 1--N \texttt{biglietti} (nullable, per ospiti/assegnazione successiva).
-  \item \texttt{utenti} 1--N \texttt{sessioni}.
+\newpage
+
+\section{Modello dei dati}
+Il progetto utilizza PostgreSQL. Gli script di definizione e popolamento sono in \texttt{db/init/*.sql}.
+
+\subsection{Progettazione concettuale con modello orientato agli oggetti}
+\label{sec:schema oo}
+
+\noindent
+\begin{minipage}{\linewidth}
+  \centering
+  \begin{subfigure}{\linewidth}
+    \centering
+    \includesvg[inkscapelatex=false,width=\linewidth]{db (oo)}
+  \end{subfigure}
+\end{minipage}
+
+\subsection{Progettazione logica con modello relazionale}
+\label{sec:schema relazionale}
+
+\noindent
+\begin{minipage}{\linewidth}
+  \centering
+  \begin{subfigure}{\linewidth}
+    \centering
+    \includesvg[inkscapelatex=false,width=\linewidth]{db (relazionale)}
+  \end{subfigure}
+\end{minipage}
+
+\newpage
+
+\subsection{Entità principali (estratte dal codice):}
+\begin{itemize}[noitemsep]
+	\item \textbf{utenti} (id, email, password, foto)
+	\item \textbf{sessioni} (jti, utente, scadenza, revocato, data creazione)
+	\item \textbf{passeggeri} (utente, nome, cognome, codice fiscale, data nascita, sesso, stripe)
+	\item \textbf{compagnie} (utente, nome, codice iata, nazione, contatto)
+	\item \textbf{modelli} (nome, posti economy, posti business, posti first, layout, massima distanza, sigla)
+	\item \textbf{aerei} (numero, compagnia, modello)
+	\item \textbf{aeroporti} (codice iata, nome, nazione, citta)
+	\item \textbf{tratte} (numero, durata minuti, distanza, partenza, arrivo, compagnia)
+	\item \textbf{voli} (numero, data ora partenza, aereo, tratta)
+	\item \textbf{biglietti} (numero, classe, posto, nome, cognome, bagagli, prezzo, volo, scadenza, utente)
 \end{itemize}
 
 \section{API REST}
-Di seguito l'elenco sintetico degli endpoint principali (prefisso \texttt{/api}). Parametri e payload sono dedotti dal codice.
+Tutte le API sono esposte sotto il prefisso \texttt{/api}. Per le rotte protette è richiesto l'header \texttt{Authorization: Bearer <token>} (access token). Dove indicato, è necessaria anche la guardia di ruolo con i ruoli ammessi.
 
-\subsection{Auth (\texttt{/api/auth})}
-\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
-GET /email & Query: \texttt{email}. Risponde 200 se disponibile; 400 se già registrata. \\
-POST /register & Body: \texttt{"email","password","dati"\{nome,cognome,codiceFiscale,dataNascita,sesso\}}. Ritorna \texttt{"accessToken","user"}. \\
-POST /login & Body: \texttt{"email","password"}. Ritorna \texttt{"accessToken","user"}. \\
-POST /logout & Invalida cookie refresh e sessione associata. \\
-POST /logout-all & Protetto. Revoca tutte le sessioni dell'utente. \\
-POST /refresh & Usa cookie \texttt{rt} per emettere nuovo \texttt{accessToken} e user. \\
-GET /me & Protetto. Ritorna dati utente corrente. \\
-\end{longtable}
+\subsection{Autenticazione (\texttt{/auth})}
+\begin{description}[style=unboxed,leftmargin=0cm]
+	\item[GET /auth/email] Pubblica. query: \texttt{email}. Scopo: verificare disponibilità email.
+	\item[POST /auth/register] Pubblica. body: \texttt{{\{} email, password, dati:{\{} nome, cognome, codiceFiscale, dataNascita, sesso {\}} {\}}}. Scopo: registrazione passeggero; crea utente e profilo passeggero.
+	\item[POST /auth/login] Pubblica. body: \texttt{{\{} email, password {\}}}. Risposta: access token + utente; imposta cookie HttpOnly \texttt{rt} per refresh.
+	\item[POST /auth/refresh] Pubblica. Usa il cookie HttpOnly \texttt{rt}. Scopo: rilascio nuovo access token.
+	\item[POST /auth/logout] Protetta (\texttt{requireAuth}). Scopo: invalida la sessione corrente e cancella il cookie refresh.
+	\item[POST /auth/logout-all] Protetta (\texttt{requireAuth}). Scopo: revoca tutte le sessioni dell'utente.
+	\item[GET /auth/me] Protetta (\texttt{requireAuth}). Scopo: dati utente corrente.
+\end{description}
 
-Esempio risposta login:
-\begin{lstlisting}[language=JSON]
-{
-  "accessToken": "<jwt>",
-  "user": { "id": 123, "email": "john@doe.it", "role": "PASSEGGERO", "foto": "" }
-}
-\end{lstlisting}
+\subsection{Aeroporti (\texttt{/aeroporti})}
+\begin{description}[style=unboxed,leftmargin=0cm]
+	\item[GET /aeroporti/list] Pubblica. Scopo: elenco aeroporti raggruppati per nazione.
+\end{description}
 
-\subsection{Aeroporti (\texttt{/api/aeroporti})}
-\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
-GET /list & Ritorna lista raggruppata per nazione con aeroporti. \\
-\end{longtable}
+\subsection{Ricerca soluzioni (\texttt{/soluzioni})}
+\begin{description}[style=unboxed,leftmargin=0cm]
+	\item[GET /soluzioni/ricerca] Pubblica. query: \texttt{partenza, arrivo, data\_andata, data\_ritorno (opz)}. Scopo: calcolare itinerari andata/ritorno.
+\end{description}
 
-\subsection{Soluzioni (\texttt{/api/soluzioni})}
-\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
-GET /ricerca & Query: \texttt{partenza, arrivo, data\_andata, [data\_ritorno]}. Ritorna itinerari (andata/ritorno). \\
-\end{longtable}
+\subsection{Prenotazione posti (\texttt{/booking})}
+Tutte protette (\texttt{requireAuth}) e riservate ai ruoli \texttt{PASSEGGERO} (\texttt{requireRole}).
+\begin{description}[style=unboxed,leftmargin=0cm]
+	\item[GET /booking/configuration] query: \texttt{nome} (modello). Scopo: configurazione posti per modello.
+	\item[GET /booking/seats] query: \texttt{volo}. Scopo: posti già occupati/riservati per un volo.
+	\item[POST /booking/seats/reserve] body: array di biglietti da trattenere 15 min. Scopo: trattenuta temporanea dei posti.
+\end{description}
 
-\subsection{Booking (\texttt{/api/booking})}
-Protetti per PASSEGGERO/ADMIN.
-\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
-GET /configuration & Query: \texttt{nome} modello. Ritorna configurazione sedili. \\
-GET /seats & Query: \texttt{volo}. Ritorna posti occupati. \\
-POST /seats/reserve & Body: lista ticket temporanei con volo/posto/classe/prezzo. \\
-\end{longtable}
+\subsection{Checkout e pagamenti (\texttt{/checkout})}
+Tutte protette (\texttt{requireAuth}) e riservate a \texttt{PASSEGGERO}.
+\begin{description}[style=unboxed,leftmargin=0cm]
+	\item[POST /checkout/insert-tickets] body: lista biglietti confermati. Scopo: conferma definitiva (rimuove scadenza).
+	\item[POST /checkout/create-payment-intent] body: importo/valuta/tipi. Scopo: PaymentIntent Stripe per pagamento.
+	\item[GET /checkout/payment-intent/:pi\_id] params: \texttt{pi\_id}. Scopo: stato PaymentIntent.
+	\item[POST /checkout/stripe-webhook] Pubblica. body: raw (firma Stripe verificata). Scopo: ricezione eventi Stripe.
+\end{description}
 
-\subsection{Checkout (\texttt{/api/checkout})}
-Protetti per PASSEGGERO/ADMIN.
-\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
-POST /insert-tickets & Inserisce biglietti (blocco + conferma). \\
-POST /create-payment-intent & Crea PaymentIntent Stripe. \\
-GET /payment-intent/:pi\_id & Recupera stato PaymentIntent. \\
-\end{longtable}
+\subsection{Area passeggero (\texttt{/passeggero})}
+Tutte protette (\texttt{requireAuth}) e ruolo \texttt{PASSEGGERO}.
+\begin{description}[style=unboxed,leftmargin=0cm]
+	\item[GET /passeggero/profile] Scopo: profilo utente.
+	\item[POST /passeggero/update/foto] body (multipart): campo \texttt{file} (max 5MB, solo immagini). Scopo: aggiorna foto profilo.
+	\item[GET /passeggero/reservations] Scopo: elenco prenotazioni utente.
+	\item[GET /passeggero/statistics] Scopo: statistiche viaggio.
+	\item[PUT /passeggero/aggiorna-email] body: nuova email. Scopo: aggiornare email.
+	\item[PUT /passeggero/aggiorna-password] body: vecchia+nuova password. Scopo: aggiornare password.
+	\item[POST /passeggero/stripe/setup-intent] Scopo: crea SetupIntent.
+	\item[GET /passeggero/stripe/payment-methods] Scopo: lista metodi di pagamento.
+	\item[DELETE /passeggero/stripe/payment-methods/:pmId] params: \texttt{pmId}. Scopo: rimuove metodo.
+\end{description}
 
-\subsection{Passeggero (\texttt{/api/passeggero})}
-Protetti per PASSEGGERO.
-\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
-GET /profile & Profilo passeggero. \\
-POST /update/foto & Upload immagine profilo (multipart \texttt{file}). \\
-GET /reservations & Prenotazioni dell'utente. \\
-GET /statistics & Statistiche personali. \\
-PUT /aggiorna-email & Body: \texttt{"email"}. \\
-PUT /aggiorna-password & Body: \texttt{"passwordAttuale","nuovaPassword"}. \\
-POST /stripe/setup-intent & Crea SetupIntent, ritorna clientSecret. \\
-GET /stripe/payment-methods & Lista metodi salvati. \\
-DELETE /stripe/payment-methods/:pmId & Rimuove metodo salvato. \\
-\end{longtable}
+\subsection{Area compagnia (\texttt{/compagnia})}
+Protette (\texttt{requireAuth}) e ruolo \texttt{COMPAGNIA}, salvo note.
+\begin{description}[style=unboxed,leftmargin=0cm]
+	\item[GET /compagnia/profile] Scopo: profilo compagnia.
+		\item[POST /compagnia/setup] body: dati azienda e cambio password. Scopo: setup iniziale.
+	\item[GET /compagnia/uploads/compagnie/:filename] Pubblica. Scopo: servire immagini logo.
+	\item[GET /compagnia/statistics] Scopo: statistiche lato compagnia.
+	\item[GET /compagnia/aircrafts] Scopo: elenco aerei della compagnia.
+	\item[POST /compagnia/aircrafts] body: nuovo aereo. Scopo: aggiungere aereo.
+	\item[DELETE /compagnia/aircrafts/:numero] params: \texttt{numero}. Scopo: rimuovere aereo.
+	\item[GET /compagnia/models] Scopo: elenco modelli disponibili.
+	\item[GET /compagnia/routes] Scopo: elenco tratte.
+	\item[GET /compagnia/routes/best] Scopo: migliori tratte per resa.
+	\item[POST /compagnia/routes] body: nuova tratta. Scopo: aggiungere tratta.
+	\item[DELETE /compagnia/routes/:numero] params: \texttt{numero}. Scopo: rimuovere tratta.
+	\item[GET /compagnia/flights] Scopo: elenco voli programmati.
+	\item[POST /compagnia/flights] body: nuovi voli. Scopo: aggiungere voli.
+\end{description}
 
-\subsection{Compagnia (\texttt{/api/compagnia})}
-Protetti per COMPAGNIA.
-\begin{longtable}{p{0.22\linewidth}p{0.73\linewidth}}
-GET /profile & Profilo compagnia (nome, IATA, contatto, nazione, foto). \\
-POST /setup & Configura profilo compagnia e imposta password. \\
-GET /uploads/compagnie/:filename & Restituisce immagine logo. \\
-GET /statistics & Statistiche (destinazioni, aerei, voli odierni, passeggeri, ricavi). \\
-GET /aircrafts & Lista aerei della compagnia. \\
-POST /aircrafts & Body: \texttt{"modello"}. Crea aereo con numero \texttt{IATA-SIGLA-XYZ}. \\
-DELETE /aircrafts/:numero & Elimina aereo se appartiene alla compagnia. \\
-GET /models & Lista modelli aeromobili (nome, sigla). \\
-GET /routes & Elenco tratte (con nomi aeroporti). \\
-GET /routes/best & Top tratte per passeggeri/riempimento. \\
-GET /flights & Elenco voli con disponibilità posti. \\
-POST /flights & Body: {routeNumber, aircraftNumber, frequency, departureTime, days?, startDate, weeksCount?}. \\
-POST /routes & Body: {numero, partenza, arrivo, durata\_min, lunghezza\_km}. \\
-DELETE /routes/:numero & Cancella tratta della compagnia. \\
-\end{longtable}
+\subsection{Area amministratore (\texttt{/admin})}
+Protette (\texttt{requireAuth}) e ruolo \texttt{ADMIN}.
+\begin{description}[style=unboxed,leftmargin=0cm]
+	\item[GET /admin/compagnie] Scopo: elenco compagnie.
+	\item[GET /admin/passeggeri] Scopo: elenco passeggeri.
+		\item[DELETE /admin/compagnie/:id] params: \texttt{id}. Scopo: rimuovi compagnia.
+		\item[DELETE /admin/passeggeri/:id] params: \texttt{id}. Scopo: rimuovi passeggero.
+		\item[POST /admin/aggiungi] body (multipart/form-data): campi \texttt{email} (string), \texttt{password} (string), \texttt{file} (logo). Scopo: crea account compagnia con foto. Risposta: 204/void (nessun body).
+	\item[GET /admin/compagnie/attesa] Scopo: elenco richieste in attesa.
+	\item[DELETE /admin/compagnie/attesa/:id] params: \texttt{id}. Scopo: rimuovi richiesta.
+\end{description}
 
-Esempio creazione aereo:
-\begin{lstlisting}[language=JSON]
-POST /api/compagnia/aircrafts
-{
-  "modello": "Boeing 737-800"
-}
-// -> { "numero": "AZ-B738-001", "modello": "Boeing 737-800" }
-\end{lstlisting}
-
-\section{Autenticazione e autorizzazione}
-\subsection{Token e sessioni}
-\begin{itemize}
-  \item Login/Register emettono un \textbf{access token JWT} (Breve durata, es. 5 min) e un \textbf{refresh token} in cookie HttpOnly (durata più lunga, es. 7 giorni). Le sessioni refresh sono tracciate in tabella \texttt{sessioni} tramite JTI.
-  \item L'header \texttt{Authorization: Bearer <token>} è richiesto su endpoint protetti; \texttt{requireAuth} valida e decodifica il token caricando \texttt{req.user}.
-  \item \texttt{requireRole(...)} verifica che il ruolo dell'utente appartenga ai ruoli ammessi.
-  \item Il flusso di \emph{refresh} controlla la sessione (non revocata e non scaduta) e rilascia un nuovo access token.
+\section{Autenticazione e gestione sessioni}
+Il sistema utilizza JWT con due token:
+\begin{itemize}[noitemsep]
+	\item \textbf{Access token} firmato con segreto \texttt{ACCESS\_SECRET}, breve scadenza (default 5 min), inviato come Bearer nelle richieste; validato da \texttt{requireAuth}.
+	\item \textbf{Refresh token} firmato con \texttt{REFRESH\_SECRET}, lunga scadenza (default 7 giorni), salvato in cookie HttpOnly (path \texttt{/api/auth}). Il suo ``jti'' è registrato in tabella \texttt{sessioni} per consentire revoca e controllo scadenza.
 \end{itemize}
+\noindent Il backend offre anche la rotazione opzionale dei segreti all'avvio (env \texttt{ROTATE\_SECRETS\_ON\_START=1}).
 
-\subsection{Workflow}
-\begin{enumerate}
-  \item L'utente invia credenziali a \texttt{/api/auth/login}.
-  \item Backend valida, determina il ruolo (ID->ruolo) e risponde con JWT + set cookie \texttt{rt}.
-  \item Angular salva \texttt{accessToken} in \texttt{localStorage}. L'interceptor lo allega a tutte le richieste non escluse.
-  \item In caso di 401, l'interceptor prova \texttt{/api/auth/refresh}. Se ok, ritenta la richiesta originale; altrimenti esegue logout.
-  \item Logout e logout-all eliminano cookie e revocano sessioni.
+\subsection{Flusso client}
+\begin{enumerate}[noitemsep]
+	\item Login/Register \textrightarrow{} ricezione dell'access token (in \texttt{localStorage}) e del refresh token (in cookie \texttt{HttpOnly}).
+    \item L'\texttt{HttpInterceptor} allega automaticamente l'access token e, in caso di errore 401 (scadenza o invalidità), invoca \texttt{/auth/refresh} una sola volta, aggiorna l'access token e ritenta la richiesta originale.
+    \item \texttt{Logout} \textrightarrow{} rimozione dell'access token, cancellazione del cookie ed eliminazione della sessione nel DB tramite \texttt{jti}; 
+    \texttt{logout-all} \textrightarrow{} rimozione dell'access token, cancellazione del cookie ed eliminazione di tutte le sessioni nel DB per l'utente interessato.
 \end{enumerate}
 
-\section{Frontend Angular}
-\subsection{Routing}
-Le rotte principali (vedi \texttt{client/src/app/app.routes.ts}): \texttt{/}, \texttt{/voli}, \texttt{/passeggero} (PASSEGGERO), \texttt{/aerolinea} (COMPAGNIA), \texttt{/admin} (ADMIN), \texttt{/dettagli}, \texttt{/posti}, \texttt{/checkout}. Protette da \texttt{authRoleGuard} con verifica ruolo e caricamento pigro di \texttt{/me} se presente un token.
+\subsection{Guardie di routing (Angular)}
+		extbf{auth-role.guard.ts} protegge le rotte in base al ruolo richiesto (\texttt{data.role}). Se c'è un utente già in memoria, verifica il ruolo; se esiste solo l'access token, chiama \texttt{AuthService.me\$()} per ottenere i dati utente e quindi valida il ruolo. In caso negativo, effettua redirect alla home. Questo garantisce che le pagine come \texttt{/passeggero}, \texttt{/aerolinea} e \texttt{/admin} siano raggiungibili solo da utenti con ruolo coerente.
 
-\subsection{Servizi}
-\begin{itemize}
-  \item \textbf{AuthService}: login, register, logout, refresh, me.
-  \item \textbf{SoluzioniService}: ricerca voli/itinerari (solo andata o A/R).
-  \item \textbf{BookingService}: stato client della prenotazione, configurazioni posti, occupazione e prenotazione temporanea.
-  \item \textbf{CheckoutService} (via endpoint \texttt{/checkout} nei componenti): gestione PaymentIntent.
-  \item \textbf{PasseggeroService}: profilo, foto, prenotazioni, statistiche, email/password, Stripe saved methods.
-  \item \textbf{AerolineaService}: profilo compagnia, statistiche, tratte, voli, aerei, modelli, setup compagnia.
-  \item \textbf{AeroportiService}: elenco aeroporti per nazione.
+\subsection{HttpInterceptor: Authorization e refresh}
+L'interceptor (snippet ridotto di seguito) si occupa di:
+\begin{itemize}[noitemsep]
+	\item Allegare a ogni richiesta API protetta l'header:
+	\begin{verbatim}
+	Authorization: Bearer <access-token>
+	\end{verbatim}
+	letto dal \texttt{localStorage}.
+	\item Intercettare risposte 401/\texttt{ACCESS\_TOKEN\_EXPIRED} da \texttt{requireAuth} e avviare un flusso di \emph{refresh} centralizzato (debounce/singola esecuzione concorrente) verso \texttt{/api/auth/refresh} con \texttt{withCredentials: true} (il cookie HttpOnly \texttt{rt} è inviato automaticamente dal browser).
+	\item Aggiornare l'access token su successo e ritentare trasparentemente la richiesta originale.
+\end{itemize}
+L'access token ha durata breve per limitare l'impatto in caso di esfiltrazione; il refresh token non è accessibile a JS (HttpOnly) e non viene inviato a tutte le rotte, ma \textbf{solo} a quelle sotto \texttt{/api/auth} grazie all'attributo \texttt{path=/api/auth} del cookie.
+
+\paragraph{Scoping del cookie e rotte escluse}
+Il cookie HttpOnly del refresh è \textbf{scambiato solo} con rotte di autenticazione grazie a \texttt{path=/api/auth}. Nel codice dell'interceptor è presente una lista di rotte escluse:
+\begin{verbatim}
+const EXCLUDED = [
+	'/api/auth/register',
+	'/api/auth/login',
+	'/api/auth/refresh',
+	'/api/auth/logout',
+];
+\end{verbatim}
+Per tali chiamate non si allega l'header \texttt{Authorization} e non si attiva il flusso di refresh: sono endpoint di bootstrap dell'autenticazione che usano \texttt{withCredentials: true} per \emph{ricevere/mandare} il refresh token via cookie, senza richiedere un access token già valido. In questo modo l'utente non percepisce differenze: il rinnovo avviene in background e le richieste applicative vengono ritentate automaticamente.
+
+\paragraph{Snippet (TypeScript, semplificato)}
+\begin{minted}[linenos, breaklines, frame=single]{typescript}
+import { inject } from '@angular/core';
+import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { AuthService } from '../services/auth';
+import { Subject, throwError } from 'rxjs';
+import { catchError, switchMap, take } from 'rxjs/operators';
+
+let isRefreshing = false;
+const refreshDone$ = new Subject<boolean>();
+
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  const auth = inject(AuthService);
+  const attach = (token: string | null) =>
+    token ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : req;
+
+  return next(attach(auth.token)).pipe(
+    catchError((err: HttpErrorResponse) => {
+      if (err.status !== 401) return throwError(() => err);
+
+      if (!isRefreshing) {
+        isRefreshing = true;
+        return auth.refresh().pipe(
+          switchMap(() => {
+            isRefreshing = false; refreshDone$.next(true);
+            return next(attach(auth.token));
+          }),
+          catchError(e => {
+            isRefreshing = false; refreshDone$.next(false);
+            auth.logout().subscribe();
+            return throwError(() => e);
+          })
+        );
+      }
+
+      return refreshDone$.pipe(
+        take(1),
+        switchMap(ok => ok ? next(attach(auth.token))
+                          : throwError(() => err))
+      );
+    })
+  );
+};
+\end{minted}
+
+\subsection{Middleware server: requireAuth e requireRole}
+	extbf{requireAuth} legge l'header Bearer, verifica la firma con \texttt{verifyAccessToken} e, se valido, popola \texttt{req.user} con il payload JWT (\texttt{sub=id}, \texttt{role}). In caso di scadenza genera 401 con codice \texttt{ACCESS\_TOKEN\_EXPIRED}; in caso di token non valido, 401 generico.\newline
+		extbf{requireRole(...roles)} verifica che \texttt{req.user.role} sia tra quelli ammessi, altrimenti risponde 403. In questo modo il controller riceve già \texttt{req.user.sub} e \texttt{req.user.role} in modo affidabile, senza dover rileggere parametri lato client.
+
+\subsection{Tabella \texttt{sessioni} come whitelist dei refresh}
+Alla creazione di un refresh token si memorizzano \texttt{jti} (JWT ID), \texttt{utente}, \texttt{scadenza} nella tabella \texttt{sessioni}. Il flusso \texttt{/auth/refresh}:
+\begin{enumerate}[noitemsep]
+	\item Verifica la firma del refresh token (\texttt{verifyRefreshToken}).
+	\item Estrae il \texttt{jti} e controlla in \texttt{sessioni} che la sessione non sia revocata (\texttt{revocato=false}) e non sia scaduta (\texttt{scadenza} \textgreater{} now()).
+	\item Emette un nuovo access token e ritorna i dati utente.
+\end{enumerate}
+\noindent\textbf{Revoca}:
+\begin{itemize}[noitemsep]
+	\item \texttt{/auth/logout}: invalida solo la sessione corrente (revoca per \texttt{jti}).
+	\item \texttt{/auth/logout-all}: revoca tutte le sessioni dell'utente (\texttt{UPDATE sessioni SET revocato=TRUE WHERE utente=...}).
 \end{itemize}
 
-\subsection{Componenti / Pagine}
-Principali pagine in \texttt{client/src/app/pages}: \texttt{home}, \texttt{voli}, \texttt{dettagli}, \texttt{posti}, \texttt{checkout}, \texttt{passeggero}, \texttt{aerolinea}, \texttt{admin}. Componenti condivisi in \texttt{shared/}: navbar, login, registrazione, dati-passeggero, dati-compagnia, ticket, popup, footer.
-
-\section{Note implementative}
-\begin{itemize}
-  \item Numerazione aerei: formato \texttt{IATA-SIGLA-XYZ} con calcolo sequenziale per compagnia+modello; validato lato server.
-  \item Trigger biglietti: la funzione \texttt{ticket\_cleanup} evita conflitti tra prenotazioni temporanee e biglietti definitivi.
-  \item Sicurezza: refresh token in cookie HttpOnly; access token nel client con scadenza breve e retry controllato.
+\subsection{Rotazione segreti (\texttt{ROTATE\_SECRETS\_ON\_START})}
+\begin{itemize}[noitemsep]
+	\item \textbf{Sviluppo}: tipicamente \texttt{ROTATE\_SECRETS\_ON\_START=0} per evitare di invalidare continuamente le sessioni e velocizzare il testing.
+	\item \textbf{Produzione}: con \texttt{ROTATE\_SECRETS\_ON\_START=1} il server genera chiavi casuali ad ogni riavvio (\texttt{generateRandomSecret()}) per \textbf{entrambe} le firme (access e refresh) e forza la revoca di tutte le sessioni (\texttt{UPDATE sessioni SET revocato=TRUE}). Questo invalida i token sia per \emph{cambio firma} sia per \emph{revoca server-side}.
 \end{itemize}
+
+\subsection{Sicurezza: scelte e mitigazioni}
+\begin{itemize}[noitemsep]
+	\item \textbf{Separazione token}: access token in \texttt{localStorage} (breve TTL) e refresh token in cookie \textbf{HttpOnly} con \texttt{sameSite=lax} e \texttt{path=/api/auth}. Così si mitiga \textbf{XSS} (il refresh non è leggibile da JS) e si riduce la superficie \textbf{CSRF} (il cookie è inviato solo verso rotte di refresh).
+	\item \textbf{CORS} con origine configurabile (\texttt{CORS\_ORIGIN}) e \texttt{credentials=true} per controllare chi può invocare le API con cookie.
+	\item \textbf{Input validation e SQL injection}: tutte le query usano \texttt{pool.query(..., [parametri])} con binding parametrico; ci sono validazioni esplicite (es. \texttt{setupCompany}) e controlli semantici nei controller.
+	\item \textbf{Password hashing}: \texttt{bcrypt} con cost 12 per memorizzazione sicura delle credenziali.
+	\item \textbf{Upload sicuri}: \texttt{multer} limita tipo MIME a immagini e dimensione max (5 MB), nomi randomizzati e directory segregate; i file sono serviti da percorsi dedicati.
+	\item \textbf{Principio del minimo privilegio}: middleware \texttt{requireRole} restringe l'accesso alle sole funzioni pertinenti (es. rotte compagnia/admin).
+	\item \textbf{Nessun token in URL}: i token non compaiono in query string o percorsi, evitando leakage in log e referrer.
+	\item \textbf{Cookie scoping}: \texttt{path=/api/auth} impedisce l'invio del refresh verso altre rotte, evitando \emph{over-sharing} del token.
+	\item \textbf{Short-lived access token}: riduce impatto di furto del Bearer; l'interceptor gestisce rinnovo trasparente.
+\end{itemize}
+
+\subsection*{File e risorse coinvolte nell'autenticazione}
+L'intero meccanismo di autenticazione/autorizzazione è realizzato tramite le tabelle \texttt{utenti} e \texttt{sessioni} del DB e i seguenti file lato client e server:
+\begin{itemize}[noitemsep]
+	\item \textbf{Server}
+	\begin{itemize}[noitemsep]
+		\item \texttt{server/src/utils/jwt.ts}
+		\item \texttt{server/src/middleware/auth.ts}
+		\item \texttt{server/src/middleware/role.ts}
+		\item \texttt{server/src/controllers/authController.ts}
+		\item \texttt{server/src/routes/authRoutes.ts}
+		\item \texttt{server/src/types/express.d.ts}
+		\item \texttt{server/src/server.ts}
+	\end{itemize}
+	\item \textbf{Client}
+	\begin{itemize}[noitemsep]
+		\item \texttt{client/src/app/services/auth.ts}
+		\item \texttt{client/src/app/guard/auth.interceptor.ts}
+		\item \texttt{client/src/app/guard/auth-role.guard.ts}
+		\item \texttt{client/src/app/app.routes.ts}
+		\item \texttt{client/src/app/app.config.ts}
+	\end{itemize}
+\end{itemize}
+
+\section{Front end Angular}
+\subsection{Struttura}
+L'interfaccia è una SPA basata su componenti. Il Router decide quale \emph{pagina} mostrare in base al percorso, iniettando la vista dentro \texttt{<router-outlet>}. Parti riutilizzabili (Navbar, Footer, Card, modali) sono componenti condivisi inclusi nei template delle pagine.
+
+\paragraph{Routes (\texttt{app.routes.ts})}
+\begin{description}[style=unboxed,leftmargin=0cm]
+	\item[/] Home (pubblica)
+	\item[/voli] Ricerca/Lista voli (pubblica)
+	\item[/dettagli] Dettaglio volo/itinerario (pubblica)
+	\item[/posti] Selezione posti (protetta, ruolo \texttt{PASSEGGERO})
+	\item[/checkout] Checkout e pagamento (protetta, ruolo \texttt{PASSEGGERO})
+	\item[/passeggero] Area riservata passeggero (protetta, ruolo \texttt{PASSEGGERO})
+	\item[/aerolinea] Area riservata compagnia (protetta, ruolo \texttt{COMPAGNIA})
+	\item[/admin] Pannello amministratore (protetta, ruolo \texttt{ADMIN})
+\end{description}
+
+\paragraph{Guardie e Interceptor}
+\begin{itemize}[noitemsep]
+	\item \textbf{auth-role.guard.ts}: consente l'accesso alle rotte riservate solo se l'utente ha il ruolo richiesto (dato di rotta \texttt{data.role}). In caso contrario effettua un redirect sicuro.
+	\item \textbf{auth.interceptor.ts}: allega l'header \texttt{Authorization: Bearer <token>} alle chiamate API; in caso di 401 per scadenza gestisce un refresh centralizzato dell'access token e ritenta la richiesta originale.
+\end{itemize}
+
+\paragraph{Servizi (Services)}
+\begin{itemize}[noitemsep]
+	\item \textbf{auth}: login, registrazione, me, refresh, logout/logout-all.
+	\item \textbf{aeroporti}: elenco aeroporti per nazione.
+	\item \textbf{soluzioni}: ricerca itinerari (andata/ritorno).
+	\item \textbf{booking}: configurazione posti per modello, posti occupati per volo, trattenuta temporanea.
+	\item \textbf{checkout}: inserimento biglietti confermati, creazione/stato PaymentIntent Stripe.
+	\item \textbf{passeggero}: profilo, foto profilo, prenotazioni, statistiche, gestione email/password, metodi di pagamento.
+	\item \textbf{aerolinea}: profilo compagnia, setup iniziale, aerei, modelli, tratte, voli, statistiche.
+	\item \textbf{admin}: gestione compagnie/passeggeri, inviti/aggiunta compagnie, richieste in attesa.
+\end{itemize}
+
+\paragraph{Componenti implementati}
+\begin{itemize}[noitemsep]
+	\item \textbf{Pagine}: Home, Voli (ricerca/lista), Dettagli volo, Posti (selezione), Checkout, Area Passeggero, Area Compagnia, Area Admin.
+	\item \textbf{Condivisi}: Navbar, Footer, Login/Registrazione, Ticket/Biglietto, componenti UI riutilizzabili (card, form, dialog) stilizzati con Tailwind CSS e daisyUI.
+\end{itemize}
+
+\subsection*{[Spazio per screenshot e flussi per ruolo]}
+% Inserisci qui le schermate principali per PASSEGGERO, COMPAGNIA e ADMIN
+\begin{center}
+	\fbox{\parbox{0.9\linewidth}{\vspace{10cm}\centering Inserire qui screenshot e flussi per ciascun ruolo\vspace{10cm}}}
+\end{center}
+
+\section{Note di deployment}
+\begin{itemize}[noitemsep]
+	\item Configurare variabili \texttt{.env} del server: segreti JWT, \texttt{CORS\_ORIGIN}, credenziali DB, \texttt{STRIPE\_WEBHOOK\_SECRET} se si usano webhook.
+	\item Esporre staticamente le cartelle \texttt{uploads/passeggeri} e \texttt{uploads/compagnie} come già previsto in \texttt{server.ts}.
+	\item Assicurarsi che \texttt{docker-compose.yml} avvii DB, backend e frontend con le porte corrette.
+\end{itemize}
+
+\section{Conclusioni}
+Il progetto implementa un ecosistema completo per la gestione end-to-end della prenotazione voli con separazione netta di ruoli, protezione tramite JWT, modellazione relazionale e integrazione con Stripe per i pagamenti. Le sezioni dedicate a schemi e screenshot possono essere completate con i materiali prodotti durante lo sviluppo e i test.
 
 \end{document}
+

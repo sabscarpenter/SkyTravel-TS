@@ -5,8 +5,8 @@ import { insertTickets, createPaymentIntent, getPaymentIntent } from '../control
 
 const checkoutRouter = Router();
 
-checkoutRouter.post('/insert-tickets', requireAuth, requireRole('PASSEGGERO', 'ADMIN'), insertTickets); 
-checkoutRouter.post('/create-payment-intent', requireAuth, requireRole('PASSEGGERO', 'ADMIN'), createPaymentIntent);
-checkoutRouter.get('/payment-intent/:pi_id', requireAuth, requireRole('PASSEGGERO', 'ADMIN'), getPaymentIntent);
+checkoutRouter.post('/insert-tickets', requireAuth, requireRole('PASSEGGERO'), insertTickets); 
+checkoutRouter.post('/create-payment-intent', requireAuth, requireRole('PASSEGGERO'), createPaymentIntent);
+checkoutRouter.get('/payment-intent/:pi_id', requireAuth, requireRole('PASSEGGERO'), getPaymentIntent);
 
 export default checkoutRouter;

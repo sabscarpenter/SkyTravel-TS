@@ -568,3 +568,24 @@ export async function deleteAircraft(req: Request, res: Response) {
         return res.status(500).json({ message: 'Errore interno del server', error: error?.message });
     }
 }
+
+export async function getCompanyName(req: Request, res: Response) {
+    try {
+        const id = req.user!.sub;
+        if (!id) return res.status(400).json({ message: 'Unauthorized' });
+
+        const result = await pool.query(
+            'SELECT nome FROM compagnie WHERE utente = $1',
+            [id]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({ message: 'Compagnia non trovata' });
+        }
+
+        return res.json({ nome: result.rows[0].nome });
+    } catch (error) {
+        console.error('Errore recupero nome compagnia:', error);
+        return res.status(500).json({ message: 'Errore interno del server' });
+    }
+}
