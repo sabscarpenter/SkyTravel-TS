@@ -3,7 +3,7 @@ import { requireAuth } from '../middleware/auth';
 import { requireRole } from '../middleware/role';
 import { getProfile, getLogoImage, getStatistics, getAircrafts, getRoutes, 
          getBestRoutes, getFlights, addFlights, addRoute, deleteRoute, setupCompany,
-         getModels, addAircraft, deleteAircraft } from '../controllers/compagniaController';
+         getModels, addAircraft, deleteAircraft, getCompanyName } from '../controllers/compagniaController';
 
 const compagniaRouter = Router();
 
@@ -21,5 +21,6 @@ compagniaRouter.get('/flights', requireAuth, requireRole('COMPAGNIA'), getFlight
 compagniaRouter.post('/flights', requireAuth, requireRole('COMPAGNIA'), addFlights);
 compagniaRouter.post('/routes', requireAuth, requireRole('COMPAGNIA'), addRoute);
 compagniaRouter.delete('/routes/:numero', requireAuth, requireRole('COMPAGNIA'), deleteRoute);
+compagniaRouter.get('/nome', requireAuth, requireRole('COMPAGNIA'), getCompanyName);
 
 export default compagniaRouter;

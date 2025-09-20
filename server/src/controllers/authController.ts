@@ -227,7 +227,7 @@ export async function me(req: Request, res: Response) {
   if (id === undefined || id === null) return res.status(400).json({ message: 'Unauthorized' });
   try {
     const u = await getUserById(id);
-    let nome = '';
+    let nome: string | undefined;
     if (u.role === 'COMPAGNIA') {
       const r = await pool.query(
         'SELECT nome FROM compagnie WHERE utente = $1',
@@ -235,7 +235,7 @@ export async function me(req: Request, res: Response) {
       );
       nome = r.rows[0]?.nome ?? '';
     }
-    return res.json({ id: u.id, nome, email: u.email, role: u.role, foto: u.foto ?? '' });
+    return res.json({ id: u.id, nome: nome, email: u.email, role: u.role, foto: u.foto ?? ''});
   } catch {
     return res.status(404).json({ message: 'User not found' });
   }

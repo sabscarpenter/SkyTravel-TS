@@ -60,6 +60,7 @@ export class Navbar implements OnInit, OnDestroy {
         this.imageLoaded = true;
         if (user?.role === 'COMPAGNIA') {
           this.loadCompanyProfile();
+          this.loadCompanyName();
         }
       },
       error: () => {
@@ -73,7 +74,7 @@ export class Navbar implements OnInit, OnDestroy {
   private loadCompanyProfile() {
     this.airlineService.getAirlineProfile().subscribe({
       next: () => { 
-        this.showCompanySetup = false; 
+        this.showCompanySetup = false;
       },
       error: (err: any) => {
         console.warn('[loadCompanyProfile] errore profilo', err?.status, err?.error);
@@ -87,6 +88,19 @@ export class Navbar implements OnInit, OnDestroy {
   onCompanyComplete() {
     this.showCompanySetup = false;
     this.checkAuthStatus();
+  }
+
+  loadCompanyName() {
+    this.airlineService.companyName().subscribe({
+      next: (data) => {
+        if (this.user) {
+          this.user.nome = data.nome;
+        }
+      },
+      error: (error) => {
+        console.error('Errore durante il caricamento del nome della compagnia:', error);
+      }
+    });
   }
 
   toggleAuthPopup() {
