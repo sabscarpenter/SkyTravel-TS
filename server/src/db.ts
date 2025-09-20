@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 const url = process.env.DATABASE_URL;
 
-// Per connessione a PostgreSQL locale o su Docker
+// Per connessione a PostgreSQL locale o su Docker (usato da noi per Docker)
 
 export const pool = url
   ? new Pool({ connectionString: url })
@@ -18,7 +18,7 @@ export const pool = url
     });
 
 
-// Per connessione a Supabase
+// Per connessione a Supabase (usato da noi per locale)
 
 /*
 dotenv.config();
