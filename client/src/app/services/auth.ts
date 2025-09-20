@@ -91,6 +91,8 @@ export class AuthService {
     );
   }
 
+  invalidateMeCache() { this._me$ = undefined; }
+
   me$(): Observable<User> {
     if (!this._me$) {
       this._me$ = this.http.get<User>(`${this.apiUrl}/me`, { withCredentials: false })

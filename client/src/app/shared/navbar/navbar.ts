@@ -60,7 +60,6 @@ export class Navbar implements OnInit, OnDestroy {
         this.imageLoaded = true;
         if (user?.role === 'COMPAGNIA') {
           this.loadCompanyProfile();
-          window.location.reload();
         }
       },
       error: () => {
@@ -87,6 +86,7 @@ export class Navbar implements OnInit, OnDestroy {
 
   onCompanyComplete() {
     this.showCompanySetup = false;
+    this.authService.invalidateMeCache();
     this.checkAuthStatus();
   }
 
