@@ -57,7 +57,11 @@ export class Navbar implements OnInit, OnDestroy {
       next: (user: User) => {
         this.isAuthenticated = !!user;
         this.user = user;
-        this.imageLoaded = true;
+        if (user?.foto !== undefined && user?.foto !== '') {
+          this.imageLoaded = true;
+        } else {
+          this.imageLoaded = false;
+        }
         if (user?.role === 'COMPAGNIA') {
           this.loadCompanyProfile();
         }
