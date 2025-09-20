@@ -62,6 +62,19 @@ export async function register(req: Request, res: Response) {
 
     const userRow = insUser.rows[0] as { id: number; email: string; foto: string | null };
 
+    await client.query(
+      `INSERT INTO passeggeri (utente, nome, cognome, codice_fiscale, data_nascita, sesso)
+       VALUES ($1, $2, $3, $4, $5::date, $6)`,
+      [
+        userRow.id,
+        dati.nome,
+        dati.cognome,
+        dati.codiceFiscale,
+        dati.dataNascita,
+        dati.sesso,
+      ]
+    );
+
     await client.query('COMMIT');
 
     const role = deriveRoleFromId(userRow.id);
